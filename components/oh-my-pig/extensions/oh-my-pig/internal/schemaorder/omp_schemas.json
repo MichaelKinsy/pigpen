@@ -1025,5 +1025,222 @@
       ],
       "additionalProperties": false
     }
+  },
+  "init_experiment": {
+    "source": "derived",
+    "description_len": 288,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "experiment name"
+        },
+        "primary_metric": {
+          "type": "string",
+          "description": "primary metric name"
+        },
+        "goal": {
+          "type": "string",
+          "description": "session goal"
+        },
+        "metric_unit": {
+          "type": "string",
+          "description": "metric unit (e.g. ms, µs, mb)"
+        },
+        "direction": {
+          "enum": [
+            "lower",
+            "higher"
+          ],
+          "type": "string",
+          "description": "better direction (default lower)"
+        },
+        "secondary_metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "secondary metric names"
+        },
+        "scope_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "expected-to-modify paths"
+        },
+        "off_limits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "off-limits paths"
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "free-form constraints"
+        },
+        "max_iterations": {
+          "type": "number",
+          "description": "soft iteration cap per segment"
+        },
+        "new_segment": {
+          "type": "boolean",
+          "description": "bump to a new segment in existing session"
+        }
+      },
+      "required": [
+        "name",
+        "primary_metric"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "run_experiment": {
+    "source": "derived",
+    "description_len": 141,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "timeout_seconds": {
+          "type": "number",
+          "description": "timeout in seconds (default 600)"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "log_experiment": {
+    "source": "derived",
+    "description_len": 342,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "type": "number",
+          "description": "primary metric value"
+        },
+        "status": {
+          "enum": [
+            "keep",
+            "discard",
+            "crash",
+            "checks_failed"
+          ],
+          "type": "string",
+          "description": "run outcome"
+        },
+        "description": {
+          "type": "string",
+          "description": "short run description"
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "secondary metrics"
+        },
+        "asi": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": true,
+          "description": "free-form structured metadata"
+        },
+        "commit": {
+          "type": "string",
+          "description": "override recorded commit hash"
+        },
+        "justification": {
+          "type": "string",
+          "description": "required when keeping a scope-deviating run"
+        },
+        "flag_runs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "run_id": {
+                "type": "integer",
+                "description": "run id to flag"
+              },
+              "reason": {
+                "type": "string",
+                "description": "why this run is suspect"
+              }
+            },
+            "required": [
+              "run_id",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          "description": "flag earlier runs as suspect"
+        }
+      },
+      "required": [
+        "metric",
+        "status",
+        "description"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "update_notes": {
+    "source": "derived",
+    "description_len": 229,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "string",
+          "description": "replacement notes body"
+        },
+        "append_idea": {
+          "type": "string",
+          "description": "append as bullet under Ideas instead of replacing body"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "manage_skill": {
+    "source": "captured",
+    "description_len": 601,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "enum": [
+            "create",
+            "update",
+            "delete"
+          ],
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "kebab-case skill name"
+        },
+        "description": {
+          "type": "string",
+          "description": "one-line description of when to use the skill (required for create/update)"
+        },
+        "body": {
+          "type": "string",
+          "description": "the SKILL.md body in markdown, no frontmatter (required for create/update)"
+        }
+      },
+      "required": [
+        "action",
+        "name"
+      ],
+      "additionalProperties": false
+    }
   }
 }

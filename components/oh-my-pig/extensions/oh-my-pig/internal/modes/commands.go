@@ -1,6 +1,7 @@
 package modes
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -10,6 +11,8 @@ import (
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/commit"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/eval"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/jobs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/toolcmd"
 )
@@ -280,6 +283,10 @@ func (m *manager) handleBranchCommand(ctx sdk.Context, _ string) error {
 // PiG SDK does not expose in-place context reset keeping the same session ID).
 // upstream: packages/coding-agent/src/slash-commands/builtin-lifecycle.ts:281-290
 func (m *manager) handleClearCommand(ctx sdk.Context, _ string) error {
+	if VibeActive != nil && VibeActive(ctx) {
+		notifyWarn(ctx, "Exit vibe mode first.")
+		return nil
+	}
 	if idle, err := ctx.IsIdle(); err == nil && !idle {
 		notifyWarn(ctx, "Wait for the current response to finish or abort it before resetting the context.")
 		return nil
@@ -780,4 +787,91 @@ func ExtractLastLink(branch []sdk.BranchEntry) string {
 		}
 	}
 	return ""
+}
+
+const commitRecentSubjects = 5
+
+// RenderCommitRequest renders omp's commit-request.md prompt template with the
+// given draft summary, recent commit subjects, and user instructions.
+// upstream: packages/coding-agent/src/slash-commands/builtin-commit.ts:36
+// upstream: packages/coding-agent/src/prompts/commit-request.md
+func RenderCommitRequest(summary string, recent []string, instructions string) string {
+	return renderTemplate(commitRequestTemplate, templateData{
+		Vars: map[string]string{
+			"summary":      summary,
+			"instructions": strings.TrimSpace(instructions),
+		},
+		Lists: map[string][]string{
+			"recent": recent,
+		},
+	})
+}
+
+// isCommitPreludeAdvertised reports whether `eval` is an active tool and the
+// `commit` eval prelude is currently enabled for ctx.
+// upstream: packages/coding-agent/src/slash-commands/builtin-commit.ts:21
+func isCommitPreludeAdvertised(ctx sdk.Context) bool {
+	activeTools, err := ctx.GetActiveTools()
+	if err != nil {
+		return false
+	}
+	evalActive := false
+	for _, name := range activeTools {
+		if name == "eval" {
+			evalActive = true
+			break
+		}
+	}
+	if !evalActive {
+		return false
+	}
+	for _, p := range eval.EnabledPreludes(ctx) {
+		if p.Name == "commit" {
+			return true
+		}
+	}
+	return false
+}
+
+// handleCommitCommand implements `/commit [instructions]`.
+// upstream: packages/coding-agent/src/slash-commands/builtin-commit.ts:13-42
+func (m *manager) handleCommitCommand(ctx sdk.Context, args string) error {
+	if !isCommitPreludeAdvertised(ctx) {
+		notifyWarn(ctx, "/commit needs the eval tool and the `commit.enabled` setting.")
+		return nil
+	}
+	reqCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if done := ctx.Done(); done != nil {
+		go func() {
+			select {
+			case <-done:
+				cancel()
+			case <-reqCtx.Done():
+			}
+		}()
+	}
+	id := commit.DefaultAgentIdentity(ctx)
+	draft, err := commit.DraftFor(commit.DraftContext{
+		Cwd:          ctx.Cwd(),
+		ArtifactsDir: commit.DefaultArtifactsDir(ctx),
+		Agent:        id.Agent,
+		IsRunning: func(agentID string) bool {
+			if commit.IsAgentRunning != nil {
+				return commit.IsAgentRunning(ctx, agentID)
+			}
+			return false
+		},
+		Ctx: reqCtx,
+	}, commit.ScopeDefault())
+	if err != nil {
+		notifyWarn(ctx, err.Error())
+		return nil
+	}
+	recent, _ := commit.LogSubjects(reqCtx, draft.Root, commitRecentSubjects)
+	promptText := RenderCommitRequest(draft.Summary(), recent, args)
+	if err := sendPromptOrSteer(ctx, promptText); err != nil {
+		notifyError(ctx, fmt.Sprintf("Failed to send commit prompt: %v", err))
+	}
+	return nil
 }

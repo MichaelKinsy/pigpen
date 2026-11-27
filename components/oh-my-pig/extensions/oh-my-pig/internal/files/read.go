@@ -16,6 +16,7 @@ import (
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/dirs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/hashline"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/markit"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
 )
 
@@ -739,6 +740,14 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 				Details: details,
 			}, nil
 		}
+	}
+
+	// Document conversion via markit (.docx, .pptx, .xlsx, .epub, .pdf).
+	// Routed before the binary guard so ZIP-based documents and PDFs convert
+	// cleanly to Markdown and honor line selectors (`:1-50`, `:1-5,10-15`, `:-5`, `:raw`).
+	// upstream: packages/coding-agent/src/tools/read.ts:2653,2760-2782
+	if markit.IsConvertiblePath(absPath) {
+		return readMarkitDocument(sig, store, absPath, displayPath, fileSize, parsed, immutable, suffixRes)
 	}
 
 	// Binary guard (skipped in :raw mode).

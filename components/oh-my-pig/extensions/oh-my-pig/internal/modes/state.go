@@ -40,6 +40,12 @@ const (
 // walk up to the top-level ancestor session.
 var ParentSession func(ctx sdk.Context) (parentSessionID string, isSubagent bool)
 
+// VibeActive reports whether ctx's session currently has Vibe mode enabled.
+// Assigned by the integrator (`modes.VibeActive = vibe.Active`) so `/plan`,
+// `/goal`, `/guided-goal`, and `/clear` refuse entry while Vibe mode is active,
+// matching omp (`interactive-mode.ts:6275, 6543, 7325, 7634, 7679`).
+var VibeActive func(ctx sdk.Context) bool
+
 // defaultStore is the single process-wide, session-ID-keyed store shared by
 // every extension instance PiG creates (one per session / reload / replacement).
 var (

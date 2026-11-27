@@ -69,6 +69,7 @@ TARGET_TOOLS: tuple[str, ...] = (
     "debug",
     "github",
     "lsp",
+    "manage_skill",
 )
 
 
@@ -789,6 +790,8 @@ find:
 goal:
   enabled: true
 ask:
+  enabled: true
+autolearn:
   enabled: true
 """
 

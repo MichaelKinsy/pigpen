@@ -10,12 +10,14 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/dirs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/hashline"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/markit"
 )
 
 const (
@@ -43,6 +45,77 @@ func readNotebook(raw []byte, store *hashline.Store, absPath, displayPath string
 	}
 	details := ensureDetailsMap(&res)
 	details["resolvedPath"] = dirs.StandardizeMacOSPath(absPath)
+	setMetaSource(details, "path", absPath)
+	return res, nil
+}
+
+// readMarkitDocument converts a .docx/.pptx/.xlsx/.epub/.pdf document via internal/markit
+// and routes the resulting Markdown through renderInMemoryText so line selectors, multi-range
+// selectors, tail selectors, `:raw`, hashline headers, truncation, and suffixResolution match omp.
+// upstream: packages/coding-agent/src/tools/read.ts:2760-2782,3427-3442
+func readMarkitDocument(
+	ctx context.Context,
+	store *hashline.Store,
+	absPath, displayPath string,
+	fileSize int64,
+	parsed ParsedSelector,
+	immutable bool,
+	suffixRes *SuffixResolution,
+) (sdk.ToolResult, error) {
+	ext := strings.ToLower(filepath.Ext(absPath))
+	conv, err := markit.ConvertFile(ctx, absPath)
+	if err != nil {
+		if ctx.Err() != nil {
+			return sdk.ToolResult{}, ctx.Err()
+		}
+		msg := strings.TrimSpace(err.Error())
+		if msg == "" {
+			msg = "Conversion failed"
+		}
+		// Match omp's read.ts:2780-2782,3427-3438 error path: fileSize + optional suffixResolution/raw.
+		details := map[string]any{
+			"fileSize": fileSize,
+		}
+		if parsed.IsRaw() {
+			details["raw"] = true
+		}
+		if suffixRes != nil {
+			details["suffixResolution"] = suffixRes.toMap()
+		}
+		return sdk.ToolResult{
+			Content: prependSuffixResolutionNotice(fmt.Sprintf("[Cannot read %s file: %s]", ext, msg), suffixRes),
+			Details: details,
+		}, nil
+	}
+	if conv.Markdown == "" {
+		details := map[string]any{
+			"fileSize": fileSize,
+		}
+		if parsed.IsRaw() {
+			details["raw"] = true
+		}
+		if suffixRes != nil {
+			details["suffixResolution"] = suffixRes.toMap()
+		}
+		return sdk.ToolResult{
+			Content: prependSuffixResolutionNotice(fmt.Sprintf("[Cannot read %s file: Conversion produced no output]", ext), suffixRes),
+			Details: details,
+		}, nil
+	}
+	// Route through renderInMemoryText with store+absPath (and unbounded=false),
+	// matching omp's buildInMemorySelectorResult in read.ts:2770-2777.
+	res, err := renderInMemoryText(conv.Markdown, displayPath, "document", parsed, store, absPath, 0, false, immutable)
+	if err != nil {
+		return sdk.ToolResult{}, err
+	}
+	if suffixRes != nil {
+		res.Content = prependSuffixResolutionNotice(res.Content, suffixRes)
+	}
+	details := ensureDetailsMap(&res)
+	details["resolvedPath"] = dirs.StandardizeMacOSPath(absPath)
+	if suffixRes != nil {
+		details["suffixResolution"] = suffixRes.toMap()
+	}
 	setMetaSource(details, "path", absPath)
 	return res, nil
 }
@@ -129,7 +202,73 @@ func splitArchivePath(ctx context.Context, rawPath, cwd string, suffixCache suff
 			return abs, formatPathRelativeToCwd(abs, cwd), "", "", sr, true
 		}
 	}
+	// ZIP-container documents (`doc.docx:word/document.xml`): an existing ZIP file
+	// whose `:subPath` is a member path rather than a line selector.
+	// upstream: packages/coding-agent/src/tools/read-archive.ts:60-103,214
+	if zAbs, zDisp, zMember, zSel, zOK := resolveZipDocumentMember(rawPath, cwd); zOK {
+		return zAbs, zDisp, zMember, zSel, nil, true
+	}
 	return "", "", "", "", nil, false
+}
+
+// zipDocumentMemberExts mirrors ZIP_DOCUMENT_MEMBER_RE in read-archive.ts:60.
+var zipDocumentMemberExts = []string{
+	".docx", ".docm", ".dotx", ".xlsx", ".xlsm", ".pptx", ".pptm", ".odt", ".ods", ".odp", ".epub",
+}
+
+// hasZipMagic reports whether file at absPath starts with a ZIP local-file/empty/spanned signature.
+// upstream: packages/coding-agent/src/tools/read-archive.ts:62-72
+func hasZipMagic(absPath string) bool {
+	f, err := os.Open(absPath)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	var hdr [4]byte
+	n, err := io.ReadFull(f, hdr[:])
+	if err != nil || n < 4 {
+		return false
+	}
+	return hdr[0] == 'P' && hdr[1] == 'K' &&
+		((hdr[2] == 0x03 && hdr[3] == 0x04) ||
+			(hdr[2] == 0x05 && hdr[3] == 0x06) ||
+			(hdr[2] == 0x07 && hdr[3] == 0x08))
+}
+
+// resolveZipDocumentMember handles `<doc>.<ext>:<member>[:<sel>]` for ZIP-based
+// document formats when `<member>` is not a line selector and the file has ZIP magic.
+// upstream: packages/coding-agent/src/tools/read-archive.ts:84-103
+func resolveZipDocumentMember(rawPath, cwd string) (archiveAbs, archiveDisplay, memberPath, selStr string, ok bool) {
+	for _, ext := range zipDocumentMemberExts {
+		for idx := indexASCIIFold(rawPath, ext, 0); idx >= 0; idx = indexASCIIFold(rawPath, ext, idx+len(ext)) {
+			end := idx + len(ext)
+			if end >= len(rawPath) || rawPath[end] != ':' {
+				continue
+			}
+			rest := rawPath[end+1:]
+			if rest == "" {
+				continue
+			}
+			// If rest parses as a read selector (e.g. `:1-50`, `:raw`, `:-5`), it addresses
+			// converted document lines rather than a ZIP member.
+			if p, err := ParseSel(rest); err == nil && p.Kind != SelectorNone {
+				continue
+			}
+			candPath := rawPath[:end]
+			abs := resolveToCwd(candPath, cwd)
+			info, err := os.Stat(abs)
+			if err != nil || !info.Mode().IsRegular() || !hasZipMagic(abs) {
+				continue
+			}
+			mPath, mSel := SplitPathAndSel(rest)
+			cleanMember := strings.TrimPrefix(path.Clean("/"+strings.ReplaceAll(mPath, "\\", "/")), "/")
+			if cleanMember == "." {
+				cleanMember = ""
+			}
+			return abs, formatPathRelativeToCwd(abs, cwd), cleanMember, mSel, true
+		}
+	}
+	return "", "", "", "", false
 }
 
 type archiveEntry struct {

@@ -18,6 +18,7 @@ Ported from omp (`https://github.com/can1357/oh-my-pi`, MIT, tag `v19.1.1`, comm
 - `packages/utils/src/format.ts` (`formatAge`)
 - `packages/coding-agent/src/tools/conflict-detect.ts` (`scanFileForConflicts`, `formatConflictWarning`, `formatConflictSummary`, `formatScanCapNote`)
 - `packages/coding-agent/src/utils/file-display-mode.ts`
+- `packages/coding-agent/src/utils/markit.ts` (document conversion dispatch for `.docx`, `.pptx`, `.xlsx`, `.epub`, `.pdf`)
 - `packages/tui/src/tools/line-ranges.ts`
 - `packages/tui/src/tools/streaming-output.ts`
 - `packages/tui/src/tools/output-meta.ts`
@@ -31,10 +32,9 @@ Ported from omp (`https://github.com/can1357/oh-my-pi`, MIT, tag `v19.1.1`, comm
 To avoid promising unsupported selectors/targets to the model:
 - Removed from `read.md`:
   - `Bare code: declarations only; re-read ONLY footer-named omissions, NEVER guess .. / ….`
-  - `PDF/DOCX/PPTX/XLSX/EPUB: extracted text`
   - `Also, with selectors in help://read/sources ... SQLite, archives (..., 7z, RAR and more), JSON/JSONL by jq filter, executable metadata, video, SVG as image, merge conflicts.`
   - Changed `skips folding and the display-width limit` to `skips the display-width limit` (folding is not ported; the 768-char column cap is ported).
-  - Kept accurate descriptions for: line selectors, block open/close context, `:raw`, selected files, directories, URLs, `.ipynb` notebooks (read-only cell text), raster images, and stdlib archives (`ZIP, JAR, APK, WHL, TAR, TAR.GZ, TGZ`).
+  - Kept accurate descriptions for: line selectors, block open/close context, `:raw`, selected files, directories, URLs, PDF/DOCX/PPTX/XLSX/EPUB extracted text (`internal/markit`), `.ipynb` notebooks (cell text), raster images, and stdlib archives (`ZIP, JAR, APK, WHL, TAR, TAR.GZ, TGZ`).
 - Narrowed in `write.md`:
   - Replaced `Archive members and SQLite rows are writable too: help://read/sources.` with `Archive members (`archive.ext:member`) are writable too for ZIP, TAR, and TAR.GZ/TGZ archives.` (SQLite row writes and non-stdlib `.tar.zst`/`.asar` archive writes are not ported).
 
@@ -60,7 +60,7 @@ Writing a member into an archive (`archive.ext:member`) rewrites the whole archi
   - `findUniqueWorkspaceSuffix` (`path-utils.ts:1413-1458`), `findSuffixMatchCached` / `isRemoteMountPath` / `isNotFoundError` (`read-path-resolution.ts:7-36`), `prependSuffixResolutionNotice` / `markRawSuffixResolution` (`read-format.ts:56-58,719-727`), plus callers for files, directories, `:conflicts`, `:line:col` diagnosis (`read.ts:2459-2582`), stdlib archives (`read-archive.ts:171-215`), and JSON `?q=` queries (`read-json.ts:407-480`).
   - Delegates to `internal/search.FindSuffixMatches` (shared `walkDir` + `compileGlob` with `pattern: "**/" + escapeGlobMetachars(normalized)`, `hidden=true`, `gitignore=true`, `includeDir=true`, `includeSymlinks=true`, `.git`/`node_modules` pruning unless named in the pattern, 5s timeout, per-call memoization, and early exit on 2 matches).
   - Sets `details.suffixResolution` (`{ from, to, raw? }`) and prepends `[Path '<from>' not found; resolved to '<to>' via suffix match]` on non-raw non-directory reads; `:raw` keeps byte output clean and records `raw: true` in `details.suffixResolution`.
-  - Suffix resolution for unported target types (SQLite, PDF, video, non-stdlib archives) remains unported alongside those target types.
+  - Suffix resolution also works for markit-converted documents (`.docx`, `.pptx`, `.xlsx`, `.epub`, `.pdf`); suffix resolution for unported target types (SQLite, video, non-stdlib archives) remains unported alongside those target types.
 ## Tests Ported (`internal/files`)
 - `internal/files/files_test.go`: 6 tests (read selector forms including bare `:N`, read-then-edit + stale/invented tag rejection, CRLF & no-trailing-newline, write + parent dirs + `MV` + `REM` + outside-cwd, directory listing & raster image read, tool registration).
 - `internal/files/v19_guards_test.go`: 9 tests porting upstream cases:
@@ -80,6 +80,7 @@ Writing a member into an archive (`archive.ext:member`) rewrites the whole archi
 - `internal/files/round4_fixes_test.go`: 11 tests (`conflict://N` excerpt backing-file tag + edit follow-up, `out://` and read-only URL tool-policy denial prefix, located `skill://` `[Skill file: ...]` provenance + `contentType: text/markdown`, edit failure details preserved over wire, `:raw` `displayContent` `countTextLines` across all four oracle cases + non-raw context + comma-list `:raw`, `meta.limits.columnTruncated` + selected-window `meta.truncation.totalBytes`, raw HTML URL `contentType: text/html`, explicit `?q=` jq unsupported error, archive-member & notebook `meta.source`, `resolvedPath` on dir/binary/out-of-range & omission of port-only `totalLines`/`fileSize`/`meta`, macOS `/private` standardization on `skill://` and headers).
 - `internal/files/archive_write_test.go`: 12 tests (ZIP & aliases, TAR/TAR.GZ/TGZ, creating missing archives & literal archive filenames, refusals for read-only/non-stdlib/invalid subpaths/dir & plain files, atomicity on failure, write guards, concurrent serialization, `conflict://` prefix recovery, TAR link flattening & special typeflags, TAR broken-link & sparse refusals, ZIP symlinks & unsafe names, rewritten archive permissions matching umask).
 - `internal/files/read_multipath_test.go`: 3 tests (with subtests) porting `glob-validate-paths.test.ts`, `grep-path-lists.test.ts`, `read-mixed-path-list.test.ts`, and `read-raw-range.test.ts` (semicolon/comma/whitespace/mixed/nested delimited lists, literal delimiter precedence, `?q=` query lists, and unique suffix resolution for files, `:raw`, directories, archives, JSON queries, ambiguity, and `.gitignore`).
+- `internal/files/read_markit_test.go`: 1 test (DOCX/PPTX/XLSX/EPUB reads via `internal/markit`, hashline `[path#TAG]` header & numbered rows, `:N-M` range, `:raw:1-3`, unique workspace-suffix resolution, ZIP-container member read `report.docx:word/document.xml`, and corrupt ZIP refusal with `fileSize` details).
 ## Settings Read by Upstream
 | Key | Default | Honoured |
 |---|---|---|
@@ -99,7 +100,7 @@ Writing a member into an archive (`archive.ext:member`) rewrites the whole archi
 | Feature | Reason |
 |---|---|
 | `read` SQLite (`file.db`, `:table`, `?q=SELECT`) | Requires a SQLite driver; forbidden by no-third-party-modules / no-cgo rule |
-| `read` PDF, DOCX, PPTX, XLSX, EPUB (`markit`) | Requires external document converters / non-stdlib parsers |
+| `read` PDF visual page screenshots (`doc.pdf:page<N>.png`), native `pdf-inspector` OCR detection, & markit conversion of archive members (`archive.zip:doc.pdf`) | Text extraction for local DOCX, PPTX, XLSX, EPUB (pure-Go stdlib) and PDF (via `pdftotext` CLI when on PATH) plus ZIP-container member reads (`doc.docx:word/document.xml`) are ported; Chromium PDF screenshots, Rust `pdf-inspector`, archive-nested markit conversion, and URL/fetch markit conversion remain unported (see `internal/markit/UPSTREAM.md`) |
 | `read` 7z, RAR, ISO, CAB, DEB, RPM, CPIO, AR, LZH, ARJ, ASAR, compressed streams | Formats not in the Go standard library (ZIP, JAR, APK, WHL, TAR, TAR.GZ/TGZ are supported) |
 | `read` video frames / contact sheets (`ffmpeg`/`ffprobe`) | Requires external `ffmpeg`/`ffprobe` binaries |
 | `read` SVG `:img` rasterization and HEIC/BMP transcoding / image auto-resize / `?q=` vision questions | Requires native image codecs/SVG rasterizer and a vision sub-call not available in Go stdlib |

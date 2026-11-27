@@ -167,6 +167,33 @@ func (r *gitRepo) currentBranch(ctx context.Context) (string, bool) {
 	return strings.TrimPrefix(ref, "refs/heads/"), true
 }
 
+// LogSubjects returns up to n recent commit subjects from the git repository at root.
+// Returns nil, nil when n <= 0 or stdout is empty; returns an error on unborn repos or git failure
+// (callers such as /commit ignore errors and fall back to an empty list, matching builtin-commit.ts:34).
+// upstream: crates/vcs/src/git/read.rs (log_subjects), packages/coding-agent/src/slash-commands/builtin-commit.ts:31-34
+func LogSubjects(ctx context.Context, root string, n int) ([]string, error) {
+	if n <= 0 {
+		return nil, nil
+	}
+	out, err := runGit(ctx, root, nil, nil, "log", "-n", strconv.Itoa(n), "--format=%s")
+	if err != nil {
+		if ctx != nil && ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		return nil, err
+	}
+	trimmed := strings.TrimRight(string(out), "\r\n")
+	if trimmed == "" {
+		return nil, nil
+	}
+	rawLines := strings.Split(trimmed, "\n")
+	subjects := make([]string, 0, len(rawLines))
+	for _, line := range rawLines {
+		subjects = append(subjects, strings.TrimRight(line, "\r"))
+	}
+	return subjects, nil
+}
+
 func (r *gitRepo) resolveRef(ctx context.Context, spec string) (string, bool) {
 	out, err := runGit(ctx, r.root, nil, nil, "rev-parse", "--verify", "--quiet", spec)
 	if err != nil {

@@ -10,7 +10,7 @@ Plain Go `map[string]any` JSON Schemas serialize their object keys alphabeticall
 
 ## Upstream Files & Capture Source
 
-All 25 tools registered by `oh-my-pig` were **captured** directly from the installed `omp/19.1.1` binary over a loopback OpenAI-compatible HTTP server (`gen/capture.py`) with 0 network attempts, 0 leaked PIDs, and `PI_NO_INTENT=1`:
+Of the 30 tools registered by `oh-my-pig`, 26 were **captured** directly from the installed `omp/19.1.1` binary over a loopback OpenAI-compatible HTTP server (`gen/capture.py`) with 0 network attempts, 0 leaked PIDs, and `PI_NO_INTENT=1`, and 4 autoresearch tools (`init_experiment`, `run_experiment`, `log_experiment`, `update_notes`) were **derived** directly via omp `v19.1.1`'s `toolWireSchema` from `packages/coding-agent/src/autoresearch/tools/*.ts`:
 
 | Upstream source | Role |
 |---|---|
@@ -20,14 +20,15 @@ All 25 tools registered by `oh-my-pig` were **captured** directly from the insta
 | `packages/coding-agent/src/web/search/index.ts` | `web_search` schema |
 | `packages/coding-agent/src/lsp/types.ts` | `lsp` schema |
 | `packages/coding-agent/src/goals/tools/goal-tool.ts` | `goal` schema |
+| `packages/coding-agent/src/autoresearch/tools/*.ts` | Autoresearch tool schemas (`init_experiment`, `run_experiment`, `log_experiment`, `update_notes`) |
 | `packages/agent/src/agent-loop.ts:1017-1072` | `injectIntentIntoSchema` composition with `internal/intent` |
 
 ## Tests
 
 6 Go tests in `schemaorder_test.go` (no upstream test suite exists for this PiG-specific adapter):
-- `TestManifestMatchesEmbeddedSchemas` — verifies `omp_schemas.manifest.json` sha256, byte count, pin (`v19.1.1` / `31ffee513f27a01bba7d4dfbe12bae239cdc646a`), tool count (25), and generator files.
-- `TestPortSchemasEqualOmpContent` — registers all 14 tool-owning areas + dynamic `yield` through `sdk.Extension.RunWithConn` and compares schema content order-insensitively against omp `v19.1.1`, failing on any unallowlisted or stale diff (`known_content_diffs.json`).
-- `TestWireOrderByteIdenticalAfterApply` — asserts wire JSON after `Apply` is byte-identical to omp `v19.1.1` (modulo Go's default `\u003c`/`\u003e`/`\u0026` HTML escapes on `<`/`>`/`&` inside strings) for all 19 content-equal tools, and asserts exact omp key-order prefix + sorted extra keys for the 6 tools with allowlisted content diffs.
+- `TestManifestMatchesEmbeddedSchemas` — verifies `omp_schemas.manifest.json` sha256, byte count, pin (`v19.1.1` / `31ffee513f27a01bba7d4dfbe12bae239cdc646a`), tool count (30: 26 captured + 4 derived), and generator files.
+- `TestPortSchemasEqualOmpContent` — registers all 16 tool-owning areas + dynamic `yield` through `sdk.Extension.RunWithConn` and compares schema content order-insensitively against omp `v19.1.1`, failing on any unallowlisted or stale diff (`known_content_diffs.json`).
+- `TestWireOrderByteIdenticalAfterApply` — asserts wire JSON after `Apply` is byte-identical to omp `v19.1.1` (modulo Go's default `\u003c`/`\u003e`/`\u0026` HTML escapes on `<`/`>`/`&` inside strings) for all 24 content-equal tools, and asserts exact omp key-order prefix + sorted extra keys for the 6 tools with allowlisted content diffs.
 - `TestApplyComposesWithIntent` — verifies `intent.Tool(schemaorder.Apply(def))` places `i` first followed by omp's exact property order and preserves root and nested key order across `bash`, `glob`, `read`, `write`, `debug`, `github`, `lsp`, and omit-mode `resolve`.
 - `TestApplyEdgeCases` — unknown tools, nil parameters, extra port-only keys sorted after omp keys, `enum` preservation, non-mutation of caller map, `anyOf` branch ordering, and `*sdk.OrderedObject`/`*sdk.TSchema` input (`lsp`).
 - `TestApplyConcurrentSafe` — concurrent `Apply` calls verified under `-race`.

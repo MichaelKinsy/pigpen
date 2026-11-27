@@ -23,10 +23,10 @@ func RegistrationDiagnostics() []string {
 }
 
 // RegisterExtension installs the built-in URL protocol handlers owned by this
-// package (skill://, rule://, out://, local://, mcp://, help://, attachment://,
-// conflict://) in omp's registration order and attaches session lifecycle hooks
-// (skill snapshot caching on before_agent_start; per-session cleanup via
-// internal/lifecycle and session_shutdown).
+// package (skill://, rule://, out://, local://, mcp://, omp://, help://,
+// attachment://, conflict://) in omp's registration order and attaches session
+// lifecycle hooks (skill snapshot caching on before_agent_start; per-session
+// cleanup via internal/lifecycle and session_shutdown).
 //
 // Safe to call multiple times in one process (across fresh *sdk.Extension
 // instances for new/reloaded/child sessions): built-in handlers are stateless
@@ -44,6 +44,7 @@ func RegisterExtension(e *sdk.Extension) {
 		OutHandler{},
 		LocalHandler{},
 		MCPHandler{},
+		OmpHandler{},
 		HelpHandler{},
 		AttachmentHandler{},
 		ConflictHandler{},

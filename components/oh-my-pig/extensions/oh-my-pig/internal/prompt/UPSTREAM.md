@@ -19,6 +19,7 @@ Upstream repository: `oh-my-pi` (MIT, tag `v19.1.1`, commit `31ffee513f27a01bba7
 - `packages/coding-agent/src/extensibility/skill-descriptions.ts` — `previewSkillDescription` (bounded 100-rune routing preview).
 - `packages/utils/src/prompt.ts` — `format()` post-render normalizer (ECMA/Unicode whitespace trimming, blank-line collapsing, closing-tag blank-line stripping, table compaction, fenced-block preservation) and `closeCodeFence()`.
 - `packages/utils/src/dirs.ts` — `standardizeMacOSPath` (`StandardizePromptCwd`: strips macOS `/private` prefix when both spellings resolve to the same real path).
+- `packages/coding-agent/src/workspace-tree.ts` + `crates/natives/src/workspace.rs` — `BuildWorkspaceTree`, `RenderWorkspaceTreeBlock`, `RenderDirContext` (`<workspace-tree>` and `<dir-context>` gated behind `includeWorkspaceTree`, default `false`, reusing `internal/search.IgnoreMatcher`).
 
 ## Oracle Test Tooling
 
@@ -86,6 +87,7 @@ Upstream repository: `oh-my-pi` (MIT, tag `v19.1.1`, commit `31ffee513f27a01bba7
 | `tools.commands` / `tools.commandDocs` (`tools/settings.ts:1122-1139`) | `true` / `"catalog"` | Wired via `prompt.ToolCommands` hook (nil until integrator assigns `internal/toolcmd`) |
 | `secrets.enabled` (`system-prompt.ts:122`) | `false` | Builder option exists; not wired (no output secret obfuscator) |
 | `ovnfs.path` (`system-prompt.ts:117`) | `""` | Builder option exists (with POSIX single-quoting); not wired |
+| `includeWorkspaceTree` (`session/settings.ts:479`, `system-prompt.ts:765`) | `false` | Wired via `prompt.IncludeWorkspaceTree` hook (default `false`; scans and injects `<workspace-tree>` + `<dir-context>` when enabled) |
 
 ## Changed on Purpose
 
@@ -100,7 +102,6 @@ Upstream repository: `oh-my-pi` (MIT, tag `v19.1.1`, commit `31ffee513f27a01bba7
 | Subagent extra prompt rules (`excludeAgentsMd`, appended `subagent-system-prompt.md`) | `prompt.SubagentSession` sets `Subagent: true` and `PersonalityNone` (`# 2. Hand-off`, no `# Personality`), while `excludeAgentsMd` filtering and `subagent-system-prompt.md` appending remain owned by `internal/agents`. |
 | Default-on interactive blocks in live hook (`dev.autoqa`, `tui.reactions`) | `report_issue` QA reporting is not ported and `pig-tern` has no emoji reaction badges. |
 | `dsm` eval prelude guidance block | The `dsm` eval prelude is not ported in `internal/eval`; `internal/prompt` renders whatever `eval.EnabledPreludes(ctx)` returns, so the `dsm` guidance block is absent until that prelude exists. (`commit` IS ported in `internal/commit` and its guidance block is rendered.) |
-| Workspace directory tree (`includeWorkspaceTree`, `<workspace-tree>`, `<dir-context>` nested `AGENTS.md` scan) | Defaults to `false` in omp; requires omp's native walker / tree builder. |
 | Additional workspace roots (`additionalWorkspaceRoots`, `/add-dir`, `/remove-dir`, `/dirs`) | PiG sessions have a single `cwd` and no multi-root directory management commands. |
 | Custom Handlebars template overrides (`SYSTEM_TEMPLATE.md`, `--system-prompt-template`, `modelSystemPromptTemplates`, `custom-system-prompt.md`) | PiG handles `SYSTEM.md` and `--system-prompt` natively (which our `before_agent_start` hook respects by passing through any custom prompt lacking our slot markers). Full Handlebars template evaluation is not ported. |
 | SQLite-backed LLM skill description compression (`SkillDescriptionStore`, `createSkillDescriptionCompressor`) | Uses omp's deterministic `PreviewSkillDescription` (100-rune bounded preview) without background LLM compression or SQLite cache. |

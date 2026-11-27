@@ -188,6 +188,10 @@ func registerWithManager(e *sdk.Extension, m *manager) {
 		Description: "Import and switch to an omp session JSONL (defaults to latest for current cwd; --full keeps pre-compaction history)",
 		Handler:     m.handleImportOmpCommand,
 	})
+	e.RegisterCommand("commit", sdk.CommandOptions{
+		Description: "Commit only the changes this agent and its subagents made",
+		Handler:     m.handleCommitCommand,
+	})
 
 	// Event hooks
 	e.OnSessionStart(m.onSessionStart)

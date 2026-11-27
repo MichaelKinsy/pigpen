@@ -49,6 +49,9 @@ var (
 
 	//go:embed prompts/handoff-document.md
 	handoffDocumentTemplate string
+
+	//go:embed prompts/commit-request.md
+	commitRequestTemplate string
 )
 
 // templateData holds values evaluated by renderTemplate (minimal Handlebars
@@ -116,7 +119,17 @@ func evalTemplate(s string, data templateData) string {
 			thenBody = stripLeadingBlockNewline(thenBody)
 			elseBody = stripLeadingBlockNewline(elseBody)
 
-			if evalCondition(kind, arg, data) {
+			if kind == "each" {
+				for _, item := range data.Lists[arg] {
+					childVars := make(map[string]string, len(data.Vars)+1)
+					for k, v := range data.Vars {
+						childVars[k] = v
+					}
+					childVars["this"] = item
+					child := templateData{Vars: childVars, Bools: data.Bools, Lists: data.Lists}
+					b.WriteString(evalTemplate(thenBody, child))
+				}
+			} else if evalCondition(kind, arg, data) {
 				b.WriteString(evalTemplate(thenBody, data))
 			} else if elseBody != "" {
 				b.WriteString(evalTemplate(elseBody, data))
@@ -403,6 +416,11 @@ func evalTruthy(key string, data templateData) bool {
 	}
 	if list, ok := data.Lists[key]; ok {
 		return len(list) > 0
+	}
+	if base, ok := strings.CutSuffix(key, ".length"); ok {
+		if list, ok := data.Lists[base]; ok {
+			return len(list) > 0
+		}
 	}
 	return false
 }

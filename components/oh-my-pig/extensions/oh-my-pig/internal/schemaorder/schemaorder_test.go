@@ -23,6 +23,8 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/agents"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ask"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ast"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autolearn"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autoresearch"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/checkpoint"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/debug"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/eval"
@@ -58,6 +60,8 @@ var allToolAreas = []areaRegistrar{
 	{area: "internal/debug", register: debug.Register},
 	{area: "internal/github", register: github.Register},
 	{area: "internal/lsp", register: lsp.Register},
+	{area: "internal/autoresearch", register: autoresearch.Register},
+	{area: "internal/autolearn", register: autolearn.Register},
 }
 
 type wireRegisteredTool struct {

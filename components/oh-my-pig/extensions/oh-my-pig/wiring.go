@@ -14,6 +14,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/approval"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ask"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ast"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autolearn"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/browser"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/checkpoint"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/commit"
@@ -28,6 +29,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lsp"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/modes"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prompt"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ratchet"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/search"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/settings"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/shell"
@@ -35,6 +37,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/todo"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/toolcmd"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/vibe"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/web"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/surface"
 )
@@ -83,6 +86,10 @@ func wireSettings() {
 	web.Setting = settings.Any
 	eval.Setting = settings.Any
 	commit.Setting = settings.Any
+	ratchet.Setting = settings.Any
+	ratchet.SetSessionOverride = func(ctx sdk.Context, key string, value any) error {
+		return settings.Set(ctx, key, value, false)
+	}
 	// ansi reads the drawing settings (statusLine.compactThinkingLevel,
 	// composer.shape, read.toolResultPreview, theme) and prints the release
 	// version on the welcome banner.
@@ -120,6 +127,9 @@ func wireSettings() {
 	approval.IsSubagent = agents.IsSubagent
 	// Per-area boolean Enabled hooks -> internal/settings.Enabled.
 	ast.Enabled = settings.Enabled
+	autolearn.Enabled = settings.Enabled
+	autolearn.IsSubagent = agents.IsSubagent
+	autolearn.ExplicitTools = agents.ExplicitTools
 	checkpoint.Enabled = settings.Enabled
 	debug.Enabled = settings.Enabled
 	github.Enabled = settings.Enabled
@@ -196,6 +206,7 @@ func wireToolCommands() {
 
 func wireLineageAndIntent() {
 	modes.ParentSession = agents.ParentSession
+	modes.VibeActive = vibe.Active
 	settings.ParentSession = agents.ParentSession
 	intent.ParentSession = agents.ParentSession
 	prompt.SubagentSession = agents.IsSubagent
@@ -280,6 +291,9 @@ func wireSpillAndURLs() {
 			BuiltinRules:  &builtin,
 			DisabledRules: store.Strings("ttsr.disabledRules"),
 		}
+	}
+	prompt.IncludeWorkspaceTree = func(ctx sdk.Context) bool {
+		return settings.Enabled(ctx, "includeWorkspaceTree", false)
 	}
 	urls.SetRulesProvider(func(c urls.Context) []urls.RuleEntry {
 		return prompt.DiscoverRulesForContext(c.SDK, c.Cwd)

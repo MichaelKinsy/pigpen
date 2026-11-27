@@ -434,16 +434,32 @@ func Register(e *sdk.Extension) {
 	astEditEnabled := func(ctx sdk.Context) bool {
 		return Enabled(ctx, SettingAstEditEnabled, true)
 	}
+	// Per omp tools/index.ts:974-981 (specialToolApplies): resolve/reject apply
+	// only when a deferrable tool (ast_edit) is active (not just configured in
+	// settings). When Vibe mode or an explicit tool list narrows the active
+	// toolset to exclude ast_edit (and bash mounting it), resolve/reject must
+	// not be activated into the top-level toolset.
+	resolveApplies := func(ctx sdk.Context) bool {
+		if !astEditEnabled(ctx) {
+			return false
+		}
+		active, err := ctx.GetActiveTools()
+		if err != nil {
+			return false
+		}
+		for _, name := range active {
+			if name == "ast_edit" || name == "bash" {
+				return true
+			}
+		}
+		return false
+	}
 	toolcmd.Mountable("ast_grep", func(ctx sdk.Context) bool {
 		return Enabled(ctx, SettingAstGrepEnabled, false)
 	})
 	toolcmd.Mountable("ast_edit", astEditEnabled)
-	// Per omp tools/index.ts:974-981 (specialToolApplies): resolve/reject apply
-	// statically whenever a deferrable tool (ast_edit) is enabled, so they are
-	// already available top-level in the same run that stages a preview when bash
-	// or tools.commands is off. HasPendingPreview remains exported for prompt hints.
-	toolcmd.RegisterSpecialCommand("resolve", astEditEnabled)
-	toolcmd.RegisterSpecialCommand("reject", astEditEnabled)
+	toolcmd.RegisterSpecialCommand("resolve", resolveApplies)
+	toolcmd.RegisterSpecialCommand("reject", resolveApplies)
 	// Register package-level per-session cleanup (safe on repeated Register calls
 	// because sharedManager is package-level and keyed by sessionID).
 	lifecycle.OnEnd("ast", m.endSession)

@@ -85,6 +85,12 @@ var OutReplies func(ctx sdk.Context) bool
 // irc/messaging.ts:16-20).
 var TaskIRC func(ctx sdk.Context) bool
 
+// IncludeWorkspaceTree reports whether `<workspace-tree>` and `<dir-context>`
+// should be scanned and injected into `<project-context>` (setting `includeWorkspaceTree`,
+// default false in omp v19.1.1). Nil by default (false).
+// upstream: packages/coding-agent/src/system-prompt.ts:765,904-908
+var IncludeWorkspaceTree func(ctx sdk.Context) bool
+
 // Personality selects one of omp's bundled personality presets (or "none").
 // upstream: packages/coding-agent/src/system-prompt.ts:125-130
 type Personality string
@@ -188,6 +194,11 @@ type BuildOptions struct {
 	SettingsApproval bool
 	// OutReplies advertises `out://` in # Internal URLs (feeds urls.SchemeHost).
 	OutReplies bool
+	// IncludeWorkspaceTree enables scanning and rendering <workspace-tree> and <dir-context>.
+	// Defaults to false, matching omp's `includeWorkspaceTree` setting.
+	IncludeWorkspaceTree bool
+	// WorkspaceTree overrides BuildWorkspaceTree when non-nil (for deterministic tests).
+	WorkspaceTree *WorkspaceTree
 }
 
 // templateSlots lists every placeholder recognized in piglets/oh-my-pig/prompts/system.md.
@@ -381,7 +392,13 @@ func RenderTemplate(tmpl string, opts BuildOptions) string {
 			blocks = append(blocks, text)
 		}
 	}
-	if proj := renderProjectPrompt(env, opts.Model, contextFiles, opts.Subagent, repoCtx, opts.AppendSystemPrompt); proj != "" {
+	var wsTree WorkspaceTree
+	if opts.WorkspaceTree != nil {
+		wsTree = *opts.WorkspaceTree
+	} else if opts.IncludeWorkspaceTree && opts.Cwd != "" {
+		wsTree = BuildWorkspaceTree(opts.Cwd, BuildWorkspaceTreeOptions{Timeout: 5 * time.Second})
+	}
+	if proj := renderProjectPrompt(env, opts.Model, contextFiles, opts.Subagent, repoCtx, opts.AppendSystemPrompt, opts.IncludeWorkspaceTree, wsTree, hasTool("glob"), hasTool("read")); proj != "" {
 		blocks = append(blocks, proj)
 	}
 	return strings.Join(blocks, "\n\n")
@@ -830,7 +847,7 @@ func renderWorkflowCleanup(subagent bool) string {
 	return "After smoke proof: permanent fix/feature: update docs/changelog; delete throwaway scripts."
 }
 
-func renderProjectPrompt(env []EnvEntry, model string, contextFiles []ContextFile, subagent bool, repoCtx *ActiveRepoContext, appendPrompt string) string {
+func renderProjectPrompt(env []EnvEntry, model string, contextFiles []ContextFile, subagent bool, repoCtx *ActiveRepoContext, appendPrompt string, includeWorkspaceTree bool, wsTree WorkspaceTree, hasGlob, hasRead bool) string {
 	var wsLines []string
 	for _, entry := range env {
 		wsLines = append(wsLines, "- "+entry.Label+": "+entry.Value)
@@ -841,7 +858,6 @@ func renderProjectPrompt(env []EnvEntry, model string, contextFiles []ContextFil
 	}
 
 	repoRules := ""
-	autoloadNote := ""
 	if len(contextFiles) > 0 {
 		var b strings.Builder
 		b.WriteString("<repo-rules>\nMUST follow these context files for all tasks:")
@@ -856,7 +872,16 @@ func renderProjectPrompt(env []EnvEntry, model string, contextFiles []ContextFil
 		}
 		b.WriteString("\n</repo-rules>")
 		repoRules = b.String()
+	}
+
+	dirContext := RenderDirContext(wsTree.AgentsMdFiles)
+	autoloadNote := ""
+	if len(contextFiles) > 0 || len(wsTree.AgentsMdFiles) > 0 {
 		autoloadNote = "Context files above auto-loaded. NEVER `grep`/`glob` for `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or similar agent/context files: relevant files already in context; others noise."
+	}
+	workspaceTreeBlock := ""
+	if includeWorkspaceTree {
+		workspaceTreeBlock = RenderWorkspaceTreeBlock(wsTree, hasGlob, hasRead)
 	}
 
 	criticalTail := "- Before yielding, MUST verify significant behavioral changes: run the specific test, command, or scenario covering the change."
@@ -868,9 +893,9 @@ func renderProjectPrompt(env []EnvEntry, model string, contextFiles []ContextFil
 		"{{workstation}}":           strings.Join(wsLines, "\n"),
 		"{{model_line}}":            modelLine,
 		"{{repo_rules}}":            repoRules,
-		"{{dir_context}}":           "",
+		"{{dir_context}}":           dirContext,
 		"{{context_autoload_note}}": autoloadNote,
-		"{{workspace_tree}}":        "",
+		"{{workspace_tree}}":        workspaceTreeBlock,
 		"{{workspace_roots}}":       "",
 		"{{active_repo_context}}":   renderActiveRepoContext(repoCtx),
 		"{{project_critical_tail}}": criticalTail,
@@ -1060,30 +1085,32 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 		if TaskIRC != nil {
 			taskIRCEnabled = TaskIRC(ctx)
 		}
+		includeWorkspaceTree := IncludeWorkspaceTree != nil && IncludeWorkspaceTree(ctx)
 
 		rendered := RenderTemplate(tmpl, BuildOptions{
-			Cwd:                cwd,
-			AgentDir:           agentDir,
-			ToolNames:          activeTools,
-			MountedCommands:    mountedCommands,
-			ToolCommandDocs:    toolCommandDocs,
-			ContextFiles:       contextFiles,
-			Skills:             skills,
-			Rules:              discovered.Rulebook,
-			AlwaysApplyRules:   alwaysApply,
-			EvalPreludes:       eval.EnabledPreludes(ctx),
-			Context:            ctx,
-			Model:              ctx.ModelQualified(),
-			Personality:        personality,
-			Subagent:           isSubagent,
-			TaskIRCEnabled:     taskIRCEnabled,
-			SettingsApproval:   settingsApproval,
-			OutReplies:         outReplies,
-			IntentTracing:      intentTracing,
-			IntentField:        intentField,
-			IntentGuidance:     intentGuidance,
-			Environment:        envOverride,
-			AppendSystemPrompt: appendPrompt,
+			Cwd:                  cwd,
+			AgentDir:             agentDir,
+			ToolNames:            activeTools,
+			MountedCommands:      mountedCommands,
+			ToolCommandDocs:      toolCommandDocs,
+			ContextFiles:         contextFiles,
+			Skills:               skills,
+			Rules:                discovered.Rulebook,
+			AlwaysApplyRules:     alwaysApply,
+			EvalPreludes:         eval.EnabledPreludes(ctx),
+			Context:              ctx,
+			Model:                ctx.ModelQualified(),
+			Personality:          personality,
+			Subagent:             isSubagent,
+			TaskIRCEnabled:       taskIRCEnabled,
+			SettingsApproval:     settingsApproval,
+			OutReplies:           outReplies,
+			IntentTracing:        intentTracing,
+			IntentField:          intentField,
+			IntentGuidance:       intentGuidance,
+			Environment:          envOverride,
+			AppendSystemPrompt:   appendPrompt,
+			IncludeWorkspaceTree: includeWorkspaceTree,
 		})
 		return map[string]any{"systemPrompt": rendered}, nil
 	})

@@ -472,6 +472,42 @@ func (ig *ignorer) isIgnored(frame *ignoreFrame, relPath string, isDir bool) boo
 	return false
 }
 
+// IgnoreMatcher wraps omp's full ignore chain (.ignore > .gitignore > .git/info/exclude >
+// global excludes, including ancestor repo rules and character-class globs) for reuse by
+// callers such as internal/prompt's workspace tree builder.
+// upstream: crates/xfs/src/ignore.rs
+type IgnoreMatcher struct {
+	ig    *ignorer
+	frame *ignoreFrame
+}
+
+// NewIgnoreMatcher initializes an IgnoreMatcher rooted at root (walking up to any enclosing
+// .git/.jj repository root and loading global excludes).
+func NewIgnoreMatcher(root string) *IgnoreMatcher {
+	ig, frame := buildIgnorerAndRootFrame(root)
+	return &IgnoreMatcher{ig: ig, frame: frame}
+}
+
+// EnterDir returns a child IgnoreMatcher incorporating any .ignore / .gitignore /
+// .git/info/exclude files in absDir (at forward-slash relDir beneath the walk root).
+func (m *IgnoreMatcher) EnterDir(absDir, relDir string) *IgnoreMatcher {
+	if m == nil {
+		return nil
+	}
+	return &IgnoreMatcher{
+		ig:    m.ig,
+		frame: pushDirIgnoreFrame(m.frame, absDir, relDir),
+	}
+}
+
+// IsIgnored reports whether relPath (forward-slash path relative to walk root) is ignored.
+func (m *IgnoreMatcher) IsIgnored(relPath string, isDir bool) bool {
+	if m == nil || m.ig == nil {
+		return false
+	}
+	return m.ig.isIgnored(m.frame, relPath, isDir)
+}
+
 // walkDir traverses root respecting gitignore (.ignore, .gitignore, .git/info/exclude,
 // global excludes), hidden-file, node_modules, symlink, and exclusion rules.
 // On cancellation or deadline expiry it returns the partial entries gathered so far

@@ -38,14 +38,19 @@ var expectedRegisteredTools = []string{
 	"glob",
 	"goal",
 	"grep",
+	"init_experiment",
+	"log_experiment",
 	"lsp",
+	"manage_skill",
 	"propose",
 	"read",
 	"reject",
 	"resolve",
 	"rewind",
+	"run_experiment",
 	"task",
 	"todo",
+	"update_notes",
 	"wait",
 	"web_search",
 	"write",
@@ -1265,4 +1270,103 @@ func TestExtensionMountedToolsLoadoutOrderAndPrepareLoadoutPreservation(t *testi
 	h.emitEvent(sdk.EventSessionShutdown, map[string]any{"reason": "exit"})
 	hPrint.emitEvent(sdk.EventSessionShutdown, map[string]any{"reason": "exit"})
 	hExp.emitEvent(sdk.EventSessionShutdown, map[string]any{"reason": "exit"})
+}
+
+// TestExtensionVibeToolsetNoLeakAndModeLockouts verifies on the full fused
+// Extension() that:
+//  1. Entering /vibe and firing before_agent_start keeps the active & declared
+//     toolset strictly equal to `read`, `todo`, `vibe_spawn`, `vibe_send`,
+//     `vibe_wait`, `vibe_kill`, `vibe_list` (no `resolve`/`reject` leak).
+//  2. While Vibe mode is active, `/plan`, `/goal`, `/guided-goal`, and `/clear`
+//     are rejected with "Exit vibe mode first." and do not alter active tools.
+//  3. Exiting /vibe restores the pre-vibe active toolset cleanly.
+func TestExtensionVibeToolsetNoLeakAndModeLockouts(t *testing.T) {
+	t.Setenv("PI_NO_INTENT", "")
+	t.Setenv("PI_INTENT_TRACING", "")
+
+	fakeHome := t.TempDir()
+	t.Setenv("HOME", fakeHome)
+	t.Setenv("USERPROFILE", fakeHome)
+	t.Setenv("PIG_HOME", filepath.Join(fakeHome, ".pig"))
+	t.Setenv("PIG_CODING_AGENT_DIR", filepath.Join(fakeHome, ".pig", "agent"))
+
+	cwd := t.TempDir()
+	ext := Extension()
+	h := startFakeHost(t, ext, fakeHostOptions{
+		Cwd:       cwd,
+		SessionID: "sess-fused-vibe",
+		Mode:      "tui",
+		HasUI:     true,
+		FakeHome:  fakeHome,
+	})
+	h.emitEvent(sdk.EventSessionStart, nil)
+	preVibeActive := h.activeToolNames()
+
+	if err := h.callCommand("vibe", ""); err != nil {
+		t.Fatalf("/vibe enter failed: %v", err)
+	}
+
+	// Trigger before_agent_start (which runs toolcmd.syncSession + prompt).
+	h.emitBeforeAgentStart()
+
+	wantVibeTools := []string{"read", "todo", "vibe_spawn", "vibe_send", "vibe_wait", "vibe_kill", "vibe_list"}
+	gotActive := h.activeToolNames()
+	if !slices.Equal(gotActive, wantVibeTools) {
+		t.Fatalf("fused vibe active tools after before_agent_start = %v, want %v", gotActive, wantVibeTools)
+	}
+	gotDeclared := h.declaredToolsForModel()
+	if !slices.Equal(gotDeclared, wantVibeTools) {
+		t.Fatalf("fused vibe declared tools after before_agent_start = %v, want %v", gotDeclared, wantVibeTools)
+	}
+
+	// Reverse mode lockouts: /plan, /goal, /guided-goal, /clear must be refused while Vibe is active.
+	h.resetCallLog()
+	for _, tc := range []struct {
+		cmd  string
+		args string
+	}{
+		{"plan", ""},
+		{"goal", "ship feature"},
+		{"guided-goal", "build something"},
+		{"clear", ""},
+	} {
+		if err := h.callCommand(tc.cmd, tc.args); err != nil {
+			t.Fatalf("/%s returned unexpected error: %v", tc.cmd, err)
+		}
+	}
+	h.mu.Lock()
+	logCopy := append([]fakeHostCall(nil), h.callLog...)
+	h.mu.Unlock()
+	exitVibeWarnings := 0
+	for _, entry := range logCopy {
+		if entry.Method == "ui.notify" {
+			if msg, _ := entry.Args["message"].(string); msg == "Exit vibe mode first." {
+				exitVibeWarnings++
+			}
+		}
+	}
+	if exitVibeWarnings != 4 {
+		t.Fatalf("expected 4 'Exit vibe mode first.' warnings for /plan, /goal, /guided-goal, /clear; got %d (calls=%+v)", exitVibeWarnings, logCopy)
+	}
+	if got := h.activeToolNames(); !slices.Equal(got, wantVibeTools) {
+		t.Fatalf("active tools mutated by blocked mode commands: got %v, want %v", got, wantVibeTools)
+	}
+
+	// Exit Vibe mode and verify pre-vibe active toolset is restored.
+	if err := h.callCommand("vibe", ""); err != nil {
+		t.Fatalf("/vibe exit failed: %v", err)
+	}
+	h.emitBeforeAgentStart()
+	gotRestored := h.activeToolNames()
+	for _, vt := range []string{"vibe_spawn", "vibe_send", "vibe_wait", "vibe_kill", "vibe_list"} {
+		if slices.Contains(gotRestored, vt) {
+			t.Fatalf("vibe tool %q still active after exit: %v", vt, gotRestored)
+		}
+	}
+	for _, prev := range preVibeActive {
+		if !slices.Contains(gotRestored, prev) {
+			t.Fatalf("pre-vibe tool %q missing after exit: got %v, want superset of %v", prev, gotRestored, preVibeActive)
+		}
+	}
+	h.emitEvent(sdk.EventSessionShutdown, map[string]any{"reason": "exit"})
 }

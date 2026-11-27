@@ -1371,15 +1371,17 @@ func EvaluateToolDecision(ctx sdk.Context, toolName string, input map[string]any
 
 	case "ask", "todo", "wait", "web_search", "checkpoint", "rewind",
 		"yield", "think", "resolve", "reject", "propose",
-		"recall", "reflect", "memory_edit":
+		"recall", "reflect", "memory_edit",
+		"vibe_wait", "vibe_kill", "vibe_list":
 		// upstream: ask.ts:423, todo.ts:687, wait.ts:317, web/search/index.ts:594,
 		// checkpoint.ts:55,91, yield.ts:316, think.ts:53, resolve.ts:343,360,378,
-		// memory-recall.ts:19, memory-reflect.ts:20, memory-edit.ts:21
+		// memory-recall.ts:19, memory-reflect.ts:20, memory-edit.ts:21,
+		// tools/vibe.ts:130,196,219
 		return ToolDecision{Tier: TierRead}
 
-	case "eval", "task", "security_scan", "browser":
+	case "eval", "task", "security_scan", "browser", "vibe_spawn", "vibe_send":
 		// upstream: eval.ts:291, task/index.ts:675, security-scan.ts:109,
-		// browser/prelude-definition.ts:71
+		// browser/prelude-definition.ts:71, tools/vibe.ts:88,108
 		return ToolDecision{Tier: TierExec}
 
 	default:

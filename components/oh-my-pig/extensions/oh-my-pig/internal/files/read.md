@@ -15,5 +15,5 @@ Sources:
 - Selected file: `[foo.ts#1A2B]` snapshot+lines. Copy `[FILENAME#TAG]` for anchored edits; NEVER invent tag.
 - Directory: complete root; child listings cap at 12 (`… N more`), read child; page via :N-M/:-N.
 - URLs: reader text/markdown, :raw original HTML; bare host:port needs trailing slash.
-- Notebooks (.ipynb): cell text; images (PNG, JPEG, GIF, WebP): decoded inline.
+- PDF/DOCX/PPTX/XLSX/EPUB: extracted text; notebooks: editable cells; images: decoded inline.
 - Archives (ZIP, JAR, APK, WHL, TAR, TAR.GZ, TGZ): directory listing; member via archive.ext:member/path.

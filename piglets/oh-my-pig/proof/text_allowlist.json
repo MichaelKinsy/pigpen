@@ -51,27 +51,6 @@
     "call_index": 5,
     "tool": "read",
     "side": "omp",
-    "regex": "^- ssh://host/<path>: max 1 MiB\\. /~/path and /~ use the connected remote account's HOME, not local HOME; /~user is unsupported, /%7E/ is literal\\. Encode : \\? # as %3A %3F %23\\. Needs verified POSIX shell; else bash remote SSH or sshfs\\.$",
-    "details_paths": [
-      "displayContent.lineNumbers",
-      "displayContent.text",
-      "totalLines"
-    ],
-    "class": "LISTED",
-    "ref_file": "internal/urls/UPSTREAM.md",
-    "ref_term": [
-      "`ssh://` (`ssh-protocol.ts`)"
-    ],
-    "ref_subject": [
-      "ssh://"
-    ],
-    "why": "ssh:// protocol is not ported, so help://read/urls omits the literal ssh:// bullet line (changing line count 4->3 and displayContent)."
-  },
-  {
-    "case": "internal-urls-read-write",
-    "call_index": 5,
-    "tool": "read",
-    "side": "omp",
     "regex": "^- proc://<id>/streams lists a bash job's pipes and the files it redirects output into, proc://<id>/streams/<n> reads what stream n carried so far\\. Write sends stdin to services only \\(empty = Enter\\); proc://<id>/mode: persist\\|session\\|detached \\(services only\\); start long-lived work as a named service when it needs stdin or lifetime controls\\. Completed jobs evicted \\(process-local\\)\\.$",
     "details_paths": [
       "displayContent.text"

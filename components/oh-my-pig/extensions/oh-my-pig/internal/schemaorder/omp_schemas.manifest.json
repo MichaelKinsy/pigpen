@@ -3,14 +3,14 @@
   "ompVersion": "omp/19.1.1",
   "ompTag": "v19.1.1",
   "ompCommit": "31ffee513f27a01bba7d4dfbe12bae239cdc646a",
-  "toolCount": 25,
-  "capturedCount": 25,
-  "derivedCount": 0,
+  "toolCount": 30,
+  "capturedCount": 26,
+  "derivedCount": 4,
   "networkAttempts": 0,
   "leakedPids": 0,
   "output": {
     "file": "omp_schemas.json",
-    "bytes": 24023,
-    "sha256": "c72dbcf88eb81a98c633f5508d44c58b55f0347f17c7c801646dc7c954ad4bb9"
+    "bytes": 29482,
+    "sha256": "9b5b0feeaf58e8c22565ac3ee33157795a0d22b8240c99603507ad00f44efe27"
   }
 }

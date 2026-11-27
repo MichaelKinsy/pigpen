@@ -26,7 +26,7 @@ Follows omp release tag **`v19.1.1`** (`31ffee513f`).
 - `packages/tui/src/overlays/copy-targets.ts`
 - `packages/tui/src/tools/goal.ts`
 - `packages/utils/src/prompt.ts` (`format` post-render pass)
-- Embedded prompt templates (`internal/modes/prompts/*.md`): 16 templates copied verbatim from `packages/coding-agent/src/prompts/` (`plan-mode-*.md`, `goal-mode-active.md`, `goal-continuation.md`, `goal-budget-limit.md`, `guided-goal-interview.md`, `goal.md`, `btw-user.md`, `ultrathink-notice.md`, `chillax-notice.md`, `orchestrate-notice.md`, `workflow-notice.md`, `jevify-notice.md`) and 1 from `packages/agent/src/compaction/prompts/handoff-document.md`.
+- Embedded prompt templates (`internal/modes/prompts/*.md`): 17 templates copied verbatim from `packages/coding-agent/src/prompts/` (`plan-mode-*.md`, `goal-mode-active.md`, `goal-continuation.md`, `goal-budget-limit.md`, `guided-goal-interview.md`, `goal.md`, `btw-user.md`, `ultrathink-notice.md`, `chillax-notice.md`, `orchestrate-notice.md`, `workflow-notice.md`, `jevify-notice.md`, `commit-request.md`) and 1 from `packages/agent/src/compaction/prompts/handoff-document.md`.
 
 Template branch defaults:
 - `plan-mode-active.md`: `proposeIsCommand` reflects live `toolcmd.CommandNames(ctx)` (true when `propose` is mounted via bash transport, false when top-level), `isHashlineEditMode=true`, `iterative=false` (parallel workflow), `askAvailable`/`taskAvailable`/`scoutAvailable` read from active tools.
@@ -86,9 +86,9 @@ Total built-in slash commands in omp `v19.1.1`: **89** (plus dynamic `/skill:<na
 
 Summary counts across the 89 built-in commands:
 - **PiG's own (built-in, not registered here to avoid collision)**: **17** (`settings`, `model`, `tree`, `export`, `share`, `copy`, `session`, `changelog`, `hotkeys`, `fork`, `login`, `logout`, `new`, `compact`, `resume`, `debug`, `quit`) — `/copy <arg>` is additionally intercepted in `EventInput` for omp's `code|cmd|link|local` subcommands.
-- **Ported here (`internal/modes`)**: **20** primary commands (+ 2 aliases: `/rewind`, `/q`) — `plan`, `plan-review`, `goal`, `guided-goal`, `loop`, `btw`, `context`, `usage`, `handoff`, `branch` (+ alias `rewind`), `clear`, `tools`, `effort`, `switch`, `rename`, `dump`, `jobs`, `queue`, `force`, `exit` (+ alias `q`).
-- **Owned by another area**: **1** (`todo` in `internal/todo`).
-- **Not ported**: **51** (including `/add-dir`, `/remove-dir`, `/dirs` — removed because PiG SDK has no multi-root workspace prompt/tool integration).
+- **Ported here (`internal/modes`)**: **21** primary commands (+ 2 aliases: `/rewind`, `/q`) — `plan`, `plan-review`, `goal`, `guided-goal`, `loop`, `btw`, `context`, `usage`, `handoff`, `branch` (+ alias `rewind`), `clear`, `tools`, `effort`, `switch`, `rename`, `dump`, `jobs`, `queue`, `force`, `exit` (+ alias `q`), `commit`.
+- **Owned by another area**: **3** (`todo` in `internal/todo`, `ratchet` in `internal/ratchet`, `vibe` in `internal/vibe`; plus `/autoresearch` in `internal/autoresearch` as a built-in extension command).
+- **Not ported**: **48** (including `/add-dir`, `/remove-dir`, `/dirs` — removed because PiG SDK has no multi-root workspace prompt/tool integration).
 
 | Command (aliases) | omp behaviour (`v19.1.1`) | State here | Notes / PiG differences / why not ported |
 |---|---|---|---|
@@ -135,7 +135,7 @@ Summary counts across the 89 built-in commands:
 | `/add-dir <path>` | Add workspace directory to session & rebuild prompt | **not ported** | PiG SDK has no multi-root workspace API; tools and prompt builder only consume single `ctx.Cwd()` |
 | `/remove-dir <path>` | Remove workspace directory from session | **not ported** | Same as `/add-dir`: no multi-root workspace support in PiG SDK |
 | `/dirs` | List session workspace directories | **not ported** | Same as `/add-dir`: no multi-root workspace support in PiG SDK |
-| `/vibe [prompt]` | Persistent fast/good worker director mode | **not ported** | Requires omp's `VibeSessionRegistry` and 5 ephemeral `vibe_*` worker tools |
+| `/vibe [prompt]` | Persistent fast/good worker director mode | **ported (`internal/vibe`)** | Registered by `internal/vibe/register.go` with dynamic `vibe_*` worker tools and reverse mode lockouts |
 | `/advisor [on\|off\|status\|dump\|configure]` | Second-model turn advisor | **not ported** | Requires omp's background advisor runtime and `advise` tool |
 | `/prewalk [into\|restart\|off]` | One-shot model handoff at next edit/write | **not ported** | Requires omp's prewalk classifier, model roles, and todo-gated mid-turn model swap |
 | `/fast [on\|ultra\|off\|status]` | Toggle provider priority/ultrafast service tier | **not ported** | PiG SDK has no API to set provider `service_tier` / `speed` |
@@ -143,7 +143,7 @@ Summary counts across the 89 built-in commands:
 | `/extended-context [on\|off\|status]` | Toggle extended context window tier | **not ported** | PiG SDK has no API to toggle provider extended-context beta flags |
 | `/skillful [on\|off\|status]` | Toggle listing skills in system prompt | **not ported** | Prompt skill listing is owned by `internal/prompt` / PiG settings |
 | `/computer [on\|off\|status]` | Toggle computer-use eval prelude | **not ported** | Computer-use desktop control prelude not ported |
-| `/ratchet [flow and goal]` | Eval hillclimbing kickoff | **not ported** | Requires omp's `ratchet` eval prelude |
+| `/ratchet [flow and goal]` | Eval hillclimbing kickoff | **ported (`internal/ratchet`)** | Registered by `internal/ratchet/register.go` alongside the `ratchet` eval prelude |
 | `/modelpreset [list\|save\|switch\|delete]` | Save/switch role-model presets | **not ported** | Depends on omp's role-model settings schema (`internal/settings`) |
 | `/setup` (`providers`) | Interactive provider setup wizard | **not ported** | Custom TUI wizard; PiG uses `/login` and `pig auth` |
 | `/security <subcommand>` | Native security scan planner/runner | **not ported** | Requires omp's `security_scan` backend and SARIF/lineage store |
@@ -154,12 +154,12 @@ Summary counts across the 89 built-in commands:
 | `/leave` | Leave collab session | **not ported** | Requires omp's collab runtime |
 | `/browser [headless\|visible]` | Toggle browser eval-prelude mode | **not ported** | Owned by `internal/browser` / `internal/ternbrowser` |
 | `/open [link]` | Open last conversation link in OS browser | **not ported** | No cross-platform browser opener contract in PiG SDK; `/copy link` is ported |
-| `/commit [instructions]` | Selective commit of agent-made changes | **not ported** | Requires omp's `eval` `commit` prelude and selective change journal |
+| `/commit [instructions]` | Selective commit of agent-made changes | **ported here** | Verifies `eval` active + `commit` prelude enabled, calls `commit.DraftFor` + `commit.LogSubjects(5)`, renders `commit-request.md` verbatim, and sends/steers prompt |
 | `/live` | Realtime Codex voice mode | **not ported** | Requires WebRTC audio + Codex realtime backend |
 | `/record` | Screen recording (`omp play`) | **not ported** | Requires omp's TUI frame recorder |
 | `/pause` | Freeze all agents until resumed | **not ported** | Requires omp's global `agentPauseGate` + fullscreen pause overlay |
 | `/forget-approvals` | Clear remembered file/folder approvals | **not ported** | Requires omp's `approval-cache` subsystem |
-| `/ssh <subcommand>` | Manage SSH hosts | **not ported** | Requires omp's SSH config/protocol backend (`ssh://`) |
+| `/ssh <subcommand>` | Manage SSH hosts | **not ported** | Interactive SSH config management command not ported (`ssh://` URL protocol is ported in `internal/ssh`) |
 | `/fresh` | Reset provider stream state without clearing transcript | **not ported** | PiG SDK has no API to prune provider stream state |
 | `/delete` | Delete current session file and start a new one | **not ported** | PiG SDK has no `dropSession` API to unlink the active session file safely |
 | `/shake [elide\|images\|thinking]` | Drop heavy content from context in place | **not ported** | PiG SDK has no API to rewrite past context entries outside compaction |

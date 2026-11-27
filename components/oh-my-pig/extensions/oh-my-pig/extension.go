@@ -13,6 +13,8 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/approval"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ask"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ast"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autolearn"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autoresearch"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/browser"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/checkpoint"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/commit"
@@ -25,14 +27,17 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lsp"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/modes"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prompt"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ratchet"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/search"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/settings"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/shell"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ssh"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/tern"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ternbrowser"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/todo"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/toolcmd"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/vibe"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/web"
 )
 
@@ -45,6 +50,7 @@ var registrars = []func(*sdk.Extension){
 	files.Register,
 	search.Register,
 	shell.Register,
+	ssh.Register,
 	approval.Register,
 	ask.Register,
 	todo.Register,
@@ -54,14 +60,18 @@ var registrars = []func(*sdk.Extension){
 	debug.Register,
 	github.Register,
 	checkpoint.Register,
+	autolearn.Register,
 	eval.Register,
 	commit.Register,
+	ratchet.Register,
 	agents.Register,
 	modes.Register,
+	vibe.Register,
 	browser.Register,
 	ternbrowser.Register,
 	tern.Register,
 	ansi.Register,
+	autoresearch.Register,
 	intent.RegisterLifecycle,
 }
 

@@ -316,7 +316,10 @@ func TestRegisterTools(t *testing.T) {
 	if readDescription == "" || writeDescription == "" || editDescription == "" {
 		t.Fatalf("embedded descriptions must be non-empty")
 	}
-	if strings.Contains(readDescription, "PDF/DOCX") || strings.Contains(readDescription, "Bare code: declarations only") {
+	if !strings.Contains(readDescription, "PDF/DOCX/PPTX/XLSX/EPUB") {
+		t.Fatalf("read.md must advertise ported document conversion:\n%s", readDescription)
+	}
+	if strings.Contains(readDescription, "Bare code: declarations only") {
 		t.Fatalf("read.md must not advertise unported sources:\n%s", readDescription)
 	}
 	if strings.Contains(writeDescription, "SQLite") {

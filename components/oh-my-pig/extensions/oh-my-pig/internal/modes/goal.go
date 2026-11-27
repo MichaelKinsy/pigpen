@@ -825,6 +825,10 @@ func (m *manager) handleGoalCommand(ctx sdk.Context, args string) error {
 		notifyError(ctx, "Cannot use goal mode without an active session ID.")
 		return nil
 	}
+	if VibeActive != nil && VibeActive(ctx) {
+		notifyWarn(ctx, "Exit vibe mode first.")
+		return nil
+	}
 	m.mu.Lock()
 	st := m.stateLocked(sid)
 	if st.planEnabled || st.planPaused {
@@ -1113,6 +1117,10 @@ func (m *manager) handleGuidedGoalCommand(ctx sdk.Context, args string) error {
 	sid := strictSessionID(ctx)
 	if sid == "" {
 		notifyError(ctx, "Cannot use guided-goal mode without an active session ID.")
+		return nil
+	}
+	if VibeActive != nil && VibeActive(ctx) {
+		notifyWarn(ctx, "Exit vibe mode first.")
 		return nil
 	}
 	m.mu.Lock()

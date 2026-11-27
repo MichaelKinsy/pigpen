@@ -710,6 +710,10 @@ func (m *manager) handlePlanCommand(ctx sdk.Context, args string) error {
 		return nil
 	}
 	initialPrompt := strings.TrimSpace(args)
+	if VibeActive != nil && VibeActive(ctx) {
+		notifyWarn(ctx, "Exit vibe mode first.")
+		return nil
+	}
 
 	m.mu.Lock()
 	st := m.stateLocked(sid)

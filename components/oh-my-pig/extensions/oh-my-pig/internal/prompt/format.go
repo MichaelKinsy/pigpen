@@ -78,6 +78,12 @@ func CloseCodeFence(text string) string {
 	return text + "\n" + open
 }
 
+// FormatPrompt reproduces omp's prompt.format(content, { renderPhase: "post-render" }).
+// upstream: packages/utils/src/prompt.ts:230-350
+func FormatPrompt(content string) string {
+	return formatPrompt(content)
+}
+
 // formatPrompt reproduces omp's prompt.format(content, { renderPhase: "post-render" }).
 // upstream: packages/utils/src/prompt.ts:230-350
 func formatPrompt(content string) string {

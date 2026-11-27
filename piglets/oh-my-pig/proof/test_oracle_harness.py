@@ -564,17 +564,17 @@ class TestHarnessFixes(unittest.TestCase):
                 self.assertIsInstance(e["ref_line"], int)
                 self.assertRegex(e["ref"], r":\d+$")
 
-        # Verify internal-urls-read-write#5 matches exact literal ssh:// and proc://streams lines (and hits all 3 refs)
+        # Verify internal-urls-read-write#5 matches exact literal proc://streams lines (ssh:// is now ported)
         diff_urls5 = (
-            "--- omp\n+++ oh-my-pig\n@@ -1,4 +1,3 @@\n"
+            "--- omp\n+++ oh-my-pig\n@@ -1,4 +1,4 @@\n"
             "-- proc://<id>/streams lists a bash job's pipes and the files it redirects output into, proc://<id>/streams/<n> reads what stream n carried so far. Write sends stdin to services only (empty = Enter); proc://<id>/mode: persist|session|detached (services only); start long-lived work as a named service when it needs stdin or lifetime controls. Completed jobs evicted (process-local).\n"
-            "-- ssh://host/<path>: max 1 MiB. /~/path and /~ use the connected remote account's HOME, not local HOME; /~user is unsupported, /%7E/ is literal. Encode : ? # as %3A %3F %23. Needs verified POSIX shell; else bash remote SSH or sshfs.\n"
             "+- proc://<id>/streams is not available in the system-shell port (live intermediate `|` pipe and redirected-file tapping requires omp's embedded shell VM). Write sends stdin to services only (empty = Enter); proc://<id>/mode: session only (persist/detached require an out-of-process daemon); start long-lived work as a named service when it needs stdin. Completed jobs evicted (process-local).\n"
+            " - ssh://host/<path>: max 1 MiB. /~/path and /~ use the connected remote account's HOME, not local HOME; /~user is unsupported, /%7E/ is literal. Encode : ? # as %3A %3F %23. Needs verified POSIX shell; else bash remote SSH or sshfs.\n"
             " - issue:// / pr://\n"
         )
         ok_u5, hits_u5 = oracle.classify_text_diff("internal-urls-read-write", 5, "read", diff_urls5, t_entries)
         self.assertTrue(ok_u5)
-        self.assertEqual(len(hits_u5), 3)
+        self.assertEqual(len(hits_u5), 2)
         # An extra unallowlisted line on #5 must still stay differs
         ok_u5_bad, _ = oracle.classify_text_diff(
             "internal-urls-read-write", 5, "read", diff_urls5 + "+- extra unexpected line\n", t_entries

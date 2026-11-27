@@ -36,22 +36,6 @@
     "target": "*",
     "case": "*",
     "side": "omp",
-    "regex": "^- ssh://host/<path>: remote UTF-8 file/dir for read/write/grep; bare lists hosts\\.$",
-    "class": "LISTED",
-    "ref_file": "internal/urls/UPSTREAM.md",
-    "ref_term": [
-      "`ssh://` (`ssh-protocol.ts`)"
-    ],
-    "ref_subject": [
-      "ssh://"
-    ],
-    "why": "ssh:// protocol is not ported."
-  },
-  {
-    "kind": "system_prompt",
-    "target": "*",
-    "case": "*",
-    "side": "omp",
     "regex": "^- mcp://<uri>: MCP resource\\.$",
     "class": "HOST",
     "ref_file": "internal/urls/UPSTREAM.md",
@@ -63,23 +47,6 @@
       "mcp://"
     ],
     "why": "PiG SDK lacks MCP client resources/list and resources/read, so MCPHandler.PromptDoc returns empty string."
-  },
-  {
-    "kind": "system_prompt",
-    "target": "*",
-    "case": "*",
-    "side": "omp",
-    "regex": "^- omp://: harness docs, AVOID unless asked\\.$",
-    "class": "LISTED",
-    "ref_file": "internal/urls/UPSTREAM.md",
-    "ref_term": [
-      "`omp://` harness docs",
-      "Omitted from `RegisterExtension`"
-    ],
-    "ref_subject": [
-      "omp://"
-    ],
-    "why": "omp:// serves omp's own internal docs corpus and is omitted from oh-my-pig."
   },
   {
     "kind": "system_prompt",
@@ -151,22 +118,6 @@
     "target": "child",
     "case": "*",
     "side": "omp",
-    "regex": "^- ssh://host/<path>: remote UTF-8 file/dir for read/write/grep; bare lists hosts\\.$",
-    "class": "LISTED",
-    "ref_file": "internal/urls/UPSTREAM.md",
-    "ref_term": [
-      "`ssh://` (`ssh-protocol.ts`)"
-    ],
-    "ref_subject": [
-      "ssh://"
-    ],
-    "why": "ssh:// protocol is not ported."
-  },
-  {
-    "kind": "child_system_prompt",
-    "target": "child",
-    "case": "*",
-    "side": "omp",
     "regex": "^- mcp://<uri>: MCP resource\\.$",
     "class": "HOST",
     "ref_file": "internal/urls/UPSTREAM.md",
@@ -178,23 +129,6 @@
       "mcp://"
     ],
     "why": "PiG SDK lacks MCP client resources/list and resources/read."
-  },
-  {
-    "kind": "child_system_prompt",
-    "target": "child",
-    "case": "*",
-    "side": "omp",
-    "regex": "^- omp://: harness docs, AVOID unless asked\\.$",
-    "class": "LISTED",
-    "ref_file": "internal/urls/UPSTREAM.md",
-    "ref_term": [
-      "`omp://` harness docs",
-      "Omitted from `RegisterExtension`"
-    ],
-    "ref_subject": [
-      "omp://"
-    ],
-    "why": "omp:// harness docs are omitted from oh-my-pig."
   },
   {
     "kind": "child_system_prompt",
@@ -299,7 +233,7 @@
     "kind": "tool_description",
     "target": "read",
     "case": "*",
-    "regex": "(?:^- :raw verbatim without anchors/prefixes \\(skips folding and the display-width limit\\); combine :2-4:raw or :raw:2-4 for exactly those lines\\.$|^- :raw verbatim without anchors/prefixes \\(skips the display-width limit\\); combine :2-4:raw or :raw:2-4 for exactly those lines\\.$|^- Bare code: declarations only; re-read ONLY footer-named omissions, NEVER guess `\\.\\.`/`…`\\.$|^- PDF/DOCX/PPTX/XLSX/EPUB: extracted text; notebooks: editable cells; images: decoded inline\\.$|^- Also, with selectors in help://read/sources \\(read it before first use\\):$|^  - SQLite, archives \\(ZIP, TAR, 7z, RAR and more\\), JSON/JSONL by jq filter, executable metadata, video, SVG as image, merge conflicts\\.$|^- Notebooks \\(\\.ipynb\\): cell text; images \\(PNG, JPEG, GIF, WebP\\): decoded inline\\.$|^- Archives \\(ZIP, JAR, APK, WHL, TAR, TAR\\.GZ, TGZ\\): directory listing; member via archive\\.ext:member/path\\.$)",
+    "regex": "(?:^- :raw verbatim without anchors/prefixes \\(skips folding and the display-width limit\\); combine :2-4:raw or :raw:2-4 for exactly those lines\\.$|^- :raw verbatim without anchors/prefixes \\(skips the display-width limit\\); combine :2-4:raw or :raw:2-4 for exactly those lines\\.$|^- Bare code: declarations only; re-read ONLY footer-named omissions, NEVER guess `\\.\\.`/`…`\\.$|^- Also, with selectors in help://read/sources \\(read it before first use\\):$|^  - SQLite, archives \\(ZIP, TAR, 7z, RAR and more\\), JSON/JSONL by jq filter, executable metadata, video, SVG as image, merge conflicts\\.$|^- Archives \\(ZIP, JAR, APK, WHL, TAR, TAR\\.GZ, TGZ\\): directory listing; member via archive\\.ext:member/path\\.$)",
     "class": "LISTED",
     "ref_file": "internal/files/UPSTREAM.md",
     "ref_term": [
@@ -308,7 +242,7 @@
     "ref_subject": [
       "read.md"
     ],
-    "why": "read.md intentionally omits unported sources (AST folding, PDF/DOCX/SQLite/7z/RAR/jq/video/SVG) to avoid promising unsupported selectors."
+    "why": "read.md intentionally omits unported sources (AST folding, SQLite/7z/RAR/jq/video/SVG) to avoid promising unsupported selectors."
   },
   {
     "kind": "tool_description",

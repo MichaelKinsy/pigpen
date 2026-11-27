@@ -466,7 +466,7 @@ func TestRouterDescribeAndReferenceSchemeOrder(t *testing.T) {
 		scheme, _, _ := strings.Cut(l, "://")
 		prefixes = append(prefixes, scheme)
 	}
-	want := []string{"skill", "rule", "out", "agent", "history", "local", "proc", "issue"}
+	want := []string{"skill", "rule", "out", "agent", "history", "local", "proc", "issue", "omp"}
 	if strings.Join(prefixes, ",") != strings.Join(want, ",") {
 		t.Fatalf("Describe order = %v, want %v", prefixes, want)
 	}
