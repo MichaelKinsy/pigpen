@@ -1,0 +1,41 @@
+{
+  "name": "@pi-in-go/pigpen-oh-my-hermes",
+  "version": "0.1.0",
+  "description": "Go port of rlaope/oh-my-hermes orchestration, category model routing, DAG execution, evidence boundaries, OMH memory provider, and HUD/slash commands extending pig-hermes",
+  "keywords": [
+    "pig-package",
+    "oh-my-hermes",
+    "hermes",
+    "orchestration",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/oh-my-hermes"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/oh-my-hermes#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "licenses",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/oh-my-hermes"
+    ]
+  }
+}

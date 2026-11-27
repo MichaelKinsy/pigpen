@@ -1,0 +1,89 @@
+{
+  "name": "01-omh-extends-pig-hermes",
+  "prompt": "Verify inherited Hermes tools plus OMH routing, DAG, unified todo, completion dossier, and episodic memory.",
+  "files": {
+    "demo.txt": "hello from inherited pig-hermes\n"
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {"name": "read_file", "arguments": {"path": "demo.txt"}}
+      ]
+    },
+    {
+      "toolCalls": [
+        {"name": "omh_delegate_route", "arguments": {"category": "deep"}}
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "omh_dag",
+          "arguments": {
+            "action": "create",
+            "run_id": "release-dag",
+            "title": "Release Pipeline",
+            "nodes": [
+              {"id": "build", "title": "Build binary"},
+              {"id": "verify", "title": "Run oracle", "depends_on": ["build"]}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "omh_todo",
+          "arguments": {
+            "action": "set",
+            "plan_stage": "executing",
+            "items": [
+              {"id": "1", "content": "Verify oh-my-hermes-pig composition", "status": "in_progress"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo_list",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "omh_remember",
+          "arguments": {
+            "action": "save",
+            "content": "oh-my-hermes-pig layers cleanly onto pig-hermes via extends.",
+            "tags": ["architecture"]
+          }
+        }
+      ]
+    },
+    {
+      "text": "Verified inherited pig-hermes and layered oh-my-hermes tools."
+    }
+  ],
+  "expectTools": [
+    "read_file", "write_file", "patch", "search_files", "terminal", "memory", "delegate_task", "todo_list",
+    "omh_delegate_route", "omh_dag", "omh_team", "omh_loop", "omh_todo", "omh_completion", "omh_run_summary", "omh_remember", "omh_roles"
+  ],
+  "forbidTools": ["read", "write", "edit", "bash", "grep", "find", "ls"],
+  "expectSystemContains": [
+    "Hermes",
+    "omh_dag"
+  ],
+  "expectToolResults": [
+    {"tool": "read_file", "index": 0, "isError": false, "contains": ["1|hello from inherited pig-hermes"]},
+    {"tool": "omh_delegate_route", "index": 0, "isError": false, "contains": ["deep"]},
+    {"tool": "omh_dag", "index": 0, "isError": false, "contains": ["release-dag"]},
+    {"tool": "omh_todo", "index": 0, "isError": false, "contains": ["Verify oh-my-hermes-pig composition"]},
+    {"tool": "todo_list", "index": 0, "isError": false, "contains": ["Verify oh-my-hermes-pig composition"]},
+    {"tool": "omh_remember", "index": 0, "isError": false, "contains": ["extends"]}
+  ]
+}

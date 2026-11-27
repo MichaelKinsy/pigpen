@@ -1,0 +1,9 @@
+{
+  "featured": false,
+  "updatedAt": "2026-11-26",
+  "languages": ["go"],
+  "notes": [
+    "An unofficial Go homage to rlaope/oh-my-hermes (v5.0.1) layered cleanly onto pig-hermes via extends: local:../pig-hermes/piglet.yaml. Not affiliated with oh-my-hermes contributors or Nous Research.",
+    "Inherits all 18 Hermes tools, 13 Hermes slash commands, and pig-mcp-adapter from pig-hermes, and adds OMH orchestration tools (omh_delegate_route, omh_dag, omh_team, omh_loop, omh_todo, omh_completion, omh_run_summary, omh_remember, omh_roles), category model routing, OMH memory provider, and /dag /bots /omh-model /omh-hud slash commands."
+  ]
+}

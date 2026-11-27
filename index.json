@@ -295,6 +295,32 @@
       ]
     },
     {
+      "id": "oh-my-hermes-pig",
+      "kind": "piglet",
+      "name": "oh-my-hermes-pig",
+      "description": "An homage to rlaope/oh-my-hermes layered onto pig-hermes via extends: — adds OMH roles, category model routing, DAG & team orchestration, durable loops, evidence-gated completion dossiers, OMH memory provider, and /dag /bots /omh-model commands in a single fused Go binary.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/oh-my-hermes-pig"
+      },
+      "manifestSha256": "58bc69f58ba31abd67ebd4b166261760eb1d6e021c12ac0e3fdba5bc218f2802",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "An unofficial Go homage to rlaope/oh-my-hermes (v5.0.1) layered cleanly onto pig-hermes via extends: local:../pig-hermes/piglet.yaml. Not affiliated with oh-my-hermes contributors or Nous Research.",
+        "Inherits all 18 Hermes tools, 13 Hermes slash commands, and pig-mcp-adapter from pig-hermes, and adds OMH orchestration tools (omh_delegate_route, omh_dag, omh_team, omh_loop, omh_todo, omh_completion, omh_run_summary, omh_remember, omh_roles), category model routing, OMH memory provider, and /dag /bots /omh-model /omh-hud slash commands."
+      ]
+    },
+    {
       "id": "pig-essentials",
       "kind": "piglet",
       "name": "pig-essentials",

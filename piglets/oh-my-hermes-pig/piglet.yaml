@@ -1,0 +1,17 @@
+# oh-my-hermes-pig: layers rlaope/oh-my-hermes orchestration, DAG, category routing,
+# evidence boundaries, and OMH memory/HUD cleanly onto pig-hermes via extends:.
+name: oh-my-hermes-pig
+description: "An homage to rlaope/oh-my-hermes layered onto pig-hermes via extends: — adds OMH roles, category model routing, DAG & team orchestration, durable loops, evidence-gated completion dossiers, OMH memory provider, and /dag /bots /omh-model commands in a single fused Go binary."
+extends:
+  source: local:../pig-hermes/piglet.yaml
+  version: "^0.1.0"
+release:
+  version: 0.1.0
+build:
+  extensionRealization: fused
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+packages:
+  oh-my-hermes: local:../../components/oh-my-hermes
+extensions:
+  - name: oh-my-hermes
+    origins: [package:oh-my-hermes]

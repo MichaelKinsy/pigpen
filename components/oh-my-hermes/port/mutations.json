@@ -1,0 +1,20 @@
+[
+  {
+    "name": "omh_dag_detects_cycles",
+    "file": "dag_team_loop.go",
+    "find": "if visited != len(nodes) {",
+    "replace": "if false && visited != len(nodes) {"
+  },
+  {
+    "name": "omh_completion_requires_observed_evidence",
+    "file": "todo_completion_memory.go",
+    "find": "if len(rec.ObservedEvidence) == 0 {",
+    "replace": "if false && len(rec.ObservedEvidence) == 0 {"
+  },
+  {
+    "name": "omh_loop_enforces_max_iterations",
+    "file": "dag_team_loop.go",
+    "find": "if l.Iteration >= l.MaxIterations {",
+    "replace": "if false && l.Iteration >= l.MaxIterations {"
+  }
+]

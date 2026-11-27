@@ -179,7 +179,11 @@ func (s *state) applySessionFlags(ctx sdk.Context) {
 				s.mu.Lock()
 				s.toolset = trimmed
 				s.mu.Unlock()
-				ctx.SetActiveTools(resolved)
+				// Only restrict active tools when the user explicitly passed a non-default toolset,
+				// or preserve any sibling extension tools (e.g. omh_*, mcp__*) registered in derived Piglets.
+				if trimmed != "hermes-cli" {
+					ctx.SetActiveTools(mergeSiblingExtensionTools(ctx, resolved))
+				}
 			}
 		}
 	}
@@ -644,7 +648,7 @@ func (s *state) cmdToolsets(ctx sdk.Context, args string) error {
 		s.mu.Lock()
 		s.toolset = target
 		s.mu.Unlock()
-		ctx.SetActiveTools(resolved)
+		ctx.SetActiveTools(mergeSiblingExtensionTools(ctx, resolved))
 		s.show(ctx, fmt.Sprintf("Active toolset set to %s (%d tools): %s", target, len(resolved), strings.Join(resolved, ", ")))
 		return nil
 	}
@@ -667,6 +671,32 @@ func (s *state) cmdToolsets(ctx sdk.Context, args string) error {
 	}
 	s.show(ctx, strings.TrimRight(b.String(), "\n"))
 	return nil
+}
+
+// mergeSiblingExtensionTools keeps non-Hermes tools registered by sibling extensions
+// (such as oh-my-hermes's omh_* tools or MCP mcp__* tools) active when a Hermes toolset is selected.
+func mergeSiblingExtensionTools(ctx sdk.Context, hermesTools []string) []string {
+	allHermes := make(map[string]bool)
+	for _, name := range ResolveToolsetTools("hermes-cli") {
+		allHermes[name] = true
+	}
+	seen := make(map[string]bool, len(hermesTools))
+	out := make([]string, 0, len(hermesTools))
+	for _, name := range hermesTools {
+		if !seen[name] {
+			seen[name] = true
+			out = append(out, name)
+		}
+	}
+	if all, err := ctx.GetAllTools(); err == nil {
+		for _, t := range all {
+			if t.Name != "" && !allHermes[t.Name] && !seen[t.Name] {
+				seen[t.Name] = true
+				out = append(out, t.Name)
+			}
+		}
+	}
+	return out
 }
 
 func (s *state) cmdTools(ctx sdk.Context, _ string) error {
