@@ -247,6 +247,19 @@ export const piglets = {
     ],
   },
   'pig-porter': { steps: porterSkill },
+  'pig-rex': {
+    steps: [
+      {
+        run: async (t) => {
+          t.type('/skill:pigpen-re');
+          await t.waitFor(/→ skill:pigpen-rex\s+(?:\[\w+\]\s+)?Use the Rex terminal multiplexer CLI from PiG/);
+          t.key('Escape');
+          t.key('C-u');
+          await t.waitGone(/^\/skill:pigpen-re/m);
+        },
+      },
+    ],
+  },
   'pig-tern': {
     // CI has no Tern. TERM_PROGRAM=tern and the multiplexer tmux puts between them are what the member sees in Tern's own
     // pane inside tmux, and PIG_TUI_NATIVE=0 is the user's switch: either way the member declines and PiG draws its own
