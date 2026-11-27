@@ -8,6 +8,7 @@
     "hermes",
     "orchestration",
     "extension",
+    "skill",
     "pigpen"
   ],
   "license": "MIT",
@@ -26,6 +27,7 @@
   },
   "files": [
     "extensions",
+    "skills",
     "licenses",
     "port",
     "README.md",
@@ -36,6 +38,18 @@
   "pi": {
     "extensions": [
       "extensions/oh-my-hermes"
+    ],
+    "skills": [
+      "skills/pigpen-omh-ulw-context",
+      "skills/pigpen-omh-ulw-interview",
+      "skills/pigpen-omh-ulw-research",
+      "skills/pigpen-omh-ulw-plan",
+      "skills/pigpen-omh-ulw-work",
+      "skills/pigpen-omh-dag-ulw",
+      "skills/pigpen-omh-ulw-maestro",
+      "skills/pigpen-omh-ulw-loop",
+      "skills/pigpen-omh-ulw-qa",
+      "skills/pigpen-omh-ulw-perf"
     ]
   }
 }

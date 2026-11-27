@@ -15,3 +15,24 @@ packages:
 extensions:
   - name: oh-my-hermes
     origins: [package:oh-my-hermes]
+skills:
+  - name: pigpen-omh-ulw-context
+    origins: [package:oh-my-hermes]
+  - name: pigpen-omh-ulw-interview
+    origins: [package:oh-my-hermes]
+  - name: pigpen-omh-ulw-research
+    origins: [package:oh-my-hermes]
+  - name: pigpen-omh-ulw-plan
+    origins: [package:oh-my-hermes]
+  - name: pigpen-omh-ulw-work
+    origins: [package:oh-my-hermes]
+  - name: pigpen-omh-dag-ulw
+    origins: [package:oh-my-hermes]
+  - name: pigpen-omh-ulw-maestro
+    origins: [package:oh-my-hermes]
+  - name: pigpen-omh-ulw-loop
+    origins: [package:oh-my-hermes]
+  - name: pigpen-omh-ulw-qa
+    origins: [package:oh-my-hermes]
+  - name: pigpen-omh-ulw-perf
+    origins: [package:oh-my-hermes]

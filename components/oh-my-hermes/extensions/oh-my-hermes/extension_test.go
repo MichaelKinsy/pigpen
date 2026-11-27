@@ -1,11 +1,13 @@
 package ohmyhermes_test
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -793,5 +795,201 @@ func TestInteractiveOverlaysWithAndWithoutUI(t *testing.T) {
 	}
 	if got := len(hNoUI.CallsTo("ui.select")); got != 0 {
 		t.Fatalf("expected 0 ui.select calls when HasUI=false, got %d", got)
+	}
+}
+
+func TestMaestroPrepareGetListAndValidation(t *testing.T) {
+	omhHome := setupTempOMH(t)
+	cwd := t.TempDir()
+	h := StartHost(t, ohmyhermes.Extension(), HostOptions{
+		Mode: "print",
+		Cwd:  cwd,
+	})
+
+	// Missing owner must fail (never auto-selects owner).
+	raw, errMsg := h.Tool("omh_maestro", map[string]any{
+		"action": "prepare_handoff",
+		"goal":   "Fix retry backoff",
+	})
+	if errMsg != "" {
+		t.Fatalf("unexpected transport error: %s", errMsg)
+	}
+	payload, isErr := parseToolJSON(t, raw)
+	if payload["ok"] != false || !strings.Contains(payload["error"].(string), "owner is required") {
+		t.Fatalf("expected ok=false error when owner missing, got isErr=%v payload=%v", isErr, payload)
+	}
+
+	// Prepare valid handoff.
+	raw, errMsg = h.Tool("omh_maestro", map[string]any{
+		"action":            "prepare_handoff",
+		"handoff_id":        "maestro-retry-1",
+		"owner":             "codex",
+		"lane":              "retry-queue",
+		"goal":              "Fix retry backoff",
+		"write_scope":       []string{"pkg/retry/backoff.go", "pkg/retry/backoff_test.go"},
+		"acceptance_checks": []string{"go test ./pkg/retry/... passes"},
+		"verify_command":    "go test ./pkg/retry/...",
+		"model":             "gpt-6.2-astra",
+		"prompt":            "Goal: Fix retry backoff",
+	})
+	if errMsg != "" {
+		t.Fatalf("prepare_handoff transport error: %s", errMsg)
+	}
+	payload, isErr = parseToolJSON(t, raw)
+	if isErr || payload["ok"] != true {
+		t.Fatalf("prepare_handoff failed: isErr=%v payload=%v", isErr, payload)
+	}
+	handoffObj, _ := payload["handoff"].(map[string]any)
+	if handoffObj["schema"] != ohmyhermes.MaestroHandoffSchema {
+		t.Errorf("expected schema %q, got %v", ohmyhermes.MaestroHandoffSchema, handoffObj["schema"])
+	}
+	if handoffObj["status"] != "prepared_not_observed" {
+		t.Errorf("expected status prepared_not_observed, got %v", handoffObj["status"])
+	}
+	if handoffObj["owner"] != "codex" {
+		t.Errorf("expected owner codex, got %v", handoffObj["owner"])
+	}
+
+	// Persisted atomically under $OMH_HOME/runtime/maestro/<id>.json.
+	persistedPath := filepath.Join(omhHome, "runtime", "maestro", "maestro-retry-1.json")
+	if _, err := os.Stat(persistedPath); err != nil {
+		t.Fatalf("expected persisted handoff file %s: %v", persistedPath, err)
+	}
+
+	// Get round-trip.
+	raw, errMsg = h.Tool("omh_maestro", map[string]any{
+		"action":     "get",
+		"handoff_id": "maestro-retry-1",
+	})
+	if errMsg != "" {
+		t.Fatalf("get transport error: %s", errMsg)
+	}
+	payload, isErr = parseToolJSON(t, raw)
+	if isErr || payload["ok"] != true {
+		t.Fatalf("get failed: isErr=%v payload=%v", isErr, payload)
+	}
+	gotHandoff, _ := payload["handoff"].(map[string]any)
+	if gotHandoff["goal"] != "Fix retry backoff" || gotHandoff["model"] != "gpt-6.2-astra" {
+		t.Errorf("unexpected get handoff: %v", gotHandoff)
+	}
+
+	// List returns the persisted handoff.
+	raw, errMsg = h.Tool("omh_maestro", map[string]any{"action": "list"})
+	if errMsg != "" {
+		t.Fatalf("list transport error: %s", errMsg)
+	}
+	payload, isErr = parseToolJSON(t, raw)
+	if isErr || payload["ok"] != true {
+		t.Fatalf("list failed: isErr=%v payload=%v", isErr, payload)
+	}
+	if count, _ := payload["count"].(float64); int(count) != 1 {
+		t.Errorf("expected count 1, got %v", payload["count"])
+	}
+}
+
+func TestLSPToolsOptInGatingAndJSONRPCFraming(t *testing.T) {
+	setupTempOMH(t)
+	cwd := t.TempDir()
+
+	// 1. Unset OMH_LSP_TOOLS -> lsp_* tools are NOT registered.
+	t.Setenv("OMH_LSP_TOOLS", "")
+	if ohmyhermes.LSPToolsEnabled() {
+		t.Fatal("expected LSPToolsEnabled() == false when OMH_LSP_TOOLS is empty")
+	}
+	hOff := StartHost(t, ohmyhermes.Extension(), HostOptions{Mode: "print", Cwd: cwd})
+	for _, name := range []string{"lsp_definition", "lsp_references", "lsp_rename", "lsp_diagnostics"} {
+		if hOff.tools[name] {
+			t.Errorf("expected tool %q NOT registered when OMH_LSP_TOOLS is unset", name)
+		}
+	}
+
+	// 2. OMH_LSP_TOOLS=1 -> all 4 lsp_* tools ARE registered.
+	t.Setenv("OMH_LSP_TOOLS", "1")
+	if !ohmyhermes.LSPToolsEnabled() {
+		t.Fatal("expected LSPToolsEnabled() == true when OMH_LSP_TOOLS=1")
+	}
+	hOn := StartHost(t, ohmyhermes.Extension(), HostOptions{Mode: "print", Cwd: cwd})
+	for _, name := range []string{"lsp_definition", "lsp_references", "lsp_rename", "lsp_diagnostics"} {
+		if !hOn.tools[name] {
+			t.Errorf("expected tool %q registered when OMH_LSP_TOOLS=1", name)
+		}
+	}
+
+	// 3. JSON-RPC Content-Length framing round-trip.
+	msg := map[string]any{
+		"jsonrpc": "2.0",
+		"id":      7,
+		"method":  "textDocument/definition",
+		"params":  map[string]any{"line": 12},
+	}
+	encoded, err := ohmyhermes.EncodeLSPMessage(msg)
+	if err != nil {
+		t.Fatalf("EncodeLSPMessage failed: %v", err)
+	}
+	if !bytes.HasPrefix(encoded, []byte("Content-Length: ")) {
+		t.Fatalf("expected Content-Length header, got %q", string(encoded))
+	}
+	decoded, err := ohmyhermes.DecodeLSPMessage(bufio.NewReader(bytes.NewReader(encoded)))
+	if err != nil {
+		t.Fatalf("DecodeLSPMessage failed: %v", err)
+	}
+	var roundTrip map[string]any
+	if err := json.Unmarshal(decoded, &roundTrip); err != nil {
+		t.Fatalf("unmarshal decoded JSON-RPC payload: %v", err)
+	}
+	if roundTrip["method"] != "textDocument/definition" {
+		t.Errorf("expected method textDocument/definition, got %v", roundTrip["method"])
+	}
+}
+
+func TestBundledOMHSkillsFrontmatterAndNames(t *testing.T) {
+	expectedSkills := []string{
+		"pigpen-omh-ulw-context",
+		"pigpen-omh-ulw-interview",
+		"pigpen-omh-ulw-research",
+		"pigpen-omh-ulw-plan",
+		"pigpen-omh-ulw-work",
+		"pigpen-omh-dag-ulw",
+		"pigpen-omh-ulw-maestro",
+		"pigpen-omh-ulw-loop",
+		"pigpen-omh-ulw-qa",
+		"pigpen-omh-ulw-perf",
+	}
+	nameRe := regexp.MustCompile(`^pigpen-[a-z0-9]+(?:-[a-z0-9]+)*$`)
+	skillsRoot := filepath.Join("..", "..", "skills")
+
+	for _, skillName := range expectedSkills {
+		if len(skillName) > 64 || !nameRe.MatchString(skillName) {
+			t.Fatalf("skill name %q violates Pigpen naming rule", skillName)
+		}
+		skillFile := filepath.Join(skillsRoot, skillName, "SKILL.md")
+		rawBytes, err := os.ReadFile(skillFile)
+		if err != nil {
+			t.Fatalf("read %s: %v", skillFile, err)
+		}
+		text := strings.ReplaceAll(string(rawBytes), "\r\n", "\n")
+		if !strings.HasPrefix(text, "---\n") {
+			t.Fatalf("%s: missing opening YAML frontmatter delimiter", skillFile)
+		}
+		endIdx := strings.Index(text[4:], "\n---\n")
+		if endIdx < 0 {
+			t.Fatalf("%s: missing closing YAML frontmatter delimiter", skillFile)
+		}
+		fm := text[4 : 4+endIdx]
+		var foundName, foundDesc string
+		for _, line := range strings.Split(fm, "\n") {
+			if strings.HasPrefix(line, "name:") {
+				foundName = strings.Trim(strings.TrimSpace(strings.TrimPrefix(line, "name:")), `"'`)
+			}
+			if strings.HasPrefix(line, "description:") {
+				foundDesc = strings.Trim(strings.TrimSpace(strings.TrimPrefix(line, "description:")), `"'`)
+			}
+		}
+		if foundName != skillName {
+			t.Errorf("%s: frontmatter name %q != directory name %q", skillFile, foundName, skillName)
+		}
+		if strings.TrimSpace(foundDesc) == "" {
+			t.Errorf("%s: frontmatter description must be non-empty", skillFile)
+		}
 	}
 }

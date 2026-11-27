@@ -22,3 +22,8 @@
 - **OMH Crowned Winged-Pig branding:** `ui.registerSprite("omh-pig")` + `ui.setLogin(...)` (`41x5` `OH-MY-HERMES` brand, `32x14` hero, `16x14` mascot).
 - **5 real PiG theme JSONs:** auto-installed to `<agentDir>/themes/omh-{sky,amber,crimson,mono,kanagawa}.json` and applied via `ctx.SetTheme` on startup and `/omh-theme <name>`.
 - **Interactive overlays (`overlays.go`):** `/omh-model` (category → preset/custom model + thinking picker persisted to `routing/model-chains.json`), `/dag` (run picker + pinned `sdk/kit` box-frontier widget + ready-node advancement), and `/bots` (3-level Profile → Sessions/Teams/Delegations → Detail drill-down), with clean non-UI fallback.
+
+## Wave 3 Flagship Skills, Opt-In LSP & Maestro
+- **10 Flagship OMH Workflow Skills (`components/oh-my-hermes/skills/pigpen-omh-*/SKILL.md`):** `ulw-context`, `ulw-interview`, `ulw-research`, `ulw-plan`, `ulw-work`, `dag-ulw`, `ulw-maestro`, `ulw-loop`, `ulw-qa`, and `ulw-perf` bundled into `oh-my-hermes-pig/piglet.yaml` (all passing Pigpen `quality-gates.mjs`).
+- **4 Opt-In `lsp_*` Tools + `omh_maestro` (`lsp_maestro.go`):** `lsp_definition`, `lsp_references`, `lsp_rename` (UTF-16 column conversion), and `lsp_diagnostics` over pure-Go JSON-RPC 2.0 stdio gated behind `OMH_LSP_TOOLS=1`, plus `omh_maestro` (`coding_executor_handoff/v1` prepare/dispatch/list/get).
+- **Inherits Live Hermes Plugin Runtime:** `oh-my-hermes-pig` automatically inherits `pig-hermes`'s full runtime Hermes plugin loader/translator (`/plugins`, `plugins` CLI, Python NDJSON bridge).

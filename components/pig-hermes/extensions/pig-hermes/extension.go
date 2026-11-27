@@ -9,7 +9,9 @@ import (
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/paths"
 	"github.com/MichaelKinsy/pigpen/pig-hermes/agents"
 	"github.com/MichaelKinsy/pigpen/pig-hermes/filetools"
+	"github.com/MichaelKinsy/pigpen/pig-hermes/media"
 	"github.com/MichaelKinsy/pigpen/pig-hermes/memoryskills"
+	"github.com/MichaelKinsy/pigpen/pig-hermes/plugins"
 	"github.com/MichaelKinsy/pigpen/pig-hermes/sessions"
 	"github.com/MichaelKinsy/pigpen/pig-hermes/surface"
 	"github.com/MichaelKinsy/pigpen/pig-hermes/terminal"
@@ -29,7 +31,8 @@ func Extension() *sdk.Extension {
 	sessions.Register(ext, p, cfg)
 	agents.Register(ext, p, cfg)
 	webmcp.Register(ext, p, cfg)
+	media.Register(ext, p, cfg)
+	plugins.Register(ext, p, cfg)
 	surface.Register(ext, p, cfg, memStore)
-
 	return ext
 }

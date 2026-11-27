@@ -417,6 +417,47 @@ func registerSlashCommands(ext *sdk.Extension, st *state) {
 		Description: "Display current session todo checklist",
 		Handler:     st.cmdTodos,
 	})
+
+	ext.RegisterCommand("context", sdk.CommandOptions{
+		Description: "Show context file manifest, memory fill %, and active context usage",
+		Handler:     st.cmdContext,
+	})
+
+	ext.RegisterCommand("ctx", sdk.CommandOptions{
+		Description: "Alias for /context",
+		Handler:     st.cmdContext,
+	})
+
+	ext.RegisterCommand("sessions", sdk.CommandOptions{
+		Description: "List or search recent PiG and upstream Hermes sessions",
+		GetArgumentCompletions: func(prefix string) ([]sdk.AutocompleteItem, error) {
+			return filterCompletions(prefix, []sdk.AutocompleteItem{
+				{Value: "list", Description: "List recent sessions"},
+			}), nil
+		},
+		Handler: st.cmdSessions,
+	})
+
+	ext.RegisterCommand("save", sdk.CommandOptions{
+		Description: "Export the current session to Markdown or JSON (/save <md|json> [path])",
+		GetArgumentCompletions: func(prefix string) ([]sdk.AutocompleteItem, error) {
+			return filterCompletions(prefix, []sdk.AutocompleteItem{
+				{Value: "md ", Description: "Export session as Markdown"},
+				{Value: "json ", Description: "Export session as JSON"},
+			}), nil
+		},
+		Handler: st.cmdSave,
+	})
+
+	ext.RegisterCommand("retry", sdk.CommandOptions{
+		Description: "Re-send the last user message in the current session",
+		Handler:     st.cmdRetry,
+	})
+
+	ext.RegisterCommand("undo", sdk.CommandOptions{
+		Description: "Rewind the last user turn (or N turns) in the session tree",
+		Handler:     st.cmdUndo,
+	})
 }
 
 func filterCompletions(prefix string, items []sdk.AutocompleteItem) []sdk.AutocompleteItem {

@@ -312,7 +312,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/oh-my-hermes-pig"
       },
-      "manifestSha256": "58bc69f58ba31abd67ebd4b166261760eb1d6e021c12ac0e3fdba5bc218f2802",
+      "manifestSha256": "f47674278451a31ebb96080b93ffd6d046a7f57133a66a0f270b8a94333b1aa6",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",

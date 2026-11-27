@@ -545,3 +545,174 @@ func TestSkillManageDeleteGuardsRootAndSymlink(t *testing.T) {
 		t.Fatalf("symlink target was unexpectedly removed: %v", err)
 	}
 }
+
+func TestSubdirectoryHintTrackerDiscoveryDedupAndSymlinkGuard(t *testing.T) {
+	root := t.TempDir()
+	// Root AGENTS.md (already loaded at session start — should be seeded & never re-injected).
+	rootAgents := filepath.Join(root, "AGENTS.md")
+	if err := os.WriteFile(rootAgents, []byte("Root instructions"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Nested subdirectory with AGENTS.override.md taking priority over AGENTS.md.
+	subDir := filepath.Join(root, "services", "billing")
+	if err := os.MkdirAll(subDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(subDir, "AGENTS.md"), []byte("Regular billing rules"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(subDir, "AGENTS.override.md"), []byte("Override billing rules"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	targetFile := filepath.Join(subDir, "invoice.go")
+	if err := os.WriteFile(targetFile, []byte("package billing\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Sibling directory with identical content to root AGENTS.md (deduped by SHA-256).
+	dupDir := filepath.Join(root, "dup")
+	if err := os.MkdirAll(dupDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dupDir, "CLAUDE.md"), []byte("Root instructions"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Excluded vendor directory should never be injected.
+	vendorDir := filepath.Join(root, "vendor", "lib")
+	if err := os.MkdirAll(vendorDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(vendorDir, "AGENTS.md"), []byte("Vendored rules"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Symlink escape directory: sub/AGENTS.md -> outside secret file.
+	outsideDir := t.TempDir()
+	secretFile := filepath.Join(outsideDir, "secret.txt")
+	if err := os.WriteFile(secretFile, []byte("TOP SECRET"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	escapeDir := filepath.Join(root, "escape")
+	if err := os.MkdirAll(escapeDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	symlinkCreated := os.Symlink(secretFile, filepath.Join(escapeDir, "AGENTS.md")) == nil
+
+	tracker := NewSubdirectoryHintTracker(root)
+
+	// Non-file tool should be ignored.
+	if got := tracker.CheckToolCall("terminal", map[string]any{"path": targetFile}); got != "" {
+		t.Fatalf("expected non-file tool to yield no hints, got %q", got)
+	}
+
+	// First read_file in services/billing discovers AGENTS.override.md.
+	hint := tracker.CheckToolCall("read_file", map[string]any{"path": targetFile})
+	if !strings.Contains(hint, `<subdirectory_context path="services/billing/AGENTS.override.md">`) {
+		t.Fatalf("expected AGENTS.override.md tag, got %q", hint)
+	}
+	if !strings.Contains(hint, "Override billing rules") || strings.Contains(hint, "Regular billing rules") {
+		t.Fatalf("expected AGENTS.override.md priority over AGENTS.md, got %q", hint)
+	}
+
+	// Second access in same dir yields nothing (already loaded).
+	if again := tracker.CheckToolCall("patch", map[string]any{"path": targetFile}); again != "" {
+		t.Fatalf("expected second access in same dir to be deduped, got %q", again)
+	}
+
+	// Directory whose hint has identical SHA-256 to root AGENTS.md is deduped.
+	if dupHint := tracker.CheckToolCall("read_file", map[string]any{"path": filepath.Join(dupDir, "main.go")}); dupHint != "" {
+		t.Fatalf("expected duplicate SHA-256 hint to be skipped, got %q", dupHint)
+	}
+
+	// Excluded vendor dir is ignored.
+	if vendorHint := tracker.CheckToolCall("search_files", map[string]any{"path": vendorDir}); vendorHint != "" {
+		t.Fatalf("expected vendor dir hints to be excluded, got %q", vendorHint)
+	}
+
+	// Symlink escaping project root must be blocked.
+	if symlinkCreated {
+		if escHint := tracker.CheckToolCall("read_file", map[string]any{"path": filepath.Join(escapeDir, "x.go")}); escHint != "" {
+			t.Fatalf("expected symlink escape to be blocked, got %q", escHint)
+		}
+	}
+}
+
+func TestSubdirectoryHintTruncationAndAncestorCap(t *testing.T) {
+	root := t.TempDir()
+
+	// 1. Oversized hint file (> 32 KiB) must be truncated with marker.
+	bigDir := filepath.Join(root, "big")
+	if err := os.MkdirAll(bigDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	bigContent := strings.Repeat("A", maxSubdirHintBytes+4096)
+	if err := os.WriteFile(filepath.Join(bigDir, "CLAUDE.md"), []byte(bigContent), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	tracker := NewSubdirectoryHintTracker(root)
+	hint := tracker.CheckToolCall("write_file", map[string]any{"path": filepath.Join(bigDir, "out.txt")})
+	if !strings.Contains(hint, "[...truncated big/CLAUDE.md:") {
+		t.Fatalf("expected truncation marker for >32KiB hint, got len=%d", len(hint))
+	}
+	if len(hint) >= len(bigContent) {
+		t.Fatalf("expected truncated hint to be shorter than original %d, got %d", len(bigContent), len(hint))
+	}
+
+	// 2. Append helper preserves []any content blocks.
+	blocks := []any{map[string]any{"type": "text", "text": "file contents"}}
+	updated, ok := appendHintToToolResultContent(blocks, hint).([]any)
+	if !ok || len(updated) != 2 {
+		t.Fatalf("expected 2 content blocks after append, got %#v", updated)
+	}
+}
+
+func TestBuildContextManifestStatuses(t *testing.T) {
+	p, _, _ := makeTestProfile(t)
+	cwd := t.TempDir()
+
+	// Write SOUL.md (loaded), HERMES.md (truncated > 20000 chars), AGENTS.md (shadowed),
+	// CLAUDE.md (empty), and leave .cursorrules missing.
+	if err := os.WriteFile(p.SoulFile, []byte("Be concise and accurate."), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cwd, "HERMES.md"), []byte(strings.Repeat("H", defaultContextFileMaxChars+500)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cwd, "AGENTS.md"), []byte("Shadowed agents instructions"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(cwd, "CLAUDE.md"), []byte("   \n\t  "), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	manifest := BuildContextManifest(cwd, p)
+	byLabel := make(map[string]ContextFileEntry, len(manifest))
+	for _, e := range manifest {
+		byLabel[e.Label] = e
+	}
+
+	if got := byLabel["SOUL.md"]; got.Status != ContextStatusLoaded || !got.Loaded || got.Chars == 0 || got.EstTokens == 0 {
+		t.Fatalf("expected SOUL.md loaded with chars/tokens, got %+v", got)
+	}
+	if got := byLabel["HERMES.md"]; got.Status != ContextStatusTruncated || !got.Loaded {
+		t.Fatalf("expected HERMES.md truncated & loaded, got %+v", got)
+	}
+	if got := byLabel["AGENTS.md"]; got.Status != ContextStatusShadowed || got.Loaded {
+		t.Fatalf("expected AGENTS.md shadowed, got %+v", got)
+	}
+	if got := byLabel["CLAUDE.md"]; got.Status != ContextStatusEmpty || got.Loaded {
+		t.Fatalf("expected CLAUDE.md empty, got %+v", got)
+	}
+	if got := byLabel[".cursorrules"]; got.Status != ContextStatusMissing || got.Loaded {
+		t.Fatalf("expected .cursorrules missing, got %+v", got)
+	}
+
+	rendered := RenderContextManifest(manifest)
+	for _, want := range []string{"SOUL.md", "HERMES.md", "AGENTS.md", "CLAUDE.md", ".cursorrules", "truncated", "shadowed", "empty", "missing"} {
+		if !strings.Contains(rendered, want) {
+			t.Errorf("expected rendered manifest to contain %q, got:\n%s", want, rendered)
+		}
+	}
+}

@@ -26,4 +26,5 @@ func Register(ext *sdk.Extension, p paths.ProfilePaths, cfg *config.Config, memS
 	registerMemoryTool(ext, cfg, memStore)
 	registerSkillsTools(ext, p, cfg)
 	registerPromptHooks(ext, p, cfg, memStore)
+	registerSubdirHintsHook(ext)
 }

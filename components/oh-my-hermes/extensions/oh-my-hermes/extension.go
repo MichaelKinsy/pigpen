@@ -26,6 +26,7 @@ func Extension() *sdk.Extension {
 	loops := NewLoopStore(pathsFn)
 	completions := NewCompletionStore(pathsFn)
 	memProv := NewOmhMemoryProvider(pathsFn)
+	maestro := NewMaestroStore(pathsFn)
 
 	// Plug into pig-hermes-core global seams once per process (delegating through
 	// dynamic pathsFn so $OMH_HOME changes remain respected).
@@ -40,6 +41,8 @@ func Extension() *sdk.Extension {
 	registerDelegateRouteTool(ext, router)
 	registerDAGTeamLoopTools(ext, dags, teams, loops)
 	registerTodoCompletionMemoryRoleTools(ext, dags, teams, completions, identities, memProv)
+	registerMaestroTool(ext, maestro)
+	registerLSPTools(ext)
 
 	// Register 5 interactive slash commands, status bar, and OMH system prompt sections.
 	surf := newSurfaceState(pathsFn, router, dags, teams, loops)

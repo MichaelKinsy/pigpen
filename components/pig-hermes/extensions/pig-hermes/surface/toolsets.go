@@ -23,6 +23,9 @@ var hermesCoreTools = []string{
 	"clarify",
 	"execute_code", "delegate_task",
 	"cronjob_manage",
+	"tool_search", "tool_describe", "tool_call",
+	"browser_exec",
+	"vision_analyze", "image_generate", "text_to_speech",
 }
 
 var codingTools = []string{
@@ -117,6 +120,31 @@ var builtinToolsets = map[string]Toolset{
 		Name:        "clarify",
 		Description: "Ask the user clarifying questions",
 		Tools:       []string{"clarify"},
+	},
+	"tool_search": {
+		Name:        "tool_search",
+		Description: "Progressive-disclosure tool catalog search, schema inspection, and dynamic invocation",
+		Tools:       []string{"tool_search", "tool_describe", "tool_call"},
+	},
+	"browser": {
+		Name:        "browser",
+		Description: "Interactive browser automation via browser-use CLI",
+		Tools:       []string{"browser_exec"},
+	},
+	"vision": {
+		Name:        "vision",
+		Description: "Image inspection and visual analysis",
+		Tools:       []string{"vision_analyze"},
+	},
+	"image_gen": {
+		Name:        "image_gen",
+		Description: "AI image generation",
+		Tools:       []string{"image_generate"},
+	},
+	"tts": {
+		Name:        "tts",
+		Description: "Text-to-speech audio synthesis",
+		Tools:       []string{"text_to_speech"},
 	},
 	"hermes-acp": {
 		Name:        "hermes-acp",

@@ -1187,3 +1187,227 @@ func TestOnSessionStartAndSkinSwitchBrandingAndThemes(t *testing.T) {
 		t.Errorf("expected /skin ares to call ui.setTheme(\"hermes-ares\"), got %q", lastTheme)
 	}
 }
+
+func TestWave3ToolsetsIncludeNewTools(t *testing.T) {
+	cases := map[string][]string{
+		"tool_search": {"tool_search", "tool_describe", "tool_call"},
+		"browser":     {"browser_exec"},
+		"vision":      {"vision_analyze"},
+		"image_gen":   {"image_generate"},
+		"tts":         {"text_to_speech"},
+	}
+	for name, wantTools := range cases {
+		ts, ok := surface.GetToolset(name)
+		if !ok {
+			t.Fatalf("expected toolset %q to exist", name)
+		}
+		resolved := surface.ResolveToolsetTools(name)
+		for _, want := range wantTools {
+			found := false
+			for _, got := range resolved {
+				if got == want {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("toolset %q (%+v) missing tool %q", name, ts, want)
+			}
+		}
+	}
+
+	cliTools := surface.ResolveToolsetTools("hermes-cli")
+	cliSet := make(map[string]bool, len(cliTools))
+	for _, tool := range cliTools {
+		cliSet[tool] = true
+	}
+	for _, want := range []string{
+		"tool_search", "tool_describe", "tool_call",
+		"browser_exec", "vision_analyze", "image_generate", "text_to_speech",
+	} {
+		if !cliSet[want] {
+			t.Errorf("hermes-cli toolset missing Wave 3 tool %q", want)
+		}
+	}
+}
+
+func TestWave3SessionAndContextSlashCommands(t *testing.T) {
+	root := t.TempDir()
+	t.Setenv("HERMES_HOME", root)
+	t.Setenv("HERMES_PROFILE", "")
+
+	p := paths.ResolveProfilePaths("")
+	cfg := config.Default()
+	memStore := memory.NewStore(p.MemoriesDir, cfg.MemoryLimit, cfg.UserLimit)
+	if err := os.WriteFile(p.SoulFile, []byte("Hermes test soul"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a PiG JSONL session file so /sessions discovers it.
+	sessDir := filepath.Join(t.TempDir(), "sessions")
+	if err := os.MkdirAll(sessDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	sessFile := filepath.Join(sessDir, "sess-wave3.jsonl")
+	jsonlLines := strings.Join([]string{
+		`{"type":"session","id":"sess-wave3","cwd":"/tmp/demo","timestamp":"2026-11-27T10:00:00Z"}`,
+		`{"type":"session_info","name":"Wave3 Planning","timestamp":"2026-11-27T10:00:00Z"}`,
+		`{"type":"message","id":"m1","parentId":"","timestamp":"2026-11-27T10:00:01Z","message":{"role":"user","content":"Plan wave 3 slash commands"}}`,
+		`{"type":"message","id":"m2","parentId":"m1","timestamp":"2026-11-27T10:00:02Z","message":{"role":"assistant","content":"Sure, adding /context and /sessions"}}`,
+	}, "\n") + "\n"
+	if err := os.WriteFile(sessFile, []byte(jsonlLines), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	sessionEntries := []map[string]any{
+		{
+			"type":      "message",
+			"id":        "e1",
+			"parentId":  "",
+			"timestamp": "2026-11-27T10:00:01Z",
+			"message": map[string]any{
+				"role":    "user",
+				"content": "First user turn",
+			},
+		},
+		{
+			"type":      "message",
+			"id":        "e2",
+			"parentId":  "e1",
+			"timestamp": "2026-11-27T10:00:02Z",
+			"message": map[string]any{
+				"role":    "assistant",
+				"content": "First assistant reply",
+			},
+		},
+		{
+			"type":      "message",
+			"id":        "e3",
+			"parentId":  "e2",
+			"timestamp": "2026-11-27T10:00:03Z",
+			"message": map[string]any{
+				"role":    "user",
+				"content": "Second user turn to retry",
+			},
+		},
+	}
+
+	var retriedContent string
+	var navTargetID string
+
+	ext := sdk.New("pig-hermes-wave3-cmd-test")
+	surface.Register(ext, p, cfg, memStore)
+
+	host := startFakeHost(t, ext, func(method string, args map[string]any) (any, string) {
+		switch method {
+		case "getSessionID":
+			return map[string]any{"sessionId": "sess-wave3"}, ""
+		case "getSessionFile":
+			return map[string]any{"sessionFile": sessFile}, ""
+		case "getContextUsage":
+			return map[string]any{"tokens": 1200, "contextWindow": 200000, "percent": 0.6}, ""
+		case "watchSessionLog":
+			if complete, _ := args["complete"].(bool); complete {
+				return map[string]any{
+					"entries":    []map[string]any{},
+					"entryCount": len(sessionEntries),
+					"hasMore":    false,
+					"leafId":     "e3",
+				}, ""
+			}
+			return map[string]any{
+				"entries":    sessionEntries,
+				"entryCount": len(sessionEntries),
+				"hasMore":    false,
+				"leafId":     "e3",
+			}, ""
+		case "sendUserMessage":
+			if s, ok := args["content"].(string); ok {
+				retriedContent = s
+			}
+			return map[string]any{}, ""
+		case "navigateTree":
+			if id, ok := args["targetId"].(string); ok {
+				navTargetID = id
+			}
+			return map[string]any{"cancelled": false}, ""
+		default:
+			return map[string]any{}, ""
+		}
+	})
+
+	// Verify all 6 new command names are registered.
+	for _, cmd := range []string{"context", "ctx", "sessions", "save", "retry", "undo"} {
+		if !host.cmds[cmd] {
+			t.Errorf("slash command /%s not registered", cmd)
+		}
+	}
+
+	lastMsg := func() string {
+		msgs := host.lastSentMessages()
+		if len(msgs) == 0 {
+			return ""
+		}
+		return msgs[len(msgs)-1]
+	}
+
+	// 1. /context and /ctx
+	host.runCommand("context", "")
+	if got := lastMsg(); !strings.Contains(got, "Hermes Context Manifest") || !strings.Contains(got, "SOUL.md") || !strings.Contains(got, "MEMORY.md") {
+		t.Errorf("/context unexpected output: %q", got)
+	}
+	host.runCommand("ctx", "")
+	if got := lastMsg(); !strings.Contains(got, "Hermes Context Manifest") {
+		t.Errorf("/ctx alias unexpected output: %q", got)
+	}
+
+	// 2. /sessions
+	host.runCommand("sessions", "")
+	if got := lastMsg(); !strings.Contains(got, "sess-wave3") || !strings.Contains(got, "[pig]") {
+		t.Errorf("/sessions unexpected output: %q", got)
+	}
+	host.runCommand("sessions", "Wave3")
+	if got := lastMsg(); !strings.Contains(got, "sess-wave3") {
+		t.Errorf("/sessions query unexpected output: %q", got)
+	}
+
+	// 3. /save md & /save json
+	mdPath := filepath.Join(t.TempDir(), "export.md")
+	host.runCommand("save", "md "+mdPath)
+	mdRaw, err := os.ReadFile(mdPath)
+	if err != nil {
+		t.Fatalf("/save md did not write file: %v", err)
+	}
+	if !strings.Contains(string(mdRaw), "First user turn") || !strings.Contains(string(mdRaw), "Second user turn to retry") {
+		t.Errorf("/save md content missing messages: %s", string(mdRaw))
+	}
+
+	jsonPath := filepath.Join(t.TempDir(), "export.json")
+	host.runCommand("save", "json "+jsonPath)
+	jsonRaw, err := os.ReadFile(jsonPath)
+	if err != nil {
+		t.Fatalf("/save json did not write file: %v", err)
+	}
+	var exported map[string]any
+	if err := json.Unmarshal(jsonRaw, &exported); err != nil {
+		t.Fatalf("/save json invalid JSON: %v", err)
+	}
+	if count, _ := exported["count"].(float64); int(count) != len(sessionEntries) {
+		t.Errorf("/save json expected count=%d, got %v", len(sessionEntries), exported["count"])
+	}
+
+	// 4. /retry
+	host.runCommand("retry", "")
+	if retriedContent != "Second user turn to retry" {
+		t.Errorf("/retry expected %q, got %q", "Second user turn to retry", retriedContent)
+	}
+
+	// 5. /undo
+	host.runCommand("undo", "")
+	if navTargetID != "e2" {
+		t.Errorf("/undo expected NavigateTree targetId=%q, got %q", "e2", navTargetID)
+	}
+	if got := lastMsg(); !strings.Contains(got, "Undid 1 turn(s)") {
+		t.Errorf("/undo unexpected output: %q", got)
+	}
+}
