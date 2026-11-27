@@ -32,6 +32,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/search"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/settings"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/shell"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/snapcompact"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ssh"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/tern"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ternbrowser"
@@ -75,6 +76,7 @@ var registrars = []func(*sdk.Extension){
 	autoresearch.Register,
 	intent.RegisterLifecycle,
 	prediction.Register,
+	snapcompact.Register,
 }
 
 // Extension returns the oh-my-pig extension.

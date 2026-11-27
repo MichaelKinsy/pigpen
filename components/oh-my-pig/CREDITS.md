@@ -47,6 +47,10 @@
   `extensions/oh-my-pig/internal/urls/docs_index.manifest.json`): gzip-compressed, base64-encoded
   JSON map of omp's 135 unmodified `docs/**/*.md` files at tag `v19.1.1`
   (`31ffee513f27a01bba7d4dfbe12bae239cdc646a`, MIT; [licenses/oh-my-pi-LICENSE](licenses/oh-my-pi-LICENSE)).
+- Embedded snapcompact bitmap fonts (`extensions/oh-my-pig/internal/snapcompact/fonts/{5x8,6x12,8x13}.bdf.gz`
+  and `unscii-8.hex.gz`): gzip-compressed copies of omp's `crates/natives/src/fonts/{5x8,6x12,8x13}.bdf`
+  (X.org Misc-Fixed UCS bitmap fonts by Markus Kuhn, public domain) and `crates/natives/src/fonts/unscii-8.hex`
+  (unscii-8 Latin-1 subset, public domain / MIT via omp `v19.1.1`).
 
 The Go code and its tests were written for this Package by Michael Kinsy. It is not affiliated with Stencil
 Labs or with omp's authors, and they have not reviewed it.

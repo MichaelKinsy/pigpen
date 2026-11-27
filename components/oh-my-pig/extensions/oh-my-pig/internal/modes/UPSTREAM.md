@@ -127,7 +127,7 @@ Summary counts across the 89 built-in commands:
 | `/login [provider\|url]` | OAuth login + manual redirect URL paste | **PiG's own (differs)** | PiG builtin `/login [provider]` runs PiG OAuth login (no `/login <redirect-url>` manual callback paste) |
 | `/logout [provider]` | Provider OAuth logout | **PiG's own (differs)** | PiG builtin `/logout` takes no provider argument and opens a selector |
 | `/new` | Start a new session | **PiG's own (same)** | PiG builtin `/new` starts a fresh session |
-| `/compact [mode] [focus]` | Compact context (`soft`/`remote`/`snapcompact`/`handoff`) | **PiG's own (differs)** | PiG builtin `/compact [instructions]` has no `soft`/`remote`/`snapcompact`/`handoff` mode subcommands (use `/handoff` here for handoff) |
+| `/compact [mode] [focus]` | Compact context (`soft`/`remote`/`snapcompact`/`handoff`) | **ported via `internal/snapcompact` (`EventInput` + `EventSessionBeforeCompact`)** | Default compaction runs local bitmap-frame `snapcompact` on vision models (honoring `compaction.methodOrder` & `snapcompact.shape`, falling back to PiG LLM compaction on text-only models or when focus instructions are given); `/compact snapcompact|soft|handoff|remote` supported. |
 | `/resume [id\|@claude\|@codex]` | Resume session or import foreign session | **PiG's own (differs)** | PiG builtin `/resume` opens PiG's session picker (no direct `<id>` arg or `@claude`/`@codex` foreign import) |
 | `/debug` | Open debug tools selector | **PiG's own (differs)** | PiG builtin `/debug` writes a debug log file (no interactive debug selector) |
 | `/quit` (`q`) | Quit application | **PiG's own (same)** | PiG builtin `/quit`; `/q` alias registered here |

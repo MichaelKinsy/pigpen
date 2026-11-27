@@ -34,6 +34,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/search"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/settings"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/shell"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/snapcompact"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/tern"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/todo"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/toolcmd"
@@ -89,6 +90,8 @@ func wireSettings() {
 	}
 	modes.Setting = settings.Any
 	modes.SetSetting = settings.Set
+	snapcompact.Setting = settings.Any
+	snapcompact.HandoffPrompt = modes.RenderHandoffPrompt
 	prompt.Skillful = func(ctx sdk.Context) bool {
 		return settings.Enabled(ctx, "skillful", true)
 	}

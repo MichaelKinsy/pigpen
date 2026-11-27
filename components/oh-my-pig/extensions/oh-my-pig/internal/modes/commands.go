@@ -192,7 +192,7 @@ func (m *manager) handleUsageCommand(ctx sdk.Context, args string) error {
 // upstream: packages/coding-agent/src/slash-commands/builtin-lifecycle.ts:349-356
 func (m *manager) handleHandoffCommand(ctx sdk.Context, args string) error {
 	focus := strings.TrimSpace(args)
-	instructions := renderHandoffPrompt(focus)
+	instructions := RenderHandoffPrompt(focus)
 	ctx.Compact(map[string]any{
 		"customInstructions": instructions,
 	})
@@ -200,7 +200,8 @@ func (m *manager) handleHandoffCommand(ctx sdk.Context, args string) error {
 	return nil
 }
 
-func renderHandoffPrompt(additionalFocus string) string {
+// RenderHandoffPrompt renders omp's handoff-document.md compaction prompt.
+func RenderHandoffPrompt(additionalFocus string) string {
 	return renderTemplate(handoffDocumentTemplate, templateData{
 		Vars: map[string]string{"additionalFocus": additionalFocus},
 	})

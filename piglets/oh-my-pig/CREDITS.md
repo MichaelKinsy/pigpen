@@ -25,5 +25,7 @@ It is not affiliated with them and they have not reviewed it.
     keeping upstream `LICENSE`, patched to remove the side panel and use `oh-my-pig`'s native host name,
     attribution, and generated `icons/oh-my-pig-*.png` icons (omp's icons are not shipped; zero third-party
     npm runtime dependencies).
+  - embedded public-domain bitmap fonts (`5x8`, `6x12`, `8x13` X.org Misc-Fixed BDF by Markus Kuhn and
+    `unscii-8.hex`, from omp `crates/natives/src/fonts/` at tag `v19.1.1`) for local snapcompact frame rendering.
 
   The extension's [credits](../../components/oh-my-pig/CREDITS.md) say where each comes from in omp.
