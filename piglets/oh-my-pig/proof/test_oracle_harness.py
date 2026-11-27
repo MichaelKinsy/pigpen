@@ -1514,20 +1514,32 @@ class TestDrawingHarnessFixes(unittest.TestCase):
         self.assertEqual(res_differs["unexpected_diffs"][0]["node_path"], "col[omp.run] > ansi[omp.tool.bash.output]")
         self.assertEqual(res_differs["unexpected_diffs"][0]["prop"], "preview")
 
-        # 4. Allowlisted host-absent part (`slash menu`) yields `expected`
+        # 4. Native `slash menu` (`overlay[omp.autocomplete]`) is now mounted on both sides:
+        #    missing on pig must report `missing` (no longer allowlisted as host-absent), while
+        #    matching native overlay with pinned anchor/list diffs yields `expected`.
         doc_omp_sm = compare.TspDocument(
             surface_id="s:1", surface_role="omp.session",
             nodes={
                 "s:1": compare.TspNode(id="s:1", kind="surface", props={"role": "omp.session"}, children=["layer"]),
                 "layer": compare.TspNode(id="layer", kind="col", props={}, children=["ov"]),
-                "ov": compare.TspNode(id="ov", kind="overlay", props={"role": "omp.autocomplete"}, children=[]),
+                "ov": compare.TspNode(id="ov", kind="overlay", props={"role": "omp.autocomplete", "anchor": {"caret": "j.line/input"}}, children=[]),
+            },
+        )
+        doc_pig_sm = compare.TspDocument(
+            surface_id="s:1", surface_role="pig.session",
+            nodes={
+                "s:1": compare.TspNode(id="s:1", kind="surface", props={"role": "pig.session"}, children=["layer"]),
+                "layer": compare.TspNode(id="layer", kind="col", props={}, children=["ov"]),
+                "ov": compare.TspNode(id="ov", kind="overlay", props={"role": "omp.autocomplete", "anchor": {"caret": "dock.editor.editor.line.input"}}, children=[]),
             },
         )
         dom_sm = {"regions": {"sf-layer": [{"kind": "overlay", "class": "sf sf-overlay", "children": []}]}}
-        sm_info = compare.summarize_part(doc_omp_sm, dom_sm, "sf-layer", [doc_omp_sm.nodes["ov"]])
-        res_sm = compare.compare_part("slash menu", "17a-slash-menu", doc_omp_sm, pig_ok, sm_info, None, allowlist=allow)
+        sm_omp_info = compare.summarize_part(doc_omp_sm, dom_sm, "sf-layer", [doc_omp_sm.nodes["ov"]])
+        sm_pig_info = compare.summarize_part(doc_pig_sm, dom_sm, "sf-layer", [doc_pig_sm.nodes["ov"]])
+        res_sm_missing = compare.compare_part("slash menu", "17a-slash-menu", doc_omp_sm, pig_ok, sm_omp_info, None, allowlist=allow)
+        self.assertEqual(res_sm_missing["verdict"], "missing")
+        res_sm = compare.compare_part("slash menu", "17a-slash-menu", doc_omp_sm, doc_pig_sm, sm_omp_info, sm_pig_info, allowlist=allow)
         self.assertEqual(res_sm["verdict"], "expected")
-
         # 5. Every repo drawing_allowlist.json & terminal_allowlist.json entry resolves uniquely via (ref_file, ref_term)
         for fname, entries in [
             ("drawing_allowlist.json", allow),

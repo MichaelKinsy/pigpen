@@ -26,6 +26,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lsp"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/modes"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prediction"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prompt"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ratchet"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/search"
@@ -73,6 +74,7 @@ var registrars = []func(*sdk.Extension){
 	ansi.Register,
 	autoresearch.Register,
 	intent.RegisterLifecycle,
+	prediction.Register,
 }
 
 // Extension returns the oh-my-pig extension.

@@ -192,6 +192,29 @@ func registerWithManager(e *sdk.Extension, m *manager) {
 		Description: "Commit only the changes this agent and its subagents made",
 		Handler:     m.handleCommitCommand,
 	})
+	e.RegisterCommand("open", sdk.CommandOptions{
+		Description: "Open the last link from the conversation in your browser (or pick one with /copy)",
+		Handler:     m.handleOpenCommand,
+	})
+	e.RegisterCommand("skillful", sdk.CommandOptions{
+		Description: "Toggle listing available skills in the system prompt (session only)",
+		GetArgumentCompletions: staticSubcommandCompletions([]sdk.AutocompleteItem{
+			{Value: "on ", Label: "on", Description: "List skills in the prompt for this session"},
+			{Value: "off ", Label: "off", Description: "Omit the skills listing for this session"},
+			{Value: "status ", Label: "status", Description: "Show skill listing status"},
+		}),
+		Handler: m.handleSkillfulCommand,
+	})
+	e.RegisterCommand("modelpreset", sdk.CommandOptions{
+		Description: "Save and switch model presets (role models + thinking level)",
+		GetArgumentCompletions: staticSubcommandCompletions([]sdk.AutocompleteItem{
+			{Value: "list ", Label: "list", Description: "List saved presets"},
+			{Value: "save ", Label: "save", Description: "Save the current role models and thinking level"},
+			{Value: "switch ", Label: "switch", Description: "Apply a saved preset"},
+			{Value: "delete ", Label: "delete", Description: "Delete a saved preset"},
+		}),
+		Handler: m.handleModelPresetCommand,
+	})
 
 	// Event hooks
 	e.OnSessionStart(m.onSessionStart)

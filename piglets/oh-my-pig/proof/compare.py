@@ -1346,9 +1346,11 @@ def load_drawing_allowlist(path: Path | None = None) -> list[dict[str, Any]]:
                     f"drawing_allowlist[{i}] frame_child must pin 'text', 'text_regex', 'child_roles', or 'empty_container'"
                 )
             continue
-        for req in ("part", "node_path", "prop", "side", "class", "ref", "why"):
+        for req in ("part", "prop", "side", "class", "ref", "why"):
             if not isinstance(e.get(req), str) or not e[req].strip():
                 raise ValueError(f"drawing_allowlist[{i}] missing required string field {req!r}")
+        if not ((isinstance(e.get("node_path"), str) and e["node_path"].strip()) or (isinstance(e.get("node_path_regex"), str) and e["node_path_regex"].strip())):
+            raise ValueError(f"drawing_allowlist[{i}] missing required string field 'node_path' or 'node_path_regex'")
         if e["side"] not in ("omp-only", "port-only", "value"):
             raise ValueError(f"drawing_allowlist[{i}] invalid side {e['side']!r}")
         # Finding 8: every `value` entry MUST pin its expected omp and pig values (or use a named match_kind).
@@ -1381,9 +1383,14 @@ def _match_allowlist_entry(
             continue
         parts_allowed = entry.get("parts")
         part_ok = (part_name in parts_allowed) if isinstance(parts_allowed, list) else (entry["part"] == part_name)
+        np_ok = (
+            bool(re.search(entry["node_path_regex"], diff["node_path"]))
+            if "node_path_regex" in entry
+            else (entry["node_path"] == diff["node_path"])
+        )
         if not (
             part_ok
-            and entry["node_path"] == diff["node_path"]
+            and np_ok
             and entry["prop"] == diff["prop"]
             and entry["side"] == diff["side"]
         ):

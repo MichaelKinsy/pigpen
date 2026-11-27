@@ -1282,6 +1282,33 @@ func (m *Manager) ReleaseTabsForOwner(ctx context.Context, ownerSessionID string
 	return len(victims)
 }
 
+// DropHeadlessTabs closes ONLY owned KindHeadless tabs belonging to
+// ownerSessionID without tombstoning the session, bumping sessionGen,
+// cancelling ownerCancels, or closing connected/spawned/relay tabs.
+// upstream: dropHeadlessTabs in packages/coding-agent/src/tools/browser.ts:399
+func (m *Manager) DropHeadlessTabs(ctx context.Context, ownerSessionID string) int {
+	if ownerSessionID == "" {
+		return 0
+	}
+	m.mu.Lock()
+	var victims []*managedTab
+	for k, mt := range m.tabs {
+		if k.owner != ownerSessionID {
+			continue
+		}
+		if mt.kind.Kind != KindHeadless {
+			continue
+		}
+		victims = append(victims, mt)
+		delete(m.tabs, k)
+	}
+	m.mu.Unlock()
+	for _, mt := range victims {
+		_ = mt.tab.Close(ctx, false)
+	}
+	return len(victims)
+}
+
 // ReleaseAllTabs closes every managed tab in this process (intended for tests/process teardown).
 func (m *Manager) ReleaseAllTabs(ctx context.Context, kill bool) int {
 	m.mu.Lock()

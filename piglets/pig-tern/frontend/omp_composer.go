@@ -1,13 +1,13 @@
 package frontend
 
 import (
-	"math"
-	"strconv"
-	"strings"
-
 	fe "github.com/MichaelKinsy/PiG/extensions/sdk/frontend"
 	"github.com/stencil-hq/tern-sdk/go/tern"
 	"github.com/stencil-hq/tern-sdk/go/tern/ui"
+	"math"
+	"slices"
+	"strconv"
+	"strings"
 )
 
 // ompComposerPlaceholder is omp's untitled-session placeholder (custom-editor.ts:54).
@@ -45,6 +45,7 @@ func (s *session) ompComposerElement(e *entry, editor fe.Editor, interactive boo
 	inputField := ui.Field{
 		Placeholder: ui.T(placeholder),
 		Sendable:    interactive && editor.Sendable,
+		Ghost:       s.ompPredictionSuffix(editor),
 	}
 	if !interactive {
 		cursor := editor.Cursor
@@ -385,9 +386,6 @@ func ompModelSpansWithName(footer fe.Footer, modelName string, includeThinking b
 		name = "no-model"
 	}
 	name = strings.TrimPrefix(name, "Claude ")
-	if footer.Provider != "" {
-		name = "(" + footer.Provider + ") " + name
-	}
 	if footer.Routed.Model != "" {
 		name += " → " + strings.TrimPrefix(footer.Routed.Model, "Claude ")
 	}
@@ -525,4 +523,151 @@ func (s *session) syncOmpFooterMount() {
 			return
 		}
 	}
+}
+
+// setOmpPredictions updates the composer's prompt prediction choices and
+// live-patches the editor's `ghost` prop when the active ghost suffix changes.
+func (s *session) setOmpPredictions(choices []string) {
+	if slices.Equal(s.predictions, choices) {
+		return
+	}
+	s.predictions = slices.Clone(choices)
+	s.predictionIdx = 0
+	if len(s.predictions) == 0 {
+		s.insertedPrediction = ""
+	}
+	s.syncOmpEditorGhost()
+}
+
+// ompPredictionSuffix computes the dim ghost suffix to paint after the editor
+// caret, matching omp `editor.ts:5608-5630` (`#getShownPrediction`):
+//   - suppressed when autocomplete is open, editor is multi-line, or cursor is
+//     not at the end of the text;
+//   - when text is empty, returns `predictions[predictionIdx]`;
+//   - when text is non-empty, returns the remaining suffix of the first choice
+//     whose lowercased prefix matches `text` (strictly longer than `text`),
+//     unless the buffer equals an already-inserted prediction with >1 choices
+//     so a second Tab can cycle alternatives.
+func (s *session) ompPredictionSuffix(editor fe.Editor) string {
+	if !s.ompRoles || len(s.predictions) == 0 || s.autocomplete != nil {
+		return ""
+	}
+	if strings.ContainsRune(editor.Text, '\n') {
+		return ""
+	}
+	if editor.Cursor != utf16Len(editor.Text) {
+		return ""
+	}
+	typed := editor.Text
+	if typed == "" {
+		idx := s.predictionIdx
+		if idx < 0 || idx >= len(s.predictions) {
+			idx = 0
+		}
+		return s.predictions[idx]
+	}
+	if len(s.predictions) > 1 && typed == s.insertedPrediction && slices.Contains(s.predictions, typed) {
+		return ""
+	}
+	lowerTyped := strings.ToLower(typed)
+	for _, p := range s.predictions {
+		if len(typed) < len(p) && strings.HasPrefix(strings.ToLower(p), lowerTyped) {
+			return p[len(typed):]
+		}
+	}
+	return ""
+}
+
+// syncOmpEditorGhost sends a raw `set` op updating `ghost` on the live editor
+// input node whenever the computed ghost suffix changed.
+func (s *session) syncOmpEditorGhost() {
+	if !s.ompRoles || !s.hasEditor {
+		return
+	}
+	for _, e := range s.dock {
+		editor, ok := e.node.(fe.Editor)
+		if !ok {
+			continue
+		}
+		nextGhost := s.ompPredictionSuffix(editor)
+		if nextGhost == e.raw.ghost {
+			return
+		}
+		e.raw.ghost = nextGhost
+		if !e.unsent {
+			if nextGhost == "" {
+				s.queue(tern.OpSet(s.editorInputID(e), map[string]any{"ghost": nil}))
+			} else {
+				s.queue(tern.OpSet(s.editorInputID(e), map[string]any{"ghost": nextGhost}))
+			}
+		}
+		return
+	}
+}
+
+// handlePredictionKeyLocked intercepts Tab (`"\t"`) and Right (`"\x1b[C"`)
+// while a composer ghost prediction is active (or Tab when cycling between
+// prediction alternatives) and inserts it via `Env.Edit` without submitting.
+// Caller holds `s.mu`.
+func (s *session) handlePredictionKeyLocked(keys string) bool {
+	if !s.hasEditor || s.closed || s.fellBack || s.screen != nil || s.autocomplete != nil || len(s.overlays) > 0 || len(s.predictions) == 0 {
+		return false
+	}
+	if keys != "\t" && keys != "\x1b[C" {
+		return false
+	}
+	for _, e := range s.dock {
+		if isLayerNode(e.node) {
+			return false
+		}
+	}
+	editor := s.editor
+	if strings.ContainsRune(editor.Text, '\n') || editor.Cursor != utf16Len(editor.Text) {
+		return false
+	}
+	editFn := s.env.Edit
+	if editFn == nil {
+		return false
+	}
+	if suffix := s.ompPredictionSuffix(editor); suffix != "" {
+		full := editor.Text + suffix
+		if idx := slices.Index(s.predictions, full); idx >= 0 {
+			s.predictionIdx = idx
+		}
+		s.insertedPrediction = full
+		cur := editor.Cursor
+		newCur := utf16Len(full)
+		s.mu.Unlock()
+		editFn(fe.Edit{
+			From:   cur,
+			To:     cur,
+			Text:   suffix,
+			Cursor: newCur,
+			Len:    utf16Len(editor.Text),
+		})
+		s.mu.Lock()
+		return true
+	}
+	// Second Tab when current buffer equals one of multiple predictions: cycle to next alternative.
+	if keys == "\t" && len(s.predictions) > 1 {
+		if idx := slices.Index(s.predictions, editor.Text); idx >= 0 {
+			nextIdx := (idx + 1) % len(s.predictions)
+			nextText := s.predictions[nextIdx]
+			s.predictionIdx = nextIdx
+			s.insertedPrediction = nextText
+			oldLen := utf16Len(editor.Text)
+			newCur := utf16Len(nextText)
+			s.mu.Unlock()
+			editFn(fe.Edit{
+				From:   0,
+				To:     oldLen,
+				Text:   nextText,
+				Cursor: newCur,
+				Len:    oldLen,
+			})
+			s.mu.Lock()
+			return true
+		}
+	}
+	return false
 }

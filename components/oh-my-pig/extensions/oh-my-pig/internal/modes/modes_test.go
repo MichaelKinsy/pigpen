@@ -1398,7 +1398,7 @@ func TestRemainingSlashCommands(t *testing.T) {
 	if _, errMsg := h.callCommand("rewind", ""); errMsg != "" || len(h.callsTo("navigateTree")) != 1 {
 		t.Fatalf("/rewind failed: err=%q", errMsg)
 	}
-	if _, errMsg := h.callCommand("tools", ""); errMsg != "" || !strings.Contains(h.lastNotify(), "* read") {
+	if _, errMsg := h.callCommand("tools", ""); errMsg != "" || !strings.Contains(h.lastNotify(), "| `read` |") {
 		t.Fatalf("/tools failed: err=%q notify=%q", errMsg, h.lastNotify())
 	}
 	if _, errMsg := h.callCommand("effort", "low"); errMsg != "" || !strings.Contains(h.lastNotify(), "Thinking set to low.") {
@@ -1578,15 +1578,13 @@ func TestForceToolsContextWithMountedCommands(t *testing.T) {
 		t.Fatalf("/tools failed: %s", errMsg)
 	}
 	toolsOut := h.lastNotify()
-	for _, want := range []string{"* read", "* bash", "* grep", "- write", "- lsp", "- debug", "~ lsp", "~ debug"} {
+	for _, want := range []string{"| Tool | Description |", "| `read` |", "| `bash` |", "| `grep` |", "| `lsp` |", "| `debug` |"} {
 		if !strings.Contains(toolsOut, want) {
 			t.Fatalf("/tools missing %q in:\n%s", want, toolsOut)
 		}
 	}
-	for _, bad := range []string{"* lsp", "* debug"} {
-		if strings.Contains(toolsOut, bad) {
-			t.Fatalf("/tools must not mark mounted tool as top-level %q in:\n%s", bad, toolsOut)
-		}
+	if strings.Contains(toolsOut, "| `write` |") {
+		t.Fatalf("/tools must not list inactive tool write in interactive table:\n%s", toolsOut)
 	}
 
 	// 3. `/context` sums only top-level advertised tool schemas, NOT mounted hugeDesc schemas.

@@ -91,10 +91,11 @@ only behavior. Its toolbar badge shows `on` while its native host serves the rel
 Against omp `v19.1.1`: all 15 tools omp turns on by default (`read`, `write`, `edit`, `bash`, `grep`, `glob`,
 `eval`, `task`, `wait`, `todo`, `ask`, `web_search`, and `lsp`, `ast_edit`, `debug` mounted in `bash`), 35 of omp's
 49 model-facing tools in all, omp's five agents, its system prompt, 17 of its 20 internal URL schemes (including
-`omp://` and `ssh://`), DOCX/PPTX/XLSX/EPUB/PDF reading, 24 of its 89 slash commands (+ `/autoresearch`), 8 of its
-16 modes, the `browser`, `commit`, and `ratchet` eval namespaces, the browser relay above, and omp's look in Tern
-for the transcript and the composer. 108 of omp's 644 settings take effect; the others are accepted and ignored.
-[PARITY.md](PARITY.md) has every row, how each was compared, and what is not proven.
+`omp://` and `ssh://`), DOCX/PPTX/XLSX/EPUB/PDF reading, 30 of its 89 slash commands (+ `/autoresearch`), 8 of its
+16 modes, full-prompt composer predictions (`composer.predictions`), the `browser`, `commit`, and `ratchet` eval
+namespaces, the browser relay above, and omp's look in Tern for the transcript, native floating autocomplete, and
+the composer. 111 of omp's 644 settings take effect; the others are accepted and ignored. [PARITY.md](PARITY.md)
+has every row, how each was compared, and what is not proven.
 
 ## Status
 

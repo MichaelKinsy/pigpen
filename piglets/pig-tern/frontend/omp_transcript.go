@@ -509,6 +509,118 @@ func ompDividerNode(id string, lines []string) (tern.WireNode, bool) {
 	return tern.WireNode{ID: id, K: tern.KindRule, P: props}, true
 }
 
+// ompDiscoverySectionHeadings lists the `[Section]` headings emitted by PiG's
+// `InteractiveMode.showLoadedResources` (`internal/codingagent/loaded_resources.go`).
+var ompDiscoverySectionHeadings = map[string]bool{
+	"[Context]":          true,
+	"[Skills]":           true,
+	"[Prompts]":          true,
+	"[Extensions]":       true,
+	"[Themes]":           true,
+	"[Skill warnings]":   true,
+	"[Prompt conflicts]": true,
+	"[Extension issues]": true,
+	"[Theme conflicts]":  true,
+}
+
+// isOmpDiscoverySection reports whether lines represent one of PiG's startup
+// loaded-resources sections (`[Context]`, `[Skills]`, `[Prompts]`,
+// `[Extensions]`, `[Themes]`, `[Skill warnings]`, `[Prompt conflicts]`,
+// `[Extension issues]`, `[Theme conflicts]`).
+func isOmpDiscoverySection(lines []string) bool {
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(stripANSI(line))
+		if trimmed == "" {
+			continue
+		}
+		return ompDiscoverySectionHeadings[trimmed]
+	}
+	return false
+}
+
+// isBlankMainLines reports whether node is an all-whitespace fe.Lines spacer
+// (e.g. `tui.NewSpacer(1)` between loaded-resource sections).
+func isBlankMainLines(node fe.Node) bool {
+	lines, ok := node.(fe.Lines)
+	if !ok || lines.Click != nil || validView(lines.View, lines.Lines) {
+		return false
+	}
+	return blank(linesText(lines.Lines))
+}
+
+// syncOmpDiscoveryDividers keeps one top `rule[omp.divider]` (`omp.discovery.top`)
+// and one bottom `rule[omp.divider]` (`omp.discovery.bottom`) framing PiG's
+// contiguous startup loaded-resources sections in `main`.
+func (s *session) syncOmpDiscoveryDividers() {
+	if !s.ompRoles {
+		return
+	}
+	firstIdx, lastIdx := -1, -1
+	for i, id := range s.order {
+		e := s.sent[strings.TrimPrefix(id, "n.")]
+		if e == nil || e.gone || !e.isDiscovery {
+			continue
+		}
+		if firstIdx < 0 {
+			firstIdx = i
+		}
+		lastIdx = i
+	}
+	if firstIdx < 0 {
+		if s.discoveryTopID != "" {
+			s.queue(tern.OpDel(s.discoveryTopID))
+			s.discoveryTopID = ""
+			s.discoveryTopBefore = ""
+		}
+		if s.discoveryBotID != "" {
+			s.queue(tern.OpDel(s.discoveryBotID))
+			s.discoveryBotID = ""
+			s.discoveryBotBefore = ""
+			s.discoveryLastID = ""
+		}
+		return
+	}
+
+	topBefore := s.liveFrom(firstIdx)
+	if s.discoveryTopID == "" || s.discoveryTopBefore != topBefore {
+		if s.discoveryTopID != "" {
+			s.queue(tern.OpDel(s.discoveryTopID))
+		}
+		topID := "omp.discovery.top"
+		rule := tern.WireNode{ID: topID, K: tern.KindRule, P: map[string]any{"role": "omp.divider"}}
+		s.queue(tern.OpAdd("main", topBefore, rule), tern.OpSettle(topID))
+		s.discoveryTopID = topID
+		s.discoveryTopBefore = topBefore
+	}
+
+	// Place bottom divider after the last discovery section (skipping trailing
+	// blank spacers that belong to the loadedResourcesContainer). Track both
+	// the last discovery node ID and the anchor `before` ID so `/reload`
+	// (which clears and re-inserts discovery nodes before an unchanged trailing
+	// node) re-places the bottom divider after the newly inserted sections.
+	lastDiscoveryID := s.order[lastIdx]
+	afterIdx := lastIdx + 1
+	for afterIdx < len(s.order) {
+		e := s.sent[strings.TrimPrefix(s.order[afterIdx], "n.")]
+		if e == nil || !isBlankMainLines(e.node) {
+			break
+		}
+		afterIdx++
+	}
+	botBefore := s.liveFrom(afterIdx)
+	if s.discoveryBotID == "" || s.discoveryBotBefore != botBefore || s.discoveryLastID != lastDiscoveryID {
+		if s.discoveryBotID != "" {
+			s.queue(tern.OpDel(s.discoveryBotID))
+		}
+		botID := "omp.discovery.bottom"
+		rule := tern.WireNode{ID: botID, K: tern.KindRule, P: map[string]any{"role": "omp.divider"}}
+		s.queue(tern.OpAdd("main", botBefore, rule), tern.OpSettle(botID))
+		s.discoveryBotID = botID
+		s.discoveryBotBefore = botBefore
+		s.discoveryLastID = lastDiscoveryID
+	}
+}
+
 // ompWelcomeTips holds omp's TSP tips from packages/tui/src/prompt/tips.txt
 // filtered to features and commands registered in oh-my-pig (no /shake, /tan,
 // /omfg, /collab, /advisor, /cleanse, or omp CLI subcommands).

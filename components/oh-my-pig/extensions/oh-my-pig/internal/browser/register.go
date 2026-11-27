@@ -108,6 +108,7 @@ func Register(e *sdk.Extension) {
 	})
 
 	eval.RegisterPrelude(PreludeDefinition(defaultManager))
+	registerBrowserCommand(e)
 
 	// Clear any ended-session tombstone FIRST THING on session_start (after /reload
 	// or /resume, PiG reuses the same session ID with a fresh extension instance),

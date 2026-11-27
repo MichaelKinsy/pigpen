@@ -476,18 +476,162 @@
   {
     "part": "slash menu",
     "node_path": "$",
+    "prop": "anchor",
+    "side": "value",
+    "omp": {
+      "caret": "j.line/input"
+    },
+    "pig": {
+      "caret": "dock.editor.editor.line.input"
+    },
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "anchor"
+    ],
+    "why": "Both sides anchor `overlay[omp.autocomplete]` to their editor input's TSP ID (`j.line/input` in omp vs `dock.editor.editor.line.input` in pig-tern)."
+  },
+  {
+    "part": "slash menu",
+    "node_path": "col[omp.select] > list",
+    "prop": "selected",
+    "side": "value",
+    "omp_regex": "^[^\\s]+/plan$",
+    "pig": "layer.complete.select.list.settings",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "selected"
+    ],
+    "why": "PiG's built-in slash command list orders PiG's own `settings` first whereas omp orders `plan` first, and each side uses its own list item node ID format."
+  },
+  {
+    "part": "slash menu",
+    "node_path_regex": "^col\\[omp\\.select\\] > list > item@[0-4]$",
+    "prop": "label",
+    "side": "value",
+    "omp": [
+      {
+        "t_regex": "^(plan|security|settings|setup|plan-review)$"
+      }
+    ],
+    "pig": [
+      {
+        "t_regex": "^(settings|model|tree|thinking|scoped-models)$"
+      }
+    ],
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "item"
+    ],
+    "why": "PiG's slash autocomplete exposes PiG's built-in command order (settings, model, tree, thinking, scoped-models in the 5-row dock.below window) whereas omp orders plan, security, settings, setup, plan-review first."
+  },
+  {
+    "part": "slash menu",
+    "node_path_regex": "^col\\[omp\\.select\\] > list > item@[0-4]$",
+    "prop": "detail",
+    "side": "value",
+    "omp": [
+      {
+        "s": "muted",
+        "t_regex": "^(Toggle plan mode|Plan, run, inspect|Open settings menu|Open provider setup|Re-open the plan review)"
+      }
+    ],
+    "pig": [
+      {
+        "s": "muted",
+        "t_regex": "^(Open settings menu|<provider/model> — Select model|Navigate session tree|<level> — Set thinking level|Enable/disable models)"
+      }
+    ],
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "item"
+    ],
+    "why": "Paired with slash menu item label ordering: descriptions differ because PiG orders its built-in commands ahead of omp extension commands."
+  },
+  {
+    "part": "slash menu",
+    "node_path_regex": "^col\\[omp\\.select\\] > list > item@[0-4]$",
+    "prop": "icon",
+    "side": "value",
+    "omp_regex": "^(plan|shield|settings|gear)$",
+    "pig_regex": "^(settings|model|tree|gauge|action)$",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "icon"
+    ],
+    "why": "Paired with slash menu item ordering: icons match each row's command name, which differs in index order between omp and PiG."
+  },
+  {
+    "part": "slash menu",
+    "node_path_regex": "^col\\[omp\\.select\\] > list > item@\\d+$",
+    "prop": "value",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "value"
+    ],
+    "why": "omp attaches dynamic state values (e.g. `on (PLAN.md)`) to select items; PiG's `dock.below` SelectList lines carry only label and description."
+  },
+  {
+    "part": "slash menu",
+    "node_path_regex": "^col\\[omp\\.select\\] > list > item@\\d+$",
     "prop": "$node",
     "side": "omp-only",
     "class": "HOST",
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
-      "| Slash autocomplete overlay",
-      "overlay[omp.autocomplete]"
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
     ],
     "ref_subject": [
-      "omp.autocomplete"
+      "overlay[omp.autocomplete]",
+      "dock.below"
     ],
-    "why": "PiG `frontend.Editor` carries no autocomplete items/selection state (`OMP-UPSTREAM.md:28,53`); PiG dumps completion lines into `dock.below` instead of `overlay[omp.autocomplete]`."
+    "why": "omp sends all ~89 slash commands into the `list` node, while PiG's `dock.below` renders only the 5-row visible window (`autocompleteMax=5`) with an `(i/N)` status footer."
+  },
+  {
+    "part": "slash menu",
+    "node_path": "col[omp.select] > text@1",
+    "prop": "$node",
+    "side": "port-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "status"
+    ],
+    "why": "PiG's 5-row windowed autocomplete includes a `(1/N)` status footer rendered as a muted `text` child inside `col[omp.select]`."
   },
   {
     "part": "composer",
@@ -788,67 +932,22 @@
   },
   {
     "kind": "frame_child",
-    "region": "layer",
-    "side": "omp-only",
-    "node_kind": "overlay",
-    "role": "omp.autocomplete",
-    "step": "17a-slash-menu",
-    "child_roles": [
-      "col[omp.select]"
-    ],
-    "class": "HOST",
-    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
-    "ref_term": [
-      "| Slash autocomplete overlay",
-      "overlay[omp.autocomplete]"
-    ],
-    "ref_subject": [
-      "overlay[omp.autocomplete]"
-    ],
-    "why": "PiG frontend.Editor carries no structured autocomplete items; omp mounts overlay[omp.autocomplete] in layer."
-  },
-  {
-    "kind": "frame_child",
-    "region": "dock",
+    "region": "main",
     "side": "port-only",
-    "node_kind": "col",
-    "role": "",
-    "step": "17a-slash-menu",
-    "child_roles": [
-      "ansi"
-    ],
-    "text_regex": "settings|model|tree|plan",
-    "class": "HOST",
+    "node_kind": "rule",
+    "role": "omp.divider",
+    "text": "",
+    "class": "ON_PURPOSE",
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
-      "| Slash autocomplete overlay",
-      "overlay[omp.autocomplete]"
+      "| Host transcript notices in `main`:",
+      "startup discovery dividers (`rule[omp.divider]`)"
     ],
     "ref_subject": [
-      "dock.below",
-      "ANSI list"
+      "rule[omp.divider]",
+      "startup discovery"
     ],
-    "why": "PiG Editor.frontendParts dumps the slash completion list as a pre-rendered `ansi` node inside `dock.below` rather than `overlay[omp.autocomplete]`."
-  },
-  {
-    "kind": "frame_child",
-    "region": "dock",
-    "side": "omp-only",
-    "node_kind": "col",
-    "role": "",
-    "step": "17a-slash-menu",
-    "empty_container": true,
-    "class": "HOST",
-    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
-    "ref_term": [
-      "| Slash autocomplete overlay",
-      "overlay[omp.autocomplete]"
-    ],
-    "ref_subject": [
-      "dock.below",
-      "ANSI list"
-    ],
-    "why": "Paired with port's `dock.below` `col(ansi)` at `17a-slash-menu`: omp keeps its `below` dock slot as an empty `col` while rendering slash completions in `overlay[omp.autocomplete]`."
+    "why": "Frontend frames PiG's startup discovery section (`[Extensions]`, `[Context]`, `[Skills]`, …) with top and bottom `rule[omp.divider]` horizontal dividers matching omp's framed startup block."
   },
   {
     "kind": "frame_child",

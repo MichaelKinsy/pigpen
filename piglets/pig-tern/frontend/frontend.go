@@ -306,6 +306,18 @@ type session struct {
 	errorBannerMsg       string
 	errorBannerExpanded  bool
 	errorBannerDismissed bool
+	// Discovery dividers framing PiG's loaded-resources block in main (ompRoles).
+	discoveryTopID     string
+	discoveryTopBefore string
+	discoveryBotID     string
+	discoveryBotBefore string
+	discoveryLastID    string
+	// Native floating autocomplete popup parsed from dock.below (ompRoles).
+	autocomplete *ompAutocompleteState
+	// Composer prompt predictions extracted from hidden omp.composer.prediction dock widget.
+	predictions        []string
+	predictionIdx      int
+	insertedPrediction string
 	// surfaceMu serializes callbacks and re-checks closed/fellBack so a late
 	// open notification can never overwrite a Close or fallback(false) (fixes N6).
 	onSurface    func(native bool)
@@ -529,10 +541,12 @@ func (s *session) Apply(frame fe.Frame) error {
 			s.refreshOmpWelcomeLogo()
 		}
 	}
+	mainChanged := false
 	for _, op := range frame.Ops {
 		switch op.Region {
 		case fe.RegionMain:
 			s.convertMain(op)
+			mainChanged = true
 		case fe.RegionOverlay:
 			if s.isScreenOp(op) {
 				s.applyScreen(op)
@@ -542,6 +556,9 @@ func (s *session) Apply(frame fe.Frame) error {
 		default:
 			s.applyDock(op)
 		}
+	}
+	if mainChanged && s.ompRoles {
+		s.syncOmpDiscoveryDividers()
 	}
 	if s.inputReady {
 		s.live = true
@@ -664,6 +681,10 @@ func (s *session) HandleInput(data string) bool {
 	for _, item := range items {
 		switch {
 		case item.Keys != nil:
+			if s.ompRoles && len(items) == 1 && s.handlePredictionKeyLocked(string(item.Keys)) {
+				s.mu.Unlock()
+				return true
+			}
 			s.mu.Unlock()
 			return false
 		case item.DA1 && !s.owedDA1:

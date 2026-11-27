@@ -141,10 +141,10 @@ Summary counts across the 89 built-in commands:
 | `/fast [on\|ultra\|off\|status]` | Toggle provider priority/ultrafast service tier | **not ported** | PiG SDK has no API to set provider `service_tier` / `speed` |
 | `/slow [on\|off\|status]` | Toggle provider flex/low-priority service tier | **not ported** | PiG SDK has no API to set provider `service_tier` / low-priority fallback |
 | `/extended-context [on\|off\|status]` | Toggle extended context window tier | **not ported** | PiG SDK has no API to toggle provider extended-context beta flags |
-| `/skillful [on\|off\|status]` | Toggle listing skills in system prompt | **not ported** | Prompt skill listing is owned by `internal/prompt` / PiG settings |
+| `/skillful [on\|off\|status]` | Toggle listing skills in system prompt | **ported here** | Session-only `skillful` toggle wired to `internal/settings` and honored by `internal/prompt` (`prompt.Skillful`) |
 | `/computer [on\|off\|status]` | Toggle computer-use eval prelude | **not ported** | Computer-use desktop control prelude not ported |
 | `/ratchet [flow and goal]` | Eval hillclimbing kickoff | **ported (`internal/ratchet`)** | Registered by `internal/ratchet/register.go` alongside the `ratchet` eval prelude |
-| `/modelpreset [list\|save\|switch\|delete]` | Save/switch role-model presets | **not ported** | Depends on omp's role-model settings schema (`internal/settings`) |
+| `/modelpreset [list\|save\|switch\|delete]` | Save/switch role-model presets | **ported here** | Stores named model + thinking level + optional role presets in `<agentDir>/model-presets.json` with interactive selector |
 | `/setup` (`providers`) | Interactive provider setup wizard | **not ported** | Custom TUI wizard; PiG uses `/login` and `pig auth` |
 | `/security <subcommand>` | Native security scan planner/runner | **not ported** | Requires omp's `security_scan` backend and SARIF/lineage store |
 | `/trace` | Open session trace in stats dashboard | **not ported** | Requires omp's `@oh-my-pi/omp-stats` HTTP server + SQLite store |
@@ -152,14 +152,14 @@ Summary counts across the 89 built-in commands:
 | `/collab [start\|view\|list\|stop\|status]` | Live session sharing via relay | **not ported** | Requires omp's collab relay protocol and host/guest runtime |
 | `/join <link>` | Join shared collab session | **not ported** | Requires omp's collab guest runtime |
 | `/leave` | Leave collab session | **not ported** | Requires omp's collab runtime |
-| `/browser [headless\|visible]` | Toggle browser eval-prelude mode | **not ported** | Owned by `internal/browser` / `internal/ternbrowser` |
-| `/open [link]` | Open last conversation link in OS browser | **not ported** | No cross-platform browser opener contract in PiG SDK; `/copy link` is ported |
+| `/browser [headless\|visible]` | Toggle browser eval-prelude mode | **ported (`internal/browser`)** | Registered by `internal/browser/command.go`; toggles `browser.headless` and drops owned headless tabs |
+| `/open [link]` | Open last conversation link in OS browser | **ported here** | Reuses `ExtractLastLink`; validates `http://`/`https://` and launches argv-only OS opener (`open`/`xdg-open`/`rundll32`) |
 | `/commit [instructions]` | Selective commit of agent-made changes | **ported here** | Verifies `eval` active + `commit` prelude enabled, calls `commit.DraftFor` + `commit.LogSubjects(5)`, renders `commit-request.md` verbatim, and sends/steers prompt |
 | `/live` | Realtime Codex voice mode | **not ported** | Requires WebRTC audio + Codex realtime backend |
 | `/record` | Screen recording (`omp play`) | **not ported** | Requires omp's TUI frame recorder |
 | `/pause` | Freeze all agents until resumed | **not ported** | Requires omp's global `agentPauseGate` + fullscreen pause overlay |
-| `/forget-approvals` | Clear remembered file/folder approvals | **not ported** | Requires omp's `approval-cache` subsystem |
-| `/ssh <subcommand>` | Manage SSH hosts | **not ported** | Interactive SSH config management command not ported (`ssh://` URL protocol is ported in `internal/ssh`) |
+| `/forget-approvals` | Clear remembered file/folder approvals | **ported (`internal/approval`)** | Registered by `internal/approval/approval.go`; calls `ClearSession` and notifies |
+| `/ssh <subcommand>` | Manage SSH hosts | **ported (`internal/ssh`)** | Registered by `internal/ssh/command.go`; supports `list`, `add`, `remove`, `help` with atomic `ssh.json` writer |
 | `/fresh` | Reset provider stream state without clearing transcript | **not ported** | PiG SDK has no API to prune provider stream state |
 | `/delete` | Delete current session file and start a new one | **not ported** | PiG SDK has no `dropSession` API to unlink the active session file safely |
 | `/shake [elide\|images\|thinking]` | Drop heavy content from context in place | **not ported** | PiG SDK has no API to rewrite past context entries outside compaction |

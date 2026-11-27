@@ -49,6 +49,9 @@ type mainEntry struct {
 	// hasWelcomeSpacers reports that ompWelcomeNode emitted sibling spacer
 	// nodes (`<id>.sp0` before, `<id>.sp1` after) in main flanking card[omp.welcome].
 	hasWelcomeSpacers bool
+	// isDiscovery reports that this main entry is one of PiG's startup
+	// loaded-resources sections (`[Context]`, `[Skills]`, `[Prompts]`, ...).
+	isDiscovery bool
 }
 
 // textRef is the boxed TSP id that streamed assistant text patches: the
@@ -83,6 +86,9 @@ func (s *session) convertMain(op fe.Op) {
 		e := &mainEntry{id: id, ref: s.textRef(id, op.Node), node: op.Node}
 		if s.ompRoles {
 			s.recordMainTiming(e, nil, op.Node)
+			if lines, ok := op.Node.(fe.Lines); ok && lines.Click == nil && !validView(lines.View, lines.Lines) {
+				e.isDiscovery = isOmpDiscoverySection(lines.Lines)
+			}
 		}
 		s.sent[op.ID] = e
 		wire := s.mainNodeFor(e, op.Node)
@@ -114,6 +120,11 @@ func (s *session) convertMain(op fe.Op) {
 		e.node = op.Node
 		if s.ompRoles {
 			s.recordMainTiming(e, prev, op.Node)
+			if lines, ok := op.Node.(fe.Lines); ok && lines.Click == nil && !validView(lines.View, lines.Lines) {
+				e.isDiscovery = isOmpDiscoverySection(lines.Lines)
+			} else {
+				e.isDiscovery = false
+			}
 		}
 		if e.gone {
 			return

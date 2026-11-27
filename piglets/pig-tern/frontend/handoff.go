@@ -150,6 +150,8 @@ func (s *session) reopenLocked() error {
 func (s *session) redrawAll() {
 	clear(s.pending)
 	s.pending = s.pending[:0]
+	s.discoveryTopID, s.discoveryTopBefore = "", ""
+	s.discoveryBotID, s.discoveryBotBefore, s.discoveryLastID = "", "", ""
 	for _, id := range s.order {
 		e := s.sent[strings.TrimPrefix(id, "n.")]
 		if e.gone {
@@ -160,6 +162,9 @@ func (s *session) redrawAll() {
 	}
 	for i, id := range s.order {
 		s.settle(s.sent[strings.TrimPrefix(id, "n.")], i)
+	}
+	if s.ompRoles {
+		s.syncOmpDiscoveryDividers()
 	}
 	if s.sessionNode {
 		s.sessionNode = false

@@ -91,6 +91,12 @@ var TaskIRC func(ctx sdk.Context) bool
 // upstream: packages/coding-agent/src/system-prompt.ts:765,904-908
 var IncludeWorkspaceTree func(ctx sdk.Context) bool
 
+// Skillful reports whether available skills should be listed in the system
+// prompt for ctx's session (`skillful` setting, toggled via `/skillful`).
+// When nil, defaults to true (preserving default-session behavior).
+// upstream: packages/coding-agent/src/slash-commands/builtin-modes.ts:564-617
+var Skillful func(ctx sdk.Context) bool
+
 // Personality selects one of omp's bundled personality presets (or "none").
 // upstream: packages/coding-agent/src/system-prompt.ts:125-130
 type Personality string
@@ -1050,7 +1056,10 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 
 		activeTools := activeToolsFromSession(ctx, options)
 		contextFiles := contextFilesFromOptions(options, cwd)
-		skills := skillsFromOptions(options)
+		var skills []SkillEntry
+		if Skillful == nil || Skillful(ctx) {
+			skills = skillsFromOptions(options)
+		}
 		appendPrompt, _ := options["appendSystemPrompt"].(string)
 		var ruleOpts RuleDiscoveryOptions
 		if RuleOptions != nil {

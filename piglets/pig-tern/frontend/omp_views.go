@@ -2883,6 +2883,7 @@ type ompDockWidgets struct {
 	errorBanner *tern.Node
 	other       tern.Nodes
 	todo        *tern.Node // checklist[omp.hud.todo] mounted inside row[omp.hud.activity]
+	predictions []string   // composer prompt predictions from hidden omp.composer.prediction widget
 }
 
 func (s *session) ompDockWidgetParts(tid string, v *fe.View, lines []string) (ompDockWidgets, bool) {
@@ -2895,7 +2896,7 @@ func (s *session) ompDockWidgetParts(tid string, v *fe.View, lines []string) (om
 		path []int
 	}
 	var parts []widgetPart
-	if role, ok := ompViewRole(v.Root.ID); ok && (role == "omp.hud.todo" || role == "omp.errorBanner") {
+	if role, ok := ompViewRole(v.Root.ID); ok && (role == "omp.hud.todo" || role == "omp.errorBanner" || role == "omp.composer.prediction") {
 		parts = append(parts, widgetPart{node: &v.Root, r: region{0, 0, v.Root.Rows, v.Root.Width}, path: []int{}})
 	} else if v.Root.Kind == fe.ViewKindContainer && v.Root.ID == "" && len(v.Root.Children) > 0 {
 		row := 0
@@ -2909,7 +2910,7 @@ func (s *session) ompDockWidgetParts(tid string, v *fe.View, lines []string) (om
 	}
 	hasOmpWidget := false
 	for _, p := range parts {
-		if role, ok := ompViewRole(p.node.ID); ok && (role == "omp.hud.todo" || role == "omp.errorBanner") {
+		if role, ok := ompViewRole(p.node.ID); ok && (role == "omp.hud.todo" || role == "omp.errorBanner" || role == "omp.composer.prediction") {
 			hasOmpWidget = true
 			break
 		}
@@ -2950,6 +2951,10 @@ func (s *session) ompDockWidgetParts(tid string, v *fe.View, lines []string) (om
 			}
 			continue
 		}
+		if ok && role == "omp.composer.prediction" {
+			out.predictions = ompExtractPredictionChoices(b, p.node, p.r)
+			continue
+		}
 		// Skip blank non-widget spacer lines in dock.
 		if p.node.Kind == fe.ViewKindLines && blank(ompViewLeafRawText(b, p.node, p.r)) {
 			continue
@@ -2974,6 +2979,37 @@ func (s *session) ompDockWidgetParts(tid string, v *fe.View, lines []string) (om
 		s.errorBannerDismissed = false
 	}
 	return out, true
+}
+
+// ompExtractPredictionChoices extracts the ordered prompt prediction strings
+// from a hidden `omp.composer.prediction` dock widget containing
+// `omp.composer.prediction.choice#<i>` text children.
+func ompExtractPredictionChoices(b *viewer, n *fe.ViewNode, r region) []string {
+	var choices []string
+	var walk func(cur *fe.ViewNode, reg region)
+	walk = func(cur *fe.ViewNode, reg region) {
+		if cur == nil {
+			return
+		}
+		if role, ok := ompViewRole(cur.ID); ok && role == "omp.composer.prediction.choice" {
+			text := strings.TrimSpace(cur.Text)
+			if text == "" {
+				text = ompViewLeafPlainText(b, cur, reg)
+			}
+			if text != "" {
+				choices = append(choices, text)
+			}
+			return
+		}
+		row := reg.row
+		for i := range cur.Children {
+			ch := &cur.Children[i]
+			walk(ch, region{row, reg.col, ch.Rows, ch.Width})
+			row += ch.Rows
+		}
+	}
+	walk(n, r)
+	return choices
 }
 
 // ompHudTodoChecklistNode builds omp's dock todo HUD `checklist[omp.hud.todo]`

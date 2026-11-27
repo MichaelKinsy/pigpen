@@ -54,12 +54,12 @@ type entry struct {
 // rawProps are the props of a dock node sent as raw ops.
 type rawProps struct {
 	// text is the editor's, the dock lines' or a spinnerless indicator's
-	// text, and cursor the editor's cursor.
+	// text, cursor the editor's cursor, and ghost the editor's inline ghost.
 	text   string
 	cursor int
+	ghost  string
 	// hot are the dock lines' or the spinner's other props.
-	hot hot
-	// A picker's rows and query.
+	hot             hot
 	items           []any
 	order, current  []string
 	selected, query string
@@ -139,6 +139,15 @@ func (s *session) applyDock(op fe.Op) {
 			s.dirty = true
 			s.dockNodeChanged(e, e.node, nil)
 			s.dropViewRules(e.tid)
+			if s.ompRoles {
+				if e.id == "dock" {
+					s.setOmpPredictions(nil)
+				}
+				if e.id == "dock.below" && s.autocomplete != nil {
+					s.autocomplete = nil
+					s.syncOmpEditorGhost()
+				}
+			}
 		}
 		return
 	}
@@ -189,9 +198,16 @@ func (s *session) dockNodeChanged(e *entry, prev, next fe.Node) {
 			editorToggled = true
 		}
 		s.editor, s.hasEditor = editor, true
+		if s.ompRoles && editor.Text != s.insertedPrediction {
+			s.insertedPrediction = ""
+		}
 	} else if wasEditor {
 		s.editor, s.hasEditor = fe.Editor{}, false
 		editorToggled = true
+		if s.ompRoles && s.autocomplete != nil {
+			s.autocomplete = nil
+			s.dirty = true
+		}
 	}
 	if editorToggled && s.ompRoles {
 		s.syncOmpFooterMount()
@@ -320,8 +336,29 @@ func (s *session) rebuild(e *entry, prev fe.Node, restructure bool) {
 					e.ompDockWidgets = &widgets
 					e.view, e.unsent = tern.Node{}, false
 					s.dirty = true
+					s.setOmpPredictions(widgets.predictions)
 					return
 				}
+			}
+			s.setOmpPredictions(nil)
+		}
+		if s.ompRoles && e.id == "dock.below" {
+			if lines, ok := e.node.(fe.Lines); ok && !validView(lines.View, lines.Lines) {
+				if ac := parseOmpAutocomplete(s.editor, lines.Lines); ac != nil {
+					if !ac.equal(s.autocomplete) {
+						s.autocomplete = ac
+						s.dirty = true
+					}
+					s.dropPending(e.tid)
+					e.view, e.unsent = tern.Node{}, false
+					s.syncOmpEditorGhost()
+					return
+				}
+			}
+			if s.autocomplete != nil {
+				s.autocomplete = nil
+				s.dirty = true
+				s.syncOmpEditorGhost()
 			}
 		}
 		e.ompDockWidgets = nil
@@ -354,6 +391,27 @@ func (s *session) rebuild(e *entry, prev fe.Node, restructure bool) {
 		p, _ := prev.(fe.Footer)
 		s.queueFooter(e, p, n, fresh)
 	case fe.Lines:
+		if s.ompRoles && e.id == "dock.below" && !validView(n.View, n.Lines) {
+			ac := parseOmpAutocomplete(s.editor, n.Lines)
+			if ac != nil {
+				if !ac.equal(s.autocomplete) {
+					s.autocomplete = ac
+					s.dirty = true
+				}
+				s.dropPending(e.tid)
+				e.view, e.unsent = tern.Node{}, false
+				s.syncOmpEditorGhost()
+				return
+			}
+			if s.autocomplete != nil {
+				s.autocomplete = nil
+				s.dirty = true
+				e.unsent = true
+				s.rebuild(e, prev, true)
+				s.syncOmpEditorGhost()
+				return
+			}
+		}
 		s.queueLines(e, prev, n, fresh)
 	case fe.Selector:
 		s.queuePicker(e, sel, rows, fresh)
@@ -451,11 +509,13 @@ func (s *session) view() tern.View {
 // `row[omp.hud.activity]` whenever working or todo is present (and an empty
 // `col` otherwise, matching `EMPTY_HUD`).
 func (s *session) ompView() tern.View {
-	layer := make(tern.Nodes, 0, len(s.overlays)+1)
+	layer := make(tern.Nodes, 0, len(s.overlays)+2)
 	for _, e := range s.overlays {
 		layer = append(layer, e.view)
 	}
-
+	if s.hasEditor && s.autocomplete != nil {
+		layer = append(layer, s.ompAutocompleteOverlay(s.autocomplete))
+	}
 	var (
 		errorBannerChildren []tern.Element
 		aboveChildren       []tern.Element
@@ -492,7 +552,9 @@ func (s *session) ompView() tern.View {
 			editorChildren = append(editorChildren, e.view)
 		case fe.Lines:
 			if e.id == "dock.below" {
-				belowChildren = append(belowChildren, e.view)
+				if e.view.Kind != "" && s.autocomplete == nil {
+					belowChildren = append(belowChildren, e.view)
+				}
 			} else if !e.raw.hot.hidden && e.view.Kind != "" {
 				aboveChildren = append(aboveChildren, e.view)
 			}
@@ -673,6 +735,21 @@ func (s *session) queueEditor(e *entry, editor fe.Editor, fresh bool) {
 	}
 	if fresh || editor.Cursor != e.raw.cursor {
 		s.queue(tern.OpSet(tid, map[string]any{"cursor": editor.Cursor}))
+	}
+	if s.ompRoles {
+		nextGhost := s.ompPredictionSuffix(editor)
+		if fresh {
+			// Fresh view already carries Field.Ghost; record it so subsequent
+			// updates only send a raw op when it changes.
+			e.raw.ghost = nextGhost
+		} else if nextGhost != e.raw.ghost {
+			if nextGhost == "" {
+				s.queue(tern.OpSet(tid, map[string]any{"ghost": nil}))
+			} else {
+				s.queue(tern.OpSet(tid, map[string]any{"ghost": nextGhost}))
+			}
+			e.raw.ghost = nextGhost
+		}
 	}
 	e.raw.text, e.raw.cursor = editor.Text, editor.Cursor
 }

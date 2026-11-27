@@ -28,6 +28,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/jobs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lsp"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/modes"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prediction"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prompt"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ratchet"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/search"
@@ -83,9 +84,19 @@ func wireSettings() {
 	})
 	tern.Setting = settings.Any
 	browser.Setting = settings.Any
+	browser.SetSetting = func(ctx sdk.Context, key string, value any) error {
+		return settings.Set(ctx, key, value, true)
+	}
+	modes.Setting = settings.Any
+	modes.SetSetting = settings.Set
+	prompt.Skillful = func(ctx sdk.Context) bool {
+		return settings.Enabled(ctx, "skillful", true)
+	}
 	web.Setting = settings.Any
 	eval.Setting = settings.Any
 	commit.Setting = settings.Any
+	prediction.Setting = settings.Any
+	prediction.IsSubagent = agents.IsSubagent
 	ratchet.Setting = settings.Any
 	ratchet.SetSessionOverride = func(ctx sdk.Context, key string, value any) error {
 		return settings.Set(ctx, key, value, false)

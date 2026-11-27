@@ -304,17 +304,52 @@ func (m *manager) handleClearCommand(ctx sdk.Context, _ string) error {
 	return nil
 }
 
-// handleToolsCommand implements `/tools`: lists top-level active (`*`) and
-// inactive (`-`) tools, followed by mounted bash tool commands (`~`).
-// upstream: packages/coding-agent/src/slash-commands/builtin-session.ts:534-561
+// escapeToolsMarkdownCell sanitizes a tool description for a Markdown table cell.
+// upstream: packages/tui/src/prompt/tools-markdown.ts:7-12
+func escapeToolsMarkdownCell(value string) string {
+	s := strings.ReplaceAll(value, "|", "\\|")
+	s = strings.ReplaceAll(s, "\r\n", " ")
+	s = strings.ReplaceAll(s, "\n", " ")
+	s = strings.ReplaceAll(s, "\r", " ")
+	return strings.TrimSpace(s)
+}
+
+// BuildToolsMarkdown renders omp's Markdown table for interactive `/tools`.
+// upstream: packages/tui/src/prompt/tools-markdown.ts:14-29
+func BuildToolsMarkdown(active []sdk.ToolInfo, mounted []toolcmd.CommandEntry) string {
+	if len(active) == 0 && len(mounted) == 0 {
+		return "No tools are currently visible to the agent."
+	}
+	rows := make([]string, 0, len(active)+len(mounted)+2)
+	rows = append(rows, "| Tool | Description |", "|------|-------------|")
+	for _, t := range active {
+		desc := escapeToolsMarkdownCell(t.Description)
+		if desc == "" {
+			desc = "No description provided."
+		}
+		rows = append(rows, fmt.Sprintf("| `%s` | %s |", t.Name, desc))
+	}
+	for _, m := range mounted {
+		desc := escapeToolsMarkdownCell(m.Summary)
+		if desc == "" {
+			desc = "No description provided."
+		}
+		rows = append(rows, fmt.Sprintf("| `%s` | %s |", m.Name, desc))
+	}
+	return strings.Join(rows, "\n")
+}
+
+// handleToolsCommand implements `/tools`: in interactive UI renders omp's
+// Markdown table (`buildToolsMarkdown`), and in non-UI / print mode lists
+// top-level active (`*`) and inactive (`-`) tools followed by mounted bash
+// tool commands (`~`).
+// upstream: packages/coding-agent/src/slash-commands/builtin-session.ts:534-561,
+//
+//	packages/coding-agent/src/modes/controllers/command-controller.ts:992-998
 func (m *manager) handleToolsCommand(ctx sdk.Context, _ string) error {
 	all, err := ctx.GetAllTools()
 	if err != nil {
 		notifyError(ctx, fmt.Sprintf("Failed to list tools: %v", err))
-		return nil
-	}
-	if len(all) == 0 {
-		notifyInfo(ctx, "No tools are available.")
 		return nil
 	}
 	activeList, _ := ctx.GetActiveTools()
@@ -324,6 +359,41 @@ func (m *manager) handleToolsCommand(ctx sdk.Context, _ string) error {
 		activeSet[name] = true
 	}
 	mounted := toolcmd.MountedNames(ctx)
+
+	if ctx.HasUI() {
+		byName := make(map[string]sdk.ToolInfo, len(all))
+		for _, t := range all {
+			byName[t.Name] = t
+		}
+		activeInfos := make([]sdk.ToolInfo, 0, len(advertised))
+		for _, name := range advertised {
+			if info, ok := byName[name]; ok {
+				activeInfos = append(activeInfos, info)
+			} else {
+				activeInfos = append(activeInfos, sdk.ToolInfo{Name: name})
+			}
+		}
+		mountedEntries := make([]toolcmd.CommandEntry, 0, len(mounted))
+		for _, name := range mounted {
+			summary := toolcmd.BuiltinToolSummaries[name]
+			if summary == "" {
+				if info, ok := byName[name]; ok {
+					summary = info.Description
+				}
+			}
+			mountedEntries = append(mountedEntries, toolcmd.CommandEntry{
+				Name:    name,
+				Summary: summary,
+			})
+		}
+		notifyInfo(ctx, BuildToolsMarkdown(activeInfos, mountedEntries))
+		return nil
+	}
+
+	if len(all) == 0 {
+		notifyInfo(ctx, "No tools are available.")
+		return nil
+	}
 	lines := make([]string, 0, len(all)+len(mounted))
 	for _, t := range all {
 		prefix := "-"

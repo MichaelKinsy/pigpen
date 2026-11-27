@@ -326,15 +326,27 @@ func ompBrandSheet(mark fe.Mark) string {
 	var b strings.Builder
 	b.Grow(4096 + len(open.Pixels)*64)
 
+	// Welcome lockup & wordmark rules:
+	// Tern's base sheet sets `[data-role='omp.welcome.lockup']{height:52px;overflow:hidden}`
+	// and `[data-role='omp.welcome.wordmark']{font:600 40px/0.9 ...}` with `.sf-text.nowrap{overflow:hidden}`,
+	// which clips descenders in `"oh-my-pig"` (`y`, `g`) and crowds `v0.1.0`.
+	// Keep single-attribute specificity (0,1,0) on lockup (without min-height) so
+	// `.sf-chat-spine [data-role='omp.welcome.lockup']{height:28px}` (0,2,0) wins
+	// in Spine mode, while Reader expands to fit content without clipping.
+	// On wordmark, `.sf-text.nowrap{overflow:hidden}` has specificity (0,2,0),
+	// so `.sf-text[data-role='omp.welcome.wordmark']` matches (0,2,0) in the later
+	// program sheet so Reader descenders are not clipped (Spine keeps its 28px lockup
+	// centered via `.sf-chat-spine [data-role='omp.welcome.lockup']`).
+	b.WriteString(`[data-role='omp.welcome.lockup']{height:auto;overflow:visible;align-items:center}`)
+	b.WriteString(`.sf-text[data-role='omp.welcome.wordmark']{line-height:1.15;overflow:visible}`)
 	// Welcome logo rules (SVG blob in image[omp.welcome.logo]).
-	b.WriteString(`[data-role='omp.welcome.logo']{cursor:default;pointer-events:none}`)
+	b.WriteString(`[data-role='omp.welcome.logo']{cursor:default;pointer-events:none;margin-top:2px}`)
 	b.WriteString(`[data-role='omp.welcome.logo'] .sf-img-svg{width:`)
 	b.WriteString(strconv.Itoa(ompLogoWidthPx))
 	b.WriteString(`px !important;height:`)
 	b.WriteString(strconv.Itoa(ompLogoHeightPx))
 	b.WriteString(`px !important}`)
 	b.WriteString(`[data-role='omp.welcome.logo'] .omp-pi{fill:light-dark(#1b1c20,#eedaad)}`)
-
 	// Working spinner rules (16×14 pig head at 1 CSS px per art pixel inside a 16×16 box).
 	// The 1×1 ::before element sits at (-1px, -1px) inside the 16×16 box so shadow
 	// offsets (x+1, y+2) place the resting 16×14 head at y=1..14, and a 1px upward

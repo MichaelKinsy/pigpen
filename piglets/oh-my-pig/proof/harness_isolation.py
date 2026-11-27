@@ -120,6 +120,8 @@ def omp_offline_config_yml(extra_yml: str = "") -> str:
 def pig_offline_config_yml(extra_yml: str = "") -> str:
     """Build oh-my-pig agent/config.yml with keyless search disabled to match omp's offline config."""
     base = (
+        "composer:\n"
+        "  predictions: false\n"
         "providers:\n"
         "  webKeyless: false\n"
         "  fetch: native\n"

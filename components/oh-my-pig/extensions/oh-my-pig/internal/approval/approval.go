@@ -158,6 +158,22 @@ func SetBashEvaluator(eval BashEvaluator, detailFmt BashDetailsFormatter) {
 func Register(e *sdk.Extension) {
 	lifecycle.OnEnd("approval", ClearSession)
 	e.OnEvent(sdk.EventToolCall, HandleToolCallVeto)
+	if e != nil {
+		e.RegisterCommand("forget-approvals", sdk.CommandOptions{
+			Description: "Forget every file and folder approval Ask and remember has recorded",
+			Handler:     handleForgetApprovalsCommand,
+		})
+	}
+}
+
+// handleForgetApprovalsCommand implements `/forget-approvals`.
+// upstream: packages/coding-agent/src/slash-commands/builtin-control.ts:122-130
+func handleForgetApprovalsCommand(ctx sdk.Context, _ string) error {
+	if sid, err := ctx.GetSessionID(); err == nil && sid != "" {
+		ClearSession(sid)
+	}
+	ctx.Notify("Remembered approvals forgotten; the next read or write asks again.", "info")
+	return nil
 }
 
 // ClearSession drops all session-scoped and target-cached approval grants

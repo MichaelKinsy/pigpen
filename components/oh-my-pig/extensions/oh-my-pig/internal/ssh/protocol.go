@@ -33,11 +33,12 @@ type Handler struct {
 
 // Register installs the `ssh://` URL protocol handler on the global router and
 // wires session-end ControlMaster teardown via internal/lifecycle.
-func Register(_ *sdk.Extension) {
+func Register(e *sdk.Extension) {
 	_ = urls.Register(&Handler{Manager: defaultManager})
 	lifecycle.OnEnd("ssh", func(sessionID string) {
 		defaultManager.CloseSession(sessionID)
 	})
+	registerSSHCommand(e)
 }
 
 func (h *Handler) mgr() *Manager {
