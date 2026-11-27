@@ -102,6 +102,20 @@ const (
 // Frontend is the member's factory, the symbol the Piglet build registers.
 func Frontend() fe.Frontend { return member{} }
 
+// ModelMeta carries per-model catalog metadata supplied by a derived Piglet's
+// extension for omp's model picker (`Ctx`, `$/M`, `free` / `ctx>...` badges,
+// and supported thinking effort slider steps).
+type ModelMeta struct {
+	ID              string
+	Provider        string
+	Name            string
+	ContextWindow   int
+	InputCostPer1M  float64
+	OutputCostPer1M float64
+	Reasoning       bool
+	ThinkingLevels  []string
+}
+
 // Options are what a Piglet that derives from pig-tern fixes for its member.
 type Options struct {
 	// Omp draws the transcript and the dock with omp's roles and node
@@ -121,6 +135,12 @@ type Options struct {
 	// by the extension over the shared `surface` channel (Finding 20).
 	// Returning "" falls back to Footer.Model.
 	ModelDisplayName func(modelID string) string
+	// ModelMeta, when non-nil, resolves per-model catalog metadata (context
+	// window, token costs, reasoning, thinking levels) for omp's model picker.
+	ModelMeta func(provider, id string) (ModelMeta, bool)
+	// OnThinkingLevel, when non-nil, is called when the user moves the
+	// thinking slider inside omp's model picker.
+	OnThinkingLevel func(level string)
 	// DisplayPath, when non-nil, normalizes the session working directory when
 	// the frontend resolves a cwd-relative path for display or `file://` hrefs
 	// (e.g. stripping macOS `/private` on project cwd). Absolute paths already
@@ -158,6 +178,8 @@ func (m member) Open(env fe.Env) (fe.Session, error) {
 	s.pigletName = m.opts.Name
 	s.pigletVersion = m.opts.Version
 	s.modelDisplayName = m.opts.ModelDisplayName
+	s.modelMeta = m.opts.ModelMeta
+	s.onThinkingLevel = m.opts.OnThinkingLevel
 	s.displayPath = m.opts.DisplayPath
 	s.start()
 	return s, nil
@@ -302,17 +324,21 @@ type session struct {
 	pigletName           string
 	pigletVersion        string
 	modelDisplayName     func(modelID string) string
+	modelMeta            func(provider, id string) (ModelMeta, bool)
+	onThinkingLevel      func(level string)
 	displayPath          func(path string) string
 	errorBannerMsg       string
 	errorBannerExpanded  bool
 	errorBannerDismissed bool
-	// Discovery dividers framing PiG's loaded-resources block in main (ompRoles).
-	discoveryTopID     string
-	discoveryTopBefore string
-	discoveryBotID     string
-	discoveryBotBefore string
-	discoveryLastID    string
-	// Native floating autocomplete popup parsed from dock.below (ompRoles).
+	recentModels         []string
+	// lastEditorView retains the last rendered omp composer node so that while
+	// PiG temporarily replaces the editor slot with a composer-anchored picker
+	// (such as /model), Tern still has `[data-role='omp.editor']` in the dock
+	// to anchor `.sf-picker.at-composer` above it.
+	lastEditorView *tern.Node
+	// tabTitleSent tracks the last OSC 2 tab title written under ompRoles so
+	// PiG's startup `pig - <dir>` title is replaced with pigletName or SessionName.
+	tabTitleSent string
 	autocomplete *ompAutocompleteState
 	// Composer prompt predictions extracted from hidden omp.composer.prediction dock widget.
 	predictions        []string
@@ -425,8 +451,17 @@ var (
 )
 
 // openLocked opens the surface and sends what is pending.
+// surfaceTitle returns the Tern surface title: pigletName when set (e.g.
+// "oh-my-pig"), otherwise "pig".
+func (s *session) surfaceTitle() string {
+	if s.pigletName != "" {
+		return s.pigletName
+	}
+	return "pig"
+}
+
 func (s *session) openLocked() error {
-	sf, err := s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: "pig", Role: "pig.session", Chat: true})
+	sf, err := s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: s.surfaceTitle(), Role: "pig.session", Chat: true})
 	if err != nil {
 		return errRefused
 	}
@@ -541,12 +576,10 @@ func (s *session) Apply(frame fe.Frame) error {
 			s.refreshOmpWelcomeLogo()
 		}
 	}
-	mainChanged := false
 	for _, op := range frame.Ops {
 		switch op.Region {
 		case fe.RegionMain:
 			s.convertMain(op)
-			mainChanged = true
 		case fe.RegionOverlay:
 			if s.isScreenOp(op) {
 				s.applyScreen(op)
@@ -556,9 +589,6 @@ func (s *session) Apply(frame fe.Frame) error {
 		default:
 			s.applyDock(op)
 		}
-	}
-	if mainChanged && s.ompRoles {
-		s.syncOmpDiscoveryDividers()
 	}
 	if s.inputReady {
 		s.live = true
@@ -586,6 +616,9 @@ func (s *session) Apply(frame fe.Frame) error {
 func (s *session) flushLocked() error {
 	if s.sf == nil || !s.live || s.fellBack || s.closed || s.suspended {
 		return nil
+	}
+	if s.ompRoles && s.pigletName != "" && s.tabTitleSent == "" {
+		s.reportOmpTabTitle(s.footer.SessionName)
 	}
 	if s.markDirty {
 		if css := markSheet(s.mark); css != "" || s.markInstalled {

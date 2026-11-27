@@ -85,7 +85,7 @@ func (s *session) Resume() {
 	default:
 		s.lent = false
 		var sf *tern.Surface
-		sf, err = s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: "pig", Role: "pig.session", Chat: true, Adopt: true})
+		sf, err = s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: s.surfaceTitle(), Role: "pig.session", Chat: true, Adopt: true})
 		if err != nil {
 			err = errRefused
 			break
@@ -150,21 +150,24 @@ func (s *session) reopenLocked() error {
 func (s *session) redrawAll() {
 	clear(s.pending)
 	s.pending = s.pending[:0]
-	s.discoveryTopID, s.discoveryTopBefore = "", ""
-	s.discoveryBotID, s.discoveryBotBefore, s.discoveryLastID = "", "", ""
 	for _, id := range s.order {
 		e := s.sent[strings.TrimPrefix(id, "n.")]
 		if e.gone {
 			continue
 		}
 		e.settled = false
-		s.pending = append(s.pending, tern.OpAdd("main", "", s.mainNodeFor(e, e.node)))
+		wire := s.mainNodeFor(e, e.node)
+		if e.hasWelcomeSpacers {
+			sp0 := tern.WireNode{ID: e.id + ".sp0", K: tern.KindSpacer, P: map[string]any{"size": "sm"}}
+			sp1 := tern.WireNode{ID: e.id + ".sp1", K: tern.KindSpacer, P: map[string]any{"size": "sm"}}
+			s.pending = append(s.pending, tern.OpAdd("main", "", sp0), tern.OpAdd("main", "", wire), tern.OpAdd("main", "", sp1))
+			s.pending = append(s.pending, tern.OpSettle(sp0.ID), tern.OpSettle(sp1.ID))
+		} else {
+			s.pending = append(s.pending, tern.OpAdd("main", "", wire))
+		}
 	}
 	for i, id := range s.order {
 		s.settle(s.sent[strings.TrimPrefix(id, "n.")], i)
-	}
-	if s.ompRoles {
-		s.syncOmpDiscoveryDividers()
 	}
 	if s.sessionNode {
 		s.sessionNode = false

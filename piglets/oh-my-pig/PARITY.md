@@ -14,10 +14,9 @@ States used in this document:
 
 ---
 
-## Final Gate Proof Runs (Single Binary `r34`, PiG `v0.8.0`)
+## Final Gate Proof Runs (Single Binary `r35`, PiG `v0.8.0`)
 
-Earlier "0 unexplained" claims were withdrawn after an audit of the proof harness's allowlists and normalisers (the audit and the review notes cited below are working notes of the port and are not in this repository): the oracle hid details differences under listed text, path masks hid unstandardised macOS `/private` paths, the Tern comparer checked only one node per part without frame alignment, and the terminal comparer ignored per-cell colours and SGR attributes. All three harnesses were corrected, the port was fixed against them, and all three proof harnesses below ran alone in sequence on **one final Binary**: **`r34`** (`79,390,402` bytes, sha256 `d93a60c55679ac2aa2d86d4d634a342b5894b11e7117a053db8be946834f2638`), built from the source of the PiG release `v0.8.0` (commit `73585394f40c`, Pi 1.6.0).
-
+Earlier "0 unexplained" claims were withdrawn after an audit of the proof harness's allowlists and normalisers (the audit and the review notes cited below are working notes of the port and are not in this repository): the oracle hid details differences under listed text, path masks hid unstandardised macOS `/private` paths, the Tern comparer checked only one node per part without frame alignment, and the terminal comparer ignored per-cell colours and SGR attributes. All three harnesses were corrected, the port was fixed against them, and all three proof harnesses below ran alone in sequence on **one final Binary**: **`r35`** (`79,457,890` bytes, sha256 `6ceff0a147f43872b5d87ea16b8fc073739c0c41c2378ac526a9706e2705383b`), built from the source of the PiG release `v0.8.0` (`b133288823`, tagged `v0.8.0`, matching `piglet.yaml`'s `requires.pig: ">=0.8.0 <0.9.0"`). Every allowlist entry was verified against `UPSTREAM.md` and `OMP-UPSTREAM.md` with zero stale or unused entries.
 The reference is the omp `19.1.1` binary. omp updates itself: on the day of these runs `omp` on `PATH` became `19.2.1`, and a first run compared against it reported omp's own changes as 2 call and 16 surface differences. The harnesses now refuse any omp but `19.1.1` (`proof/omp_version.sh`); the runs below name the `19.1.1` binary with `OMP_BIN`.
 
 ### Block 1 — Per-Tool Oracle (`proof/oracle.sh`)
@@ -25,8 +24,8 @@ The reference is the omp `19.1.1` binary. omp updates itself: on the day of thes
 ```text
 Command: ORACLE_MODE=both OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            ORACLE_OUT=<out>/oracle piglets/oh-my-pig/proof/oracle.sh piglets/oh-my-pig/proof/cases
-Run:     Binary r34 (sha256 d93a60c55679ac2aa2d86d4d634a342b5894b11e7117a053db8be946834f2638), omp 19.1.1,
-         measured 2026-11-27 02:27Z–02:31Z (load 5.7 → 7.5), alone, no allowances, exit 0
+Run:     Binary r35 (sha256 6ceff0a147f43872b5d87ea16b8fc073739c0c41c2378ac526a9706e2705383b), omp 19.1.1,
+         measured 2026-11-27 05:06Z–05:10Z (load ~9.5 → 4.7), alone, no allowances, exit 0
 Totals:  74 cases (0 failed), 474 calls:
          352 identical, 114 details-listed, 8 differs-listed, 0 details-only, 0 timing, 0 differs, 0 missing
 Recorded tool_execution_start: 471 identical, 3 recorded-listed (HOST), 0 recorded-differs
@@ -42,15 +41,15 @@ Hygiene: network_attempts=0, leaked_pids=0
 ```text
 Command: OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            OMP_PROOF_ROOT=<out>/tern piglets/oh-my-pig/proof/run.sh
-Run:     Binary r34 (sha256 d93a60c55679ac2aa2d86d4d634a342b5894b11e7117a053db8be946834f2638), omp 19.1.1,
-         measured 2026-11-27 02:23Z (load ~5.7–10.5), alone, no allowances, exit 0
+Run:     Binary r35 (sha256 6ceff0a147f43872b5d87ea16b8fc073739c0c41c2378ac526a9706e2705383b), omp 19.1.1,
+         measured 2026-11-27 05:10Z–05:12Z (load ~5–7), alone, no allowances, exit 0
 Capture: capture_valid=true (33/33 turns consumed per side, in_flight=0)
 Parts:   30 parts across 23/23 steps (0 not-compared steps):
          13 same, 17 expected, 0 timing, 0 differs, 0 missing
 Sub-diffs: 0 unexpected, 0 timing, 140 allowlisted (ON_PURPOSE=13, HOST=123, LISTED=4; 3 class_in_doubt),
            6 noop-default (counted separately)
 Frame alignment (all 23 steps):
-         390 expected / 0 unexplained unmatched region children (344 HOST, 46 ON_PURPOSE discovery dividers)
+         344 expected / 0 unexplained unmatched region children (344 HOST)
          414 expected / 0 unexplained matched-subtree visible-node-count deltas (unaccounted=0)
 Final step (18-narrow-80): 357 omp vs 201 pig visible TSP nodes (main 70/58, dock 13/11, layer 0/0)
 Allowlist: 51 entries in drawing_allowlist.json, 0 stale, 0 zero-hit
@@ -62,11 +61,10 @@ Stylesheets: 0 rules rejected by Tern on either side (the comparer fails on a re
 ```text
 Command: OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            ANSI_OUT=<out>/ansi piglets/oh-my-pig/proof/ansi.sh
-Run:     Binary r34 (sha256 d93a60c55679ac2aa2d86d4d634a342b5894b11e7117a053db8be946834f2638), omp 19.1.1,
-         measured 2026-11-27 02:32Z (load ~7.5), alone, no allowances, exit 0
+Run:     Binary r35 (sha256 6ceff0a147f43872b5d87ea16b8fc073739c0c41c2378ac526a9706e2705383b), omp 19.1.1,
+         measured 2026-11-27 05:12Z–05:13Z (load ~4.7), alone, no allowances, exit 0
 Capture: capture_valid=true (33/33 turns, 15 prompts, 5 snapshots, 0 leaked PIDs per side;
-         scrollback 232 omp / 244 pig lines)
-Final screen (80x24, --screen-regions):
+         scrollback 232 omp / 243 pig lines)
          verdict=expected, total_unexplained_all=0 (text=0, blank=0, colour=0, mode=0), timing_pairs=0
          text: 2/2 hunks expected (11 HOST lines); blank: 1 expected;
          colour+attrs: 8/8 runs expected across 12 text-matching lines (8 HOST);
@@ -74,7 +72,7 @@ Final screen (80x24, --screen-regions):
          dock height: omp 15 vs pig 15 (delta 0); full-screen clears: omp 2 vs pig 6
 Full scrollback (120x40 -> 80x24):
          verdict=expected, total_unexplained_all=0 (text=0, blank=0, colour=0, mode=0), timing_pairs=0
-         text: 7/7 hunks expected (48 lines: ON_PURPOSE=20, HOST=22, LISTED=6); blank: 9 expected;
+         text: 7/7 hunks expected (46 lines: ON_PURPOSE=18, HOST=22, LISTED=6); blank: 9 expected;
          colour+attrs: 71/71 runs expected across text-matching lines (66 HOST, 5 LISTED);
          mode: 1 expected (OMP_ARTIFACT)
 Allowlist: 18 entries in terminal_allowlist.json (9 text, 4 colour/attrs, 4 blank_row, 1 terminal_mode),
@@ -84,10 +82,10 @@ Allowlist: 18 entries in terminal_allowlist.json (9 text, 4 colour/attrs, 4 blan
 
 ### Block 4 — Gate Suites, Differentials, Vet & Repository Checks
 
-- **Full extension suites (PiG `v0.8.0` SDK, measured `2026-11-27 02:19Z`, Tern env vars unset)**: **41 packages `ok`, 0 `FAIL`, 3 packages without test files; 1,425 top-level tests: 1,425 `PASS` / 0 `FAIL` / 0 `SKIP`** (with real tools including `gopls` and `ast-grep`, `OMP_REAL_BROWSER=1` with the two click-loop tests at `OMP_LOOP_ITERS=200`, the two real-Chrome relay tests with `OMP_RELAY_BINARY` naming the gated Binary `r34`, `OMP_TERN_DAEMON_TEST=1`, `OMP_REGEN_JS_REWRITER=1`, `OMP_REGEN_RELAY_EXTENSION=1`, `OMP_SRC` `docs_index` parity, and the full approval and intent differential corpora with `FAIL=1`). The macOS display was locked during this run, so the relay end-to-end test did not verify its screenshot step (see the relay section); the run on Binary `r31`, with the display unlocked, did.
+- **Full extension suites (PiG `v0.8.0` SDK, measured `2026-11-27 05:03Z–05:06Z`, Tern env vars unset)**: **41 packages `ok`, 0 `FAIL`, 3 packages without test files; 1,425 top-level tests: 1,425 `PASS` / 0 `FAIL` / 0 `SKIP`** (with real tools including `gopls` and `ast-grep`, `OMP_REAL_BROWSER=1` with the two click-loop tests at `OMP_LOOP_ITERS=200`, the two real-Chrome relay tests with `OMP_RELAY_BINARY` naming the gated Binary `r35`, `OMP_TERN_DAEMON_TEST=1`, `OMP_REGEN_JS_REWRITER=1`, `OMP_REGEN_RELAY_EXTENSION=1`, `OMP_SRC` `docs_index` parity, and the full approval and intent differential corpora with `FAIL=1`). The macOS display was locked during this run, so the relay end-to-end test did not verify its screenshot step (see the relay section); the run on Binary `r26` verified screenshots on an unlocked display.
 - **Full 2,000-iteration real-Chrome click loops (run separately on the release candidate's SDK, not repeated on `v0.8.0`; `-timeout 60m`, `OMP_REAL_BROWSER=1`, display locked, load 23 → 9)**: `TestRealPass4_F1_NavigatingClickLoop2000Iterations` **PASS** (`60.07s`) and `TestRealPass5_F1_NoURLTabNavigatingClickLoop2000Iterations` **PASS** (`559.56s`) — 2,000 iterations each with sibling tab open and verified, `wedges=0`.
 - **Frontend, vet, harness & repository checks**:
-  - `piglets/pig-tern/frontend` Go suite: **147 `Test*` functions, `ok`** (with `-race`), and `piglets/oh-my-pig/frontend`: **1, `ok`**; `gofmt` clean and `go vet` exit 0 on `darwin`, `linux`, and `windows` for the extension module, `pig-tern/frontend`, and `piglets/oh-my-pig/frontend`.
+  - `piglets/pig-tern/frontend` Go suite: **149 `Test*` functions, `ok`** (with `-race`), and `piglets/oh-my-pig/frontend`: **1, `ok`**; `gofmt` clean and `go vet` exit 0 on `darwin`, `linux`, and `windows` for the extension module, `pig-tern/frontend`, and `piglets/oh-my-pig/frontend`.
   - Proof harness unit tests (`proof/test_oracle_harness.py`): **46 tests OK**; hygiene grep for developer paths: 0 hits.
   - Repository checks (PiG pinned to `v0.8.0`): `npm run check` **exit 0**; `node scripts/quality-gates.mjs` **exit 0**; `npm test` **492 tests — 489 pass, 2 skipped, 1 fail** (`scripts/npm-packages.test.mjs:112` for the `ahp` package, pre-existing before this work).
 - **Argument validation differential** (`proof/diff/intent/`, 20,065 cases, run on the PiG `v0.8.0` SDK with `FAIL=1`; checked-in reduced corpus `internal/intent/testdata/omp_diff_reduced.jsonl`, 1,201 cases, `go test ./internal/intent -run TestOmpDifferentialReduced`):
@@ -98,7 +96,7 @@ Allowlist: 18 entries in terminal_allowlist.json (9 text, 4 colour/attrs, 4 blan
 - **Bash interceptor differential** (`internal/shell/testdata/gen_interceptor_diff.ts` + checked-in `interceptor_diff.txt.gz`, **200,000** recorded omp verdicts, `go test ./internal/shell -run TestInterceptorDifferentialAgainstOmp`): **0** differences across all 4 lookaround rules ported to Go.
 - **Hashline block-op oracle** (`internal/hashline/testdata/blockspans/*.json`, **10,573** anchors across 30 files from real `omp` 19.1.1, `go test ./internal/hashline -run TestBlockSpansAgainstRealOmpOracle`): **0 WRONG** spans; on held-out Sample 3 (9 resolvable languages, 4,088 anchors, 1,604 omp-resolved): **1,063** exact matches, **541** conservative refusals (**33.7%**), **0 WRONG**; plus third-party YAML hold-out (1,666 anchors): 644 equal, 33 refused, 989 refused by both, **0 WRONG**.
 - **JS cell rewriter** (`internal/eval`, `go test ./internal/eval`): runs omp `v19.1.1`'s bundled rewriter + `@babel/parser@7.29.9`; verified on 190 JS/TS matrix and adversarial cases under `bun` and `node` 22+, and deterministic regeneration verified (`OMP_REGEN_JS_REWRITER=1`).
-- **Unit & integration test counts**: **1,425** executable top-level Go `Test*` tests in the extension module (`1,426` `func Test*` declarations including `TestMain` in `internal/ask/main_test.go`; `1,403` in 39 `internal/` packages + `2` in `brand` + `21` in module root), **147** in `piglets/pig-tern/frontend`, **1** in `piglets/oh-my-pig/frontend`, and **46** Python `test_*` methods in `proof/test_oracle_harness.py`.
+- **Unit & integration test counts**: **1,425** executable top-level Go `Test*` tests in the extension module (`1,426` `func Test*` declarations including `TestMain` in `internal/ask/main_test.go`; `1,403` in 39 `internal/` packages + `2` in `brand` + `21` in module root), **149** in `piglets/pig-tern/frontend`, **1** in `piglets/oh-my-pig/frontend`, and **46** Python `test_*` methods in `proof/test_oracle_harness.py`.
 ---
 
 ## What Each Comparison Covers — and Does Not Cover
@@ -160,19 +158,17 @@ Every item below comes directly from the six checked-in allowlist files (`piglet
 
 ### 2. User-Facing Differences — Headless Tern (`drawing_allowlist.json` [51])
 
-**`ON_PURPOSE`** (14 entries):
+**`ON_PURPOSE`** (13 entries):
 - **Surface root & welcome branding**: surface role is `pig.session` instead of `omp.session` (`OMP-UPSTREAM.md:93`); welcome logo alt and wordmark say `oh-my-pig`, version shows the Piglet version (`v0.1.0`), and the welcome tip is chosen randomly from tips filtered to registered commands (`OMP-UPSTREAM.md:19`).
 - **oh-my-pig's own mark (4 entries)**: the welcome logo is a mashup of omp's π and PiG's pig head (the active sprite's, so `/sprite` changes it; the head sits on the π's bar), sent as an SVG image of 48 by 44 px in place of Tern's built-in `omp` image; `omp-brand` overrides Tern's fixed `52px`/`0.9` lockup clipping so `"oh-my-pig"` descenders render unclipped in Reader while keeping Spine's `28px` lockup intact.
-- **Startup discovery dividers (1 entry)**: PiG's startup resource discovery sections (`[Context]`, `[Skills]`, `[Prompts]`, `[Extensions]`, `[Skill warnings]`) are framed with top and bottom `rule[omp.divider]` horizontal dividers (`OMP-UPSTREAM.md:47`).
 - **Slash autocomplete anchor ID (1 entry)**: both sides mount native `overlay[omp.autocomplete](col[omp.select](list))` in `layer`, anchored to each side's editor input TSP ID (`j.line/input` vs `dock.editor.editor.line.input`, `OMP-UPSTREAM.md:30`).
 - **Pig spinner (3 entries)**: the working row's first child is the pig head (16 by 14 px, a blink and a one-pixel hop, still under reduced motion) where omp shows Tern's starburst spinner; the row's height and its other children are unchanged (`OMP-UPSTREAM.md:23,96`).
-- **Tab title (not compared by the proofs)**: the pane's title and the fallback notification titles are `oh-my-pig`, where omp's are `omp`; the Piglet does not present itself as omp (`internal/tern/UPSTREAM.md:51`).
-
+- **Tab title & surface title (not compared by the proofs)**: the pane's tab title (OSC 0), surface title, and fallback notification titles are `oh-my-pig`, where omp's are `omp`; the Piglet does not present itself as omp (`internal/tern/UPSTREAM.md:51`).
 **`LISTED`** (4 entries):
 - **Bash command block (`tool card: bash`, `long bash` folded & expanded)**: drawn as `code[omp.tool.bash.command]` (`lang:"bash"`) showing the command as typed rather than omp's `shell` AST visualizer (`OMP-UPSTREAM.md:97-99`). Shared props and command text still match below `$kind`.
 - **Subagent `auto` thinking badge (`tool card: task`)**: shows `thinkingHigh` (provisional fallback) where omp's LLM `auto` judge selects `thinkingLow` (`internal/agents/UPSTREAM.md:114`).
 
-**`HOST` — confirmed** (30 entries across parts and frame children):
+**`HOST` — confirmed** (31 entries across parts and frame children):
 - **Assistant per-turn usage & thinking nesting**: `row[omp.turn.usage]` is absent (`OMP-UPSTREAM.md:95`), and `section[omp.thinking]` mounts as a top-level sibling in `main` rather than inside `col[omp.assistant]` (`OMP-UPSTREAM.md:41`).
 - **Working row Stop control**: `row[omp.working.stop]` (`escape` / `Stop`) is omitted (`OMP-UPSTREAM.md:96`).
 - **Live `ask` dialog**: PiG swaps `dock.editor` for a `picker` in `layer` instead of mounting inline `col[omp.ask.card]` in `main` alongside a live `col[omp.editor]` (`OMP-UPSTREAM.md:45,100`).
@@ -181,8 +177,7 @@ Every item below comes directly from the six checked-in allowlist files (`piglet
 - **Composer context meter (`composer`, `slash closed`, `narrow 80`)**: omits compaction threshold `marks`, tooltip reads `Auto-compact enabled` instead of `Auto-compact at 85%`, and `value` uses total tokens (`155`, `1404`) rather than prompt-only tokens (`120`, `1366`) (`OMP-UPSTREAM.md:44`).
 - **Dock HUD pills & progress**: `row[omp.hud]` (agent-count pills) and the dock `judge`/`downloads`/`compaction` container are absent (`OMP-UPSTREAM.md:42`).
 - **Empty `col[omp.assistant]` before tool turns**: PiG emits zero ops for tool-call-only turns where omp mounts an empty 0×0 `col[omp.assistant]` (`OMP-UPSTREAM.md:46`).
-- **Status toasts & host transcript lines in `main`**: `"Tool output: expanded"`, `"Plan mode enabled..."`, `[Extensions]`, `Piglet oh-my-pig hid 2 tools`, and the `/bug` hint arrive as plain `ansi` transcript lines instead of `toast[omp.toast.status]` or silent chrome (`OMP-UPSTREAM.md:43,47`).
-
+- **Status toasts & host transcript lines in `main`**: `"Tool output: expanded"`, `"Plan mode enabled..."`, `Piglet oh-my-pig hid 2 tools`, and the `/bug` hint arrive as plain `ansi` transcript lines instead of `toast[omp.toast.status]` or silent chrome; startup discovery sections (`[Context]`, `[Skills]`, `[Prompts]`, `[Extensions]`, `[Themes]`, …) are wrapped as collapsed `section[omp.notice.discovery]` notices so Tern activates `.sf-fresh` + `.sf-slot.open` (dot-grid sky, centered welcome hero, aurora composer) identically to `omp` (`OMP-UPSTREAM.md:43,47`).
 **`HOST` tagged `class_in_doubt`** (3 entries — flagged by the audit because the Piglet may be able to reach part of the behaviour):
 - **`card[omp.user]` `actions.hold`, `row[omp.user.tools]`, and `col[omp.assistant]` `actions.hold`** (3 entries): timestamps and per-message rewind targets are HOST, but OSC 52 copy and `/rewind` via `Env.Send` may be reachable (`OMP-UPSTREAM.md:94-95`). *(The earlier 4th entry for the composer model chip display name was removed once `Options.ModelDisplayName` was wired; `drawing_allowlist.json` has 51 entries and 0 stale.)*
 

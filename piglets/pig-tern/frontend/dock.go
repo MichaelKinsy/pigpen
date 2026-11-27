@@ -45,10 +45,11 @@ type entry struct {
 	raw            rawProps
 	// startedAt is when a dock working indicator started (ompRoles elapsed timer).
 	startedAt time.Time
-	// A sheet's state: the picker's catalog, and the prefs row whose
-	// choice menu is open, or "".
-	catalog pickerCatalog
-	editing string
+	// A sheet's state: the picker's catalog, omp model picker state, and the
+	// prefs row whose choice menu is open, or "".
+	catalog  pickerCatalog
+	ompModel *ompModelPickerState
+	editing  string
 }
 
 // rawProps are the props of a dock node sent as raw ops.
@@ -209,6 +210,11 @@ func (s *session) dockNodeChanged(e *entry, prev, next fe.Node) {
 			s.dirty = true
 		}
 	}
+	if sel, isSel := next.(fe.Selector); isSel && kindOf(prev) != kindOf(next) && s.ompRoles && ompIsModelPicker(sel, e.tree) && s.lastEditorView != nil {
+		// Clear any slash-command draft (e.g. "/model") from the retained
+		// composer backdrop so it shows clean placeholder behind the picker.
+		s.queue(tern.OpText("dock.editor.editor.line.input", "replace", ""))
+	}
 	if editorToggled && s.ompRoles {
 		s.syncOmpFooterMount()
 	}
@@ -246,7 +252,7 @@ func (s *session) dockNodeChanged(e *entry, prev, next fe.Node) {
 		s.dropPending(e.tid)
 	}
 	if next != nil {
-		e.catalog, e.editing = pickerCatalog{}, ""
+		e.catalog, e.ompModel, e.editing = pickerCatalog{}, nil, ""
 		e.handlers = s.handlers(e, next)
 		e.tid = "dock." + e.id
 		if s.ompRoles {
@@ -327,7 +333,9 @@ func (s *session) rebuild(e *entry, prev fe.Node, restructure bool) {
 			s.dropPending(e.tid)
 			e.view, e.unsent, e.raw = tern.Node{}, true, rawProps{}
 			s.dirty = true
-			s.reportCwd(e.node.(fe.Footer).Cwd)
+			ft := e.node.(fe.Footer)
+			s.reportCwd(ft.Cwd)
+			s.reportOmpTabTitle(ft.SessionName)
 			return
 		}
 		if s.ompRoles && e.id == "dock" {
@@ -365,6 +373,10 @@ func (s *session) rebuild(e *entry, prev fe.Node, restructure bool) {
 		view := buildNode(s.element(e, true))
 		if _, isEditor := e.node.(fe.Editor); !isEditor || !s.ompRoles {
 			view.Handlers = e.handlers
+		}
+		if _, isEditor := e.node.(fe.Editor); isEditor && s.ompRoles {
+			cp := view
+			s.lastEditorView = &cp
 		}
 		fresh = e.unsent || e.view.Kind != view.Kind
 		if _, ok := e.node.(fe.Footer); ok && !fresh {
@@ -564,6 +576,18 @@ func (s *session) ompView() tern.View {
 			}
 		}
 	}
+	// When PiG replaces the dock editor with a composer-anchored model picker,
+	// keep the last rendered composer visible in the editor slot (non-interactive
+	// behind the modal picker) so Tern can anchor `.sf-picker.at-composer`
+	// directly above `[data-role='omp.editor']` just like omp.
+	if len(editorChildren) == 0 && s.lastEditorView != nil {
+		for _, e := range s.dock {
+			if sel, ok := e.node.(fe.Selector); ok && ompIsModelPicker(sel, e.tree) {
+				editorChildren = append(editorChildren, *s.lastEditorView)
+				break
+			}
+		}
+	}
 
 	slot := func(key string, children ...tern.Element) tern.Node {
 		return tern.Node{Kind: tern.KindCol, Props: map[string]any{"key": key}, Children: children}
@@ -649,7 +673,7 @@ func (s *session) element(e *entry, clicks bool) tern.Element {
 		return footerElement(e.id, n, false, s.runCommand)
 	case fe.Selector:
 		if s.ompRoles {
-			return ompPickerElement(e.id, n, e.tree)
+			return s.ompPickerElement(e.id, n, e.tree)
 		}
 		return pickerElement(e.id, n, e.tree)
 	case fe.Settings:

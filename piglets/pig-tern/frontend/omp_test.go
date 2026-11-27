@@ -196,6 +196,9 @@ func TestOmpComposerLayoutAndInteractions(t *testing.T) {
 
 	// Under ompRoles, dock.footer stays suppressed even when a selector replaces
 	// the editor (upstream status-line/component.ts:3810 — Tern draws no status strip).
+	// For a composer-anchored model picker, the composer stays mounted in dock
+	// so Tern can anchor `.sf-picker.at-composer` above it; closing the selector
+	// refocuses the editor input without unmounting the composer.
 	ops = h.applyOps(
 		fe.Op{Kind: fe.Remove, Region: fe.RegionDock, ID: "editor", Index: 0},
 		fe.Op{Kind: fe.Insert, Region: fe.RegionDock, ID: "selector.1", Index: 0, Node: fe.Selector{Title: "Models", Items: []fe.SelectorItem{{ID: "a", Label: "A"}}}},
@@ -207,8 +210,14 @@ func TestOmpComposerLayoutAndInteractions(t *testing.T) {
 		fe.Op{Kind: fe.Remove, Region: fe.RegionDock, ID: "selector.1", Index: 0},
 		fe.Op{Kind: fe.Insert, Region: fe.RegionDock, ID: "editor", Index: 0, Node: fe.Editor{Sendable: true}},
 	)
-	if ed := node(ops, "dock.editor.editor"); ed == nil {
-		t.Fatalf("editor did not remount after selector closed: %#v", ops)
+	focused := false
+	for _, op := range ops {
+		if arr, ok := op.([]any); ok && len(arr) >= 2 && arr[0] == "focus" && arr[1] == "dock.editor.editor.line.input" {
+			focused = true
+		}
+	}
+	if !focused {
+		t.Fatalf("editor did not refocus after model picker closed: %#v", ops)
 	}
 }
 
@@ -1181,22 +1190,24 @@ func TestOmpV19ToolCards(t *testing.T) {
 }
 
 // TestOmpPickers verifies omp v19.1.1 picker shapes (size, noun, icon, layout,
-// right-aligned Close action) for model, thinking, session, tree ("Session Tree"),
+// composer-anchored model picker without action bar, right-aligned Close action
+// for non-model pickers) for model, thinking, session, tree ("Session Tree"),
 // and generic selectors.
 func TestOmpPickers(t *testing.T) {
 	cases := []struct {
-		id         string
-		sel        fe.Selector
-		wantSize   string
-		wantNoun   string
-		wantIcon   any
-		wantLayout any
+		id           string
+		sel          fe.Selector
+		wantSize     string
+		wantNoun     string
+		wantIcon     any
+		wantLayout   any
+		wantNoAction bool
 	}{
 		{
-			// upstream: packages/tui/src/overlays/model-picker.ts:648-650
+			// upstream: packages/tui/src/overlays/model-picker.ts:648-675
 			id:       "selector.model",
-			sel:      fe.Selector{Title: "Select Model", Items: []fe.SelectorItem{{ID: "m1", Label: "sonnet"}}},
-			wantSize: "md", wantNoun: "models", wantIcon: "cpu", wantLayout: nil,
+			sel:      fe.Selector{Title: "Select Model", Items: []fe.SelectorItem{{ID: "anthropic/sonnet", Label: "sonnet"}}},
+			wantSize: "md", wantNoun: "models", wantIcon: "cpu", wantLayout: "rows", wantNoAction: true,
 		},
 		{
 			// upstream: packages/tui/src/overlays/model-picker.ts:693
@@ -1236,7 +1247,17 @@ func TestOmpPickers(t *testing.T) {
 			t.Errorf("%s: got size=%v noun=%v icon=%v layout=%v, want %v/%v/%v/%v",
 				tc.id, pr["size"], pr["noun"], pr["icon"], pr["layout"], tc.wantSize, tc.wantNoun, tc.wantIcon, tc.wantLayout)
 		}
-		actions := pr["actions"].([]any)
+		actions, _ := pr["actions"].([]any)
+		if tc.wantNoAction {
+			if len(actions) != 0 {
+				t.Errorf("%s: actions = %#v, want empty []", tc.id, actions)
+			}
+			if pr["anchor"] != "composer" || pr["search"] != "list" || pr["density"] != "snug" || pr["scopeStyle"] != "rail" {
+				t.Errorf("%s: model picker props = anchor:%v search:%v density:%v scopeStyle:%v",
+					tc.id, pr["anchor"], pr["search"], pr["density"], pr["scopeStyle"])
+			}
+			continue
+		}
 		closeAct := actions[1].(map[string]any)
 		if closeAct["id"] != "close" || closeAct["label"] != "Close" || closeAct["end"] != true {
 			t.Errorf("%s: close action = %#v", tc.id, closeAct)

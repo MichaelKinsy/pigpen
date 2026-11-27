@@ -30,7 +30,7 @@ func TestOmpBrandSheetWelcomeLockupNoClipping(t *testing.T) {
 	}
 }
 
-func TestOmpDiscoverySectionsFramedWithDividers(t *testing.T) {
+func TestOmpDiscoverySectionsCollapsibleNoticesKeepSfFresh(t *testing.T) {
 	h := readyOmpRoles(t)
 	ops := h.applyOps(
 		fe.Op{Kind: fe.Insert, Region: fe.RegionMain, ID: "d0", Index: 0, Node: fe.Lines{
@@ -40,7 +40,7 @@ func TestOmpDiscoverySectionsFramedWithDividers(t *testing.T) {
 			Lines: []string{""},
 		}},
 		fe.Op{Kind: fe.Insert, Region: fe.RegionMain, ID: "d1", Index: 2, Node: fe.Lines{
-			Lines: []string{"\x1b[1m[Skills]\x1b[0m", "  rex"},
+			Lines: []string{"\x1b[1m[Skills]\x1b[0m", "  rex", "  review"},
 		}},
 		fe.Op{Kind: fe.Insert, Region: fe.RegionMain, ID: "sp1", Index: 3, Node: fe.Lines{
 			Lines: []string{""},
@@ -49,121 +49,196 @@ func TestOmpDiscoverySectionsFramedWithDividers(t *testing.T) {
 			Lines: []string{"\x1b[1m[Extensions]\x1b[0m", "  builtin:piglet"},
 		}},
 	)
-	top := node(ops, "omp.discovery.top")
-	bot := node(ops, "omp.discovery.bottom")
-	if top == nil || top["k"] != "rule" || props(top)["role"] != "omp.divider" {
-		t.Fatalf("top divider = %#v, want rule[omp.divider]", top)
+	// Every discovery section must become a collapsed section[omp.notice.discovery]
+	// and blank spacers must become hidden spacer nodes (never plain ansi or rule
+	// nodes) so Tern 0.9.27 activates `.sf-fresh` + `.sf-slot.open`.
+	for _, id := range []string{"n.d0", "n.d1", "n.d2"} {
+		n := node(ops, id)
+		if n == nil || n["k"] != "section" {
+			t.Fatalf("%s = %#v, want section", id, n)
+		}
+		pr := props(n)
+		if pr["role"] != "omp.notice.discovery" || pr["collapsible"] != true || pr["collapsed"] != true {
+			t.Fatalf("%s props = %#v, want role=omp.notice.discovery collapsible=true collapsed=true", id, pr)
+		}
 	}
-	if bot == nil || bot["k"] != "rule" || props(bot)["role"] != "omp.divider" {
-		t.Fatalf("bottom divider = %#v, want rule[omp.divider]", bot)
+	for _, id := range []string{"n.sp0", "n.sp1"} {
+		sp := node(ops, id)
+		if sp == nil || sp["k"] != "spacer" || props(sp)["hidden"] != true {
+			t.Fatalf("%s = %#v, want hidden spacer", id, sp)
+		}
 	}
-	// Count rule adds: must be exactly 2 (top and bottom), never duplicated per section.
-	ruleAdds := 0
+	if node(ops, "omp.discovery.top") != nil || node(ops, "omp.discovery.bottom") != nil {
+		t.Fatalf("rule dividers must not be emitted under omp.notice.discovery: %#v", ops)
+	}
+	// Session file hidden node must use spacer kind under ompRoles so sf-fresh stays on.
+	sf := "/tmp/session-fresh.jsonl"
+	_ = h.out.take()
+	if err := h.session.Apply(fe.Frame{SessionFile: &sf}); err != nil {
+		t.Fatal(err)
+	}
+	var sfOps []any
+	for _, f := range h.frames() {
+		sfOps = append(sfOps, f.body["ops"].([]any)...)
+	}
+	sn := node(sfOps, "pig.session")
+	if sn == nil || sn["k"] != "spacer" || props(sn)["hidden"] != true || props(sn)["role"] != "pig.session" || props(sn)["href"] != sf {
+		t.Fatalf("pig.session node = %#v, want hidden spacer with role=pig.session href=%q", sn, sf)
+	}
+}
+
+func TestOmpSurfaceTitleUsesPigletName(t *testing.T) {
+	h := newHarnessEnv(t, map[string]string{"PIG_TERN_ROLES": "omp"})
+	h.session.pigletName = "oh-my-pig"
+	h.session.pigletVersion = "0.1.0"
+	h.reply(`,"credits":64,"cols":120,"cell":{"w":8,"h":16}`)
+	h.session.InputReady()
+	h.apply()
+	var openMsg *message
+	for _, m := range h.messages() {
+		if m.verb == "o" {
+			cp := m
+			openMsg = &cp
+			break
+		}
+	}
+	if openMsg == nil || openMsg.body["title"] != "oh-my-pig" {
+		t.Fatalf("open message = %#v, want title \"oh-my-pig\"", openMsg)
+	}
+}
+
+func TestOmpModelPickerRichPropsRailAndSlider(t *testing.T) {
+	var gotThinking string
+	catalog := map[string]ModelMeta{
+		"github-copilot/claude-opus-4.6": {
+			ID: "claude-opus-4.6", Provider: "github-copilot", Name: "Opus 4.6",
+			ContextWindow: 200000, InputCostPer1M: 0, OutputCostPer1M: 0,
+			Reasoning: true, ThinkingLevels: []string{"off", "low", "medium", "high"},
+		},
+		"anthropic/claude-sonnet-4": {
+			ID: "claude-sonnet-4", Provider: "anthropic", Name: "Sonnet 4",
+			ContextWindow: 200000, InputCostPer1M: 3, OutputCostPer1M: 15,
+			Reasoning: true, ThinkingLevels: []string{"off", "minimal", "low", "medium", "high"},
+		},
+		"openai/gpt-4.1-mini": {
+			ID: "gpt-4.1-mini", Provider: "openai", Name: "GPT-4.1 Mini",
+			ContextWindow: 64000, InputCostPer1M: 0.4, OutputCostPer1M: 1.6,
+			Reasoning: false,
+		},
+	}
+	h := readyOmpRoles(t)
+	h.session.modelMeta = func(provider, id string) (ModelMeta, bool) {
+		m, ok := catalog[provider+"/"+id]
+		return m, ok
+	}
+	h.session.onThinkingLevel = func(level string) { gotThinking = level }
+	h.applyOps(
+		fe.Op{Kind: fe.Insert, Region: fe.RegionDock, ID: "editor", Index: 0, Node: fe.Editor{Sendable: true}},
+		fe.Op{Kind: fe.Insert, Region: fe.RegionDock, ID: "footer", Index: 1, Node: fe.Footer{
+			Model: "claude-opus-4.6", Provider: "github-copilot", ThinkingLevel: "medium",
+			ContextUsage: fe.ContextUsage{Tokens: 100000, ContextWindow: 200000, Percent: 50},
+		}},
+	)
+	sel := fe.Selector{
+		Title:      "Select model",
+		Searchable: true,
+		Selected:   "github-copilot/claude-opus-4.6",
+		Items: []fe.SelectorItem{
+			{ID: "github-copilot/claude-opus-4.6", Label: "claude-opus-4.6", Detail: "github-copilot", Checked: true},
+			{ID: "anthropic/claude-sonnet-4", Label: "claude-sonnet-4", Detail: "anthropic"},
+			{ID: "openai/gpt-4.1-mini", Label: "gpt-4.1-mini", Detail: "openai"},
+		},
+	}
+	ops := h.applyOps(
+		fe.Op{Kind: fe.Remove, Region: fe.RegionDock, ID: "editor", Index: 0},
+		fe.Op{Kind: fe.Insert, Region: fe.RegionDock, ID: "selector.model", Index: 0, Node: sel},
+	)
+	p := node(ops, "layer.selector.model")
+	if p == nil || p["k"] != "picker" {
+		t.Fatalf("picker node = %#v", p)
+	}
+	pr := props(p)
+	if pr["anchor"] != "composer" || pr["search"] != "list" || pr["density"] != "snug" || pr["scopeStyle"] != "rail" {
+		t.Fatalf("picker shell props = %#v", pr)
+	}
+	if pr["title"] != nil {
+		t.Fatalf("expected clean search-only head without title, got %v", pr["title"])
+	}
+	// Verify raw set op carries enriched items, scopes rail, grouped order, and level slider.
+	var rawSet map[string]any
 	for _, op := range ops {
 		arr, ok := op.([]any)
-		if ok && len(arr) >= 3 && arr[0] == "add" {
-			if m, ok := arr[len(arr)-1].(map[string]any); ok && m["k"] == "rule" {
-				ruleAdds++
+		if ok && len(arr) >= 3 && arr[0] == "set" && arr[1] == "layer.selector.model" {
+			rawSet, _ = arr[2].(map[string]any)
+		}
+	}
+	if rawSet == nil {
+		t.Fatalf("expected raw set op on layer.selector.model, got %#v", ops)
+	}
+	scopes, _ := rawSet["scopes"].([]any)
+	if len(scopes) != 3 {
+		t.Fatalf("scopes = %#v, want 3 provider rail entries", scopes)
+	}
+	level, _ := rawSet["level"].(map[string]any)
+	if level == nil || level["label"] != "Thinking" || level["value"] != "medium" || level["detail"] != "github-copilot" {
+		t.Fatalf("level slider = %#v", level)
+	}
+	order, _ := rawSet["order"].([]any)
+	if len(order) < 5 {
+		t.Fatalf("grouped order = %#v, want Recent + All headers and 3 rows", order)
+	}
+	if grp, _ := order[0].(map[string]any); grp["group"] != "recent" || grp["label"] != "Recent" {
+		t.Fatalf("first order group = %#v, want Recent", order[0])
+	}
+	items, _ := rawSet["items"].([]any)
+	if len(items) != 3 {
+		t.Fatalf("items = %#v", items)
+	}
+	mini := items[2].(map[string]any)
+	badges, _ := mini["badges"].([]any)
+	if len(badges) == 0 || badges[0].(map[string]any)["text"] != "ctx>64k" {
+		t.Fatalf("over-context model badges = %#v, want ctx>64k warning", badges)
+	}
+	// Clicking a provider scope filters order to only that provider.
+	_ = h.out.take()
+	h.session.ompModelPickerSetScope("selector.model", "provider:anthropic")
+	var scopeOps []any
+	for _, f := range h.frames() {
+		scopeOps = append(scopeOps, f.body["ops"].([]any)...)
+	}
+	var scopeSet map[string]any
+	for _, op := range scopeOps {
+		if arr, ok := op.([]any); ok && len(arr) >= 3 && arr[0] == "set" && arr[1] == "layer.selector.model" {
+			scopeSet, _ = arr[2].(map[string]any)
+		}
+	}
+	if scopeSet == nil || scopeSet["scope"] != "provider:anthropic" {
+		t.Fatalf("scope filter op = %#v", scopeOps)
+	}
+	if filteredOrder, _ := scopeSet["order"].([]any); len(filteredOrder) != 2 || filteredOrder[1] != "anthropic/claude-sonnet-4" {
+		t.Fatalf("filtered order = %#v, want [All header, anthropic/claude-sonnet-4]", filteredOrder)
+	}
+	// Clicking the active provider scope again toggles back to "all".
+	h.session.ompModelPickerSetScope("selector.model", "provider:anthropic")
+	_ = h.out.take()
+	// Clicking the thinking slider updates level and invokes OnThinkingLevel.
+	h.session.ompModelPickerSetThinking("selector.model", "high")
+	if gotThinking != "high" {
+		t.Fatalf("OnThinkingLevel = %q, want high", gotThinking)
+	}
+	// Verify non-reasoning model shows disabled slider message.
+	sel.Selected = "openai/gpt-4.1-mini"
+	lvlOps := h.applyOps(fe.Op{Kind: fe.Update, Region: fe.RegionDock, ID: "selector.model", Index: 0, Node: sel})
+	var disabledLvl map[string]any
+	for _, op := range lvlOps {
+		if arr, ok := op.([]any); ok && len(arr) >= 3 && arr[0] == "set" && arr[1] == "layer.selector.model" {
+			if m, ok := arr[2].(map[string]any); ok {
+				disabledLvl, _ = m["level"].(map[string]any)
 			}
 		}
 	}
-	if ruleAdds != 2 {
-		t.Fatalf("ruleAdds = %d, want 2 (top + bottom)", ruleAdds)
-	}
-	// Appending a normal user message after discovery does NOT duplicate dividers.
-	ops2 := h.applyOps(fe.Op{Kind: fe.Insert, Region: fe.RegionMain, ID: "u1", Index: 5, Node: fe.MarkdownText{
-		Role: fe.RoleUser, Text: "hello",
-	}})
-	if node(ops2, "omp.discovery.top") != nil {
-		t.Fatalf("top divider should not be re-added on user message: %#v", ops2)
-	}
-
-	// Removing all discovery sections cleans up both dividers.
-	ops3 := h.applyOps(
-		fe.Op{Kind: fe.Remove, Region: fe.RegionMain, ID: "d2", Index: 4},
-		fe.Op{Kind: fe.Remove, Region: fe.RegionMain, ID: "d1", Index: 2},
-		fe.Op{Kind: fe.Remove, Region: fe.RegionMain, ID: "d0", Index: 0},
-	)
-	var delTop, delBot bool
-	for _, op := range ops3 {
-		arr, ok := op.([]any)
-		if ok && len(arr) >= 2 && arr[0] == "del" {
-			if arr[1] == "omp.discovery.top" {
-				delTop = true
-			}
-			if arr[1] == "omp.discovery.bottom" {
-				delBot = true
-			}
-		}
-	}
-	if !delTop || !delBot {
-		t.Fatalf("expected both discovery dividers deleted on removal, got %#v", ops3)
-	}
-
-	// Reload scenario: clear existing discovery sections and re-insert new ones
-	// in a single frame ahead of an existing user card -> exact order must be
-	// omp.discovery.top, new discovery sections, omp.discovery.bottom, user card.
-	h2 := readyOmpRoles(t)
-	h2.applyOps(
-		fe.Op{Kind: fe.Insert, Region: fe.RegionMain, ID: "d0", Index: 0, Node: fe.Lines{
-			Lines: []string{"[Context]", "  AGENTS.md"},
-		}},
-		fe.Op{Kind: fe.Insert, Region: fe.RegionMain, ID: "u1", Index: 1, Node: fe.MarkdownText{
-			Role: fe.RoleUser, Text: "hi",
-		}},
-	)
-	reloadOps := h2.applyOps(
-		fe.Op{Kind: fe.Remove, Region: fe.RegionMain, ID: "d0", Index: 0},
-		fe.Op{Kind: fe.Insert, Region: fe.RegionMain, ID: "d1", Index: 0, Node: fe.Lines{
-			Lines: []string{"[Context]", "  AGENTS.md"},
-		}},
-		fe.Op{Kind: fe.Insert, Region: fe.RegionMain, ID: "d2", Index: 1, Node: fe.Lines{
-			Lines: []string{"[Extensions]", "  builtin:piglet"},
-		}},
-	)
-	// Replay main ops into an ordered slice to verify exact sibling order.
-	mainOrder := []string{"omp.discovery.top", "n.d0", "omp.discovery.bottom", "n.u1"}
-	for _, op := range reloadOps {
-		arr, ok := op.([]any)
-		if !ok || len(arr) < 2 {
-			continue
-		}
-		switch arr[0] {
-		case "del":
-			id, _ := arr[1].(string)
-			for i, cur := range mainOrder {
-				if cur == id {
-					mainOrder = append(mainOrder[:i], mainOrder[i+1:]...)
-					break
-				}
-			}
-		case "add":
-			// TSP wire format: ["add", id, parent, before, node] (or ["add", id, parent, node])
-			if len(arr) < 4 || arr[2] != "main" {
-				continue
-			}
-			id, _ := arr[1].(string)
-			before := ""
-			if len(arr) == 5 {
-				before, _ = arr[3].(string)
-			}
-			if before == "" {
-				mainOrder = append(mainOrder, id)
-			} else {
-				idx := len(mainOrder)
-				for i, cur := range mainOrder {
-					if cur == before {
-						idx = i
-						break
-					}
-				}
-				mainOrder = append(mainOrder[:idx], append([]string{id}, mainOrder[idx:]...)...)
-			}
-		}
-	}
-	wantOrder := []string{"omp.discovery.top", "n.d1", "n.d2", "omp.discovery.bottom", "n.u1"}
-	if !reflect.DeepEqual(mainOrder, wantOrder) {
-		t.Fatalf("post-reload main order = %v, want %v (ops=%#v)", mainOrder, wantOrder, reloadOps)
+	if disabledLvl == nil || disabledLvl["disabled"] != "GPT-4.1 Mini does not reason" {
+		t.Fatalf("non-reasoning slider = %#v", disabledLvl)
 	}
 }
 func TestOmpAutocompleteOverlayFromDockBelow(t *testing.T) {

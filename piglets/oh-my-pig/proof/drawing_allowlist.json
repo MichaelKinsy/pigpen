@@ -934,20 +934,20 @@
     "kind": "frame_child",
     "region": "main",
     "side": "port-only",
-    "node_kind": "rule",
-    "role": "omp.divider",
-    "text": "",
-    "class": "ON_PURPOSE",
+    "node_kind": "section",
+    "role": "omp.notice.discovery",
+    "text_regex": "^(?:Context|Skills|Prompts|Extensions|Themes|Skill warnings|Prompt conflicts|Extension issues|Theme conflicts) · ",
+    "class": "HOST",
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
       "| Host transcript notices in `main`:",
-      "startup discovery dividers (`rule[omp.divider]`)"
+      "collapsible startup discovery notices (`section[omp.notice.discovery]`)"
     ],
     "ref_subject": [
-      "rule[omp.divider]",
+      "section[omp.notice.discovery]",
       "startup discovery"
     ],
-    "why": "Frontend frames PiG's startup discovery section (`[Extensions]`, `[Context]`, `[Skills]`, …) with top and bottom `rule[omp.divider]` horizontal dividers matching omp's framed startup block."
+    "why": "PiG host emits startup loaded-resource sections (`[Extensions]`, `[Context]`, `[Skills]`, …) in `RegionMain` (no `quietStartup` manifest toggle); frontend converts them to collapsed `section[omp.notice.discovery]` notices so Tern activates `.sf-fresh` hero landing mode identically to `omp`."
   },
   {
     "kind": "frame_child",

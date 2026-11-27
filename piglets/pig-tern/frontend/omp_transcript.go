@@ -180,11 +180,23 @@ var ompErrorStatusCode = regexp.MustCompile(`^(\d{3})(?::\s*|\s+)`)
 // (chat/assistant-message.ts:52).
 const ompMaxErrorRows = 8
 
-// ompLinesNode recognizes PiG's assistant error/abort lines and horizontal
-// divider lines under ompRoles, returning their omp TSP nodes.
+// ompLinesNode recognizes PiG's assistant error/abort lines, startup
+// loaded-resources discovery sections, blank spacers, and horizontal divider
+// lines under ompRoles, returning their omp TSP nodes.
 func ompLinesNode(id, pigID string, lines []string, expanded bool) (tern.WireNode, bool) {
 	if node, ok := ompAssistantErrorNode(id, pigID, lines, expanded); ok {
 		return node, true
+	}
+	if node, ok := ompDiscoveryNoticeNode(id, lines); ok {
+		return node, true
+	}
+	if blank(linesText(lines)) {
+		// Tern's `.sf-fresh` landing mode treats plain `ansi` nodes (even when
+		// `hidden: true`) as transcript content, which disables the centered hero
+		// layout, dot-grid sky, and aurora glow. Representing blank PiG spacers
+		// as hidden `spacer` nodes preserves zero visual height while keeping
+		// `.sf-fresh` active on fresh sessions.
+		return tern.WireNode{ID: id, K: tern.KindSpacer, P: map[string]any{"hidden": true}}, true
 	}
 	if node, ok := ompDividerNode(id, lines); ok {
 		return node, true
@@ -538,87 +550,75 @@ func isOmpDiscoverySection(lines []string) bool {
 	return false
 }
 
-// isBlankMainLines reports whether node is an all-whitespace fe.Lines spacer
-// (e.g. `tui.NewSpacer(1)` between loaded-resource sections).
-func isBlankMainLines(node fe.Node) bool {
-	lines, ok := node.(fe.Lines)
-	if !ok || lines.Click != nil || validView(lines.View, lines.Lines) {
-		return false
+// ompDiscoveryNoticeNode converts one PiG startup loaded-resources section
+// (`[Context]`, `[Skills]`, `[Prompts]`, `[Extensions]`, `[Themes]`, etc.) into
+// a native collapsible `section[omp.notice.discovery]` node. Tern's
+// `omp-chat-reader.css` explicitly allows `[data-role^='omp.notice.']` inside
+// `.sf-main.sf-fresh` (at `max-width: 736px`), so fresh sessions keep Tern's
+// dot-grid sky, centered welcome hero, and aurora composer while still letting
+// the user inspect loaded resources on click.
+func ompDiscoveryNoticeNode(id string, lines []string) (tern.WireNode, bool) {
+	if !isOmpDiscoverySection(lines) {
+		return tern.WireNode{}, false
 	}
-	return blank(linesText(lines.Lines))
-}
-
-// syncOmpDiscoveryDividers keeps one top `rule[omp.divider]` (`omp.discovery.top`)
-// and one bottom `rule[omp.divider]` (`omp.discovery.bottom`) framing PiG's
-// contiguous startup loaded-resources sections in `main`.
-func (s *session) syncOmpDiscoveryDividers() {
-	if !s.ompRoles {
-		return
-	}
-	firstIdx, lastIdx := -1, -1
-	for i, id := range s.order {
-		e := s.sent[strings.TrimPrefix(id, "n.")]
-		if e == nil || e.gone || !e.isDiscovery {
+	var heading string
+	var bodyLines []string
+	for _, raw := range lines {
+		plain := strings.TrimRight(stripANSI(raw), " \t")
+		trimmed := strings.TrimSpace(plain)
+		if heading == "" {
+			if trimmed == "" {
+				continue
+			}
+			heading = strings.TrimPrefix(strings.TrimSuffix(trimmed, "]"), "[")
 			continue
 		}
-		if firstIdx < 0 {
-			firstIdx = i
+		if trimmed != "" {
+			bodyLines = append(bodyLines, plain)
 		}
-		lastIdx = i
 	}
-	if firstIdx < 0 {
-		if s.discoveryTopID != "" {
-			s.queue(tern.OpDel(s.discoveryTopID))
-			s.discoveryTopID = ""
-			s.discoveryTopBefore = ""
-		}
-		if s.discoveryBotID != "" {
-			s.queue(tern.OpDel(s.discoveryBotID))
-			s.discoveryBotID = ""
-			s.discoveryBotBefore = ""
-			s.discoveryLastID = ""
-		}
-		return
+	if heading == "" {
+		return tern.WireNode{}, false
 	}
-
-	topBefore := s.liveFrom(firstIdx)
-	if s.discoveryTopID == "" || s.discoveryTopBefore != topBefore {
-		if s.discoveryTopID != "" {
-			s.queue(tern.OpDel(s.discoveryTopID))
+	summary := ""
+	if len(bodyLines) > 0 {
+		first := strings.TrimSpace(bodyLines[0])
+		if len(bodyLines) == 1 {
+			summary = first
+		} else {
+			summary = fmt.Sprintf("%s (+%d more)", first, len(bodyLines)-1)
 		}
-		topID := "omp.discovery.top"
-		rule := tern.WireNode{ID: topID, K: tern.KindRule, P: map[string]any{"role": "omp.divider"}}
-		s.queue(tern.OpAdd("main", topBefore, rule), tern.OpSettle(topID))
-		s.discoveryTopID = topID
-		s.discoveryTopBefore = topBefore
 	}
-
-	// Place bottom divider after the last discovery section (skipping trailing
-	// blank spacers that belong to the loadedResourcesContainer). Track both
-	// the last discovery node ID and the anchor `before` ID so `/reload`
-	// (which clears and re-inserts discovery nodes before an unchanged trailing
-	// node) re-places the bottom divider after the newly inserted sections.
-	lastDiscoveryID := s.order[lastIdx]
-	afterIdx := lastIdx + 1
-	for afterIdx < len(s.order) {
-		e := s.sent[strings.TrimPrefix(s.order[afterIdx], "n.")]
-		if e == nil || !isBlankMainLines(e.node) {
-			break
-		}
-		afterIdx++
+	headSpans := []any{map[string]any{"t": heading, "s": "muted"}}
+	if summary != "" {
+		headSpans = append(headSpans, map[string]any{"t": " · " + summary, "s": "dim"})
 	}
-	botBefore := s.liveFrom(afterIdx)
-	if s.discoveryBotID == "" || s.discoveryBotBefore != botBefore || s.discoveryLastID != lastDiscoveryID {
-		if s.discoveryBotID != "" {
-			s.queue(tern.OpDel(s.discoveryBotID))
-		}
-		botID := "omp.discovery.bottom"
-		rule := tern.WireNode{ID: botID, K: tern.KindRule, P: map[string]any{"role": "omp.divider"}}
-		s.queue(tern.OpAdd("main", botBefore, rule), tern.OpSettle(botID))
-		s.discoveryBotID = botID
-		s.discoveryBotBefore = botBefore
-		s.discoveryLastID = lastDiscoveryID
+	headID := id + ".head"
+	head := tern.WireNode{
+		ID: headID,
+		K:  tern.KindText,
+		P:  map[string]any{"spans": headSpans, "wrap": "none"},
 	}
+	bodyText := strings.Join(bodyLines, "\n")
+	if bodyText == "" {
+		bodyText = heading
+	}
+	body := tern.WireNode{
+		ID: id + ".body",
+		K:  tern.KindText,
+		P:  map[string]any{"spans": []any{map[string]any{"t": bodyText, "s": "dim mono"}}, "wrap": "word"},
+	}
+	return tern.WireNode{
+		ID: id,
+		K:  tern.KindSection,
+		P: map[string]any{
+			"role":        "omp.notice.discovery",
+			"collapsible": true,
+			"collapsed":   true,
+			"head":        headID,
+		},
+		C: []tern.WireNode{head, body},
+	}, true
 }
 
 // ompWelcomeTips holds omp's TSP tips from packages/tui/src/prompt/tips.txt

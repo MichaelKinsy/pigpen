@@ -1436,13 +1436,87 @@ func (s *chromeState) snapshot(ctx sdk.Context) StatusLineData {
 }
 
 // refreshAll runs once at session_start to seed model, thinking, context,
-// session name, and initial branch cost before installing the chrome.
+// session name, model catalog metadata, and initial branch cost before
+// installing the chrome.
 func (s *chromeState) refreshAll(ctx sdk.Context) {
 	s.updateModel(ctx)
+	s.publishModelCatalog(ctx)
+	s.installThinkingApplier(ctx)
 	s.updateThinking(ctx)
 	s.updateContext(ctx)
 	s.updateSessionInfo(ctx)
 	s.seedBranchCost(ctx)
+}
+
+// installThinkingApplier registers the active session's thinking-level setter
+// so Tern's model picker slider can apply thinking effort immediately.
+func (s *chromeState) installThinkingApplier(ctx sdk.Context) {
+	surface.SetThinkingApplier(func(level string) {
+		if level == "" {
+			return
+		}
+		s.mu.Lock()
+		closed := s.closed
+		c := s.sessionCtx
+		s.mu.Unlock()
+		if closed {
+			return
+		}
+		go func() {
+			c.SetThinkingLevel(level)
+		}()
+	})
+}
+
+// publishModelCatalog snapshots ModelRegistry.GetAll() into surface.SetModels
+// so the Tern frontend's model picker can display Ctx, $/M, free/ctx badges,
+// and each model's supported thinking slider steps.
+func (s *chromeState) publishModelCatalog(ctx sdk.Context) {
+	models, err := ctx.ModelRegistry().GetAll()
+	if err != nil || len(models) == 0 {
+		return
+	}
+	out := make([]surface.ModelMeta, 0, len(models))
+	for _, raw := range models {
+		id := strField(raw, "id")
+		if id == "" {
+			continue
+		}
+		provider := strField(raw, "provider")
+		name := strField(raw, "name")
+		if name == "" {
+			name = id
+		}
+		shown := strings.TrimPrefix(name, "Claude ")
+		reasoning, _ := raw["reasoning"].(bool)
+		ctxWin, _ := intField(raw, "contextWindow")
+		var inCost, outCost, cacheRead, cacheWrite float64
+		if costMap, ok := raw["cost"].(map[string]any); ok {
+			inCost, _ = floatField(costMap, "input")
+			outCost, _ = floatField(costMap, "output")
+			cacheRead, _ = floatField(costMap, "cacheRead")
+			cacheWrite, _ = floatField(costMap, "cacheWrite")
+		}
+		var levels []string
+		if reasoning {
+			levels = sdk.GetSupportedThinkingLevels(raw)
+		}
+		out = append(out, surface.ModelMeta{
+			ID:                  id,
+			Provider:            provider,
+			Name:                shown,
+			ContextWindow:       ctxWin,
+			InputCostPer1M:      inCost,
+			OutputCostPer1M:     outCost,
+			CacheReadCostPer1M:  cacheRead,
+			CacheWriteCostPer1M: cacheWrite,
+			Reasoning:           reasoning,
+			ThinkingLevels:      levels,
+		})
+	}
+	if len(out) > 0 {
+		surface.SetModels(out)
+	}
 }
 
 func (s *chromeState) updateModel(ctx sdk.Context) bool {
@@ -1458,6 +1532,24 @@ func (s *chromeState) updateModel(ctx sdk.Context) bool {
 	// The Tern composer gets only the model id from the host; the frontend
 	// member looks the shown name up here.
 	surface.SetModelDisplayName(model.ID, shown)
+	var levels []string
+	if model.Reasoning {
+		if raw, rerr := ctx.ModelRegistry().Find(model.Provider, model.ID); rerr == nil && raw != nil {
+			levels = sdk.GetSupportedThinkingLevels(raw)
+		}
+	}
+	surface.UpsertModel(surface.ModelMeta{
+		ID:                  model.ID,
+		Provider:            model.Provider,
+		Name:                shown,
+		ContextWindow:       model.ContextWindow,
+		InputCostPer1M:      model.InputCostPer1M,
+		OutputCostPer1M:     model.OutputCostPer1M,
+		CacheReadCostPer1M:  model.CacheReadCostPer1M,
+		CacheWriteCostPer1M: model.CacheWriteCostPer1M,
+		Reasoning:           model.Reasoning,
+		ThinkingLevels:      levels,
+	})
 	s.mu.Lock()
 	s.data.ModelName = shown
 	s.data.ModelReasoning = model.Reasoning
@@ -1470,9 +1562,13 @@ func (s *chromeState) updateModel(ctx sdk.Context) bool {
 }
 
 func (s *chromeState) refreshModel(ctx sdk.Context) {
+	if pending := surface.ConsumePendingThinkingLevel(); pending != "" {
+		ctx.SetThinkingLevel(pending)
+	}
 	if s.updateModel(ctx) {
 		s.requestFooterRepaint()
 	}
+	s.publishModelCatalog(ctx)
 }
 
 func (s *chromeState) updateThinking(ctx sdk.Context) bool {
