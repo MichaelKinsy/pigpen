@@ -244,16 +244,24 @@ func TestWildcardMatcher(t *testing.T) {
 	})
 
 	tw(t, f, "wildcardMatch expands ~ prefix in pattern before matching", func(t *testing.T) {
+		posixOnly(t)
 		w(t, "~/dev/project", fakeHome+"/dev/project", true)
 	})
-	tw(t, f, "wildcardMatch expands ~/glob in pattern", func(t *testing.T) { w(t, "~/dev/*", fakeHome+"/dev/project/file.ts", true) })
+	tw(t, f, "wildcardMatch expands ~/glob in pattern", func(t *testing.T) {
+		posixOnly(t)
+		w(t, "~/dev/*", fakeHome+"/dev/project/file.ts", true)
+	})
 	tw(t, f, "wildcardMatch ~/glob does not match a different home directory", func(t *testing.T) {
 		w(t, "~/dev/*", "/other/user/dev/file.ts", false)
 	})
 	tw(t, f, "wildcardMatch expands $HOME prefix in pattern before matching", func(t *testing.T) {
+		posixOnly(t)
 		w(t, "$HOME/dev/project", fakeHome+"/dev/project", true)
 	})
-	tw(t, f, "wildcardMatch expands $HOME/glob in pattern", func(t *testing.T) { w(t, "$HOME/work/*", fakeHome+"/work/file.ts", true) })
+	tw(t, f, "wildcardMatch expands $HOME/glob in pattern", func(t *testing.T) {
+		posixOnly(t)
+		w(t, "$HOME/work/*", fakeHome+"/work/file.ts", true)
+	})
 	tw(t, f, "compileWildcardPattern retains original ~ pattern in .pattern field", func(t *testing.T) {
 		eq(t, CompilePattern("~/dev/*", "allow", nil).Pattern, "~/dev/*", "pattern")
 	})
@@ -261,6 +269,7 @@ func TestWildcardMatcher(t *testing.T) {
 		eq(t, CompilePattern("$HOME/dev/*", "allow", nil).Pattern, "$HOME/dev/*", "pattern")
 	})
 	tw(t, f, "compileWildcardPattern expanded pattern matches the expanded path", func(t *testing.T) {
+		posixOnly(t)
 		eq(t, CompilePattern("~/dev/*", "allow", nil).Matches(fakeHome+"/dev/file.ts"), true, "match")
 	})
 	tw(t, f, "non-home pattern is unaffected", func(t *testing.T) {

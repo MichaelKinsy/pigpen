@@ -56,6 +56,33 @@ func skillAsk(skill, tool string) Ask {
 	return Ask{Surface: "skill", Value: skill, Tool: tool}
 }
 
+// mcpAsk builds the ask on the MCP surface: the decision value is the candidate the deciding rule matched, and
+// the session option is the exact Pi tool name for a built-in `mcp__server__tool` call (never the wider server
+// prefix) or, for a proxy call, the server pattern its target suggests (pattern-suggest.ts
+// suggestExactSessionPattern and suggestSessionPattern).
+func mcpAsk(tool string, found Found) Ask {
+	pattern := suggestMcpPattern(found.Value)
+	if isPiMcpToolName(tool) {
+		pattern = tool // the exact tool, never the wider server prefix
+	}
+	return Ask{Surface: "mcp", Pattern: patternOf(found.Rule), Value: found.Value, Tool: tool,
+		Session: AskSession{Surface: "mcp", Pattern: pattern,
+			Label: `Yes, allow mcp tool "` + pattern + `" for this session`}}
+}
+
+// suggestMcpPattern is pattern-suggest.ts suggestMcpPattern: a qualified target (`server:tool`) suggests
+// `server:*`, a munged one (`server_tool`) `server_*`, a bare target the catch-all.
+func suggestMcpPattern(target string) string {
+	trimmed := jsTrim(target)
+	if i := strings.IndexByte(trimmed, ':'); i > 0 {
+		return trimmed[:i] + ":*"
+	}
+	if i := strings.IndexByte(trimmed, '_'); i > 0 {
+		return trimmed[:i] + "_*"
+	}
+	return "*"
+}
+
 func patternOf(r Rule) string {
 	if r.Layer == "config" || r.Layer == "session" {
 		return r.Pattern

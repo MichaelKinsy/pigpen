@@ -177,10 +177,9 @@ func TestDecideGuards(t *testing.T) {
 	dd := policyOf(t, `{"permission":{"path":"allow","external_directory":{"*":"deny"},"read":"allow"}}`)
 	dv := dd.DecideIn("read", map[string]any{"path": external}, nil, cwd)
 	eq(t, has(dv, "Denied by policy: 'external_directory_read' (rule '*')."), true, "external deny")
-	// MCP and skill surfaces.
-	eq(t, has(q.Decide("mcp", nil), "does not support permissions for the 'mcp' tool (the MCP and skill surfaces) yet."), true, "mcp")
-	eq(t, has(q.Decide("skill", nil), "does not support permissions for the 'skill' tool (the MCP and skill surfaces) yet."), true, "skill")
-	eq(t, has(q.Decide("mcp__srv__tool", nil), "does not support permissions for the 'mcp__srv__tool' tool (the MCP and skill surfaces) yet."), true, "pi mcp tool")
+	// The skill surface is not ported: a `skill` tool call is refused, while an extension tool of a similar
+	// name is decided by the default rule.
+	eq(t, has(q.Decide("skill", nil), "does not support permissions for the 'skill' tool (the skill surface) yet."), true, "skill")
 	eq(t, q.Decide("mcp__srv", nil).Ask != nil, true, "not an MCP name: an extension tool under the default ask")
 }
 
@@ -202,12 +201,17 @@ func TestPolicyComposition(t *testing.T) {
 }
 
 func TestIsToolFullyDenied(t *testing.T) {
+	mcpTestAgentDir(t) // the mcp candidates read mcp.json: decide against no configured servers
 	p := policyOf(t, `{"permission":{"*":"ask","read":{"*":"deny","a":"allow"},"write":"deny","edit":{"a":"deny"},"bash":{"*":"deny","echo":"allow"}}}`)
 	for tool, want := range map[string]bool{"read": false, "write": true, " write ": true, "edit": false, "bash": false, "grep": false, "mcp__a__b": false} {
-		eq(t, p.IsToolFullyDenied(tool), want, tool)
+		eq(t, p.IsToolFullyDenied(tool, ""), want, tool)
 	}
-	eq(t, policyOf(t, `{"permission":{"*":"deny"}}`).IsToolFullyDenied("anything"), true, "universal deny")
-	eq(t, policyOf(t, `{"permission":{"*":"deny"}}`).IsToolFullyDenied("mcp__srv__tool"), false, "an MCP tool is never withheld: its surface is not ported")
+	eq(t, policyOf(t, `{"permission":{"*":"deny"}}`).IsToolFullyDenied("anything", ""), true, "universal deny")
+	// A Pi MCP tool's identity is its name: its candidates give the tool one answer, so a rule naming the
+	// server denies the whole tool (resolvePiMcpTool), while the universal default withholds nothing.
+	eq(t, policyOf(t, `{"permission":{"*":"deny"}}`).IsToolFullyDenied("mcp__srv__tool", ""), true, "a denied MCP tool is withheld")
+	eq(t, policyOf(t, `{"permission":{"*":"ask","mcp":{"mcp_dap*":"deny"}}}`).IsToolFullyDenied("mcp__mcp_dap__start_session", ""), true, "a deny rule on the mcp surface withholds it")
+	eq(t, policyOf(t, `{"permission":{"*":"ask","mcp":{"other*":"deny"}}}`).IsToolFullyDenied("mcp__mcp_dap__start_session", ""), false, "a deny that matches no candidate does not withhold it")
 }
 
 func TestDetectPermissiveBashFallback(t *testing.T) {
@@ -276,10 +280,14 @@ func TestLoadConfig(t *testing.T) {
 
 func TestWildcardExtras(t *testing.T) {
 	useFakeHome(t)
-	eq(t, WildcardMatch(`~\dev`, fakeHome+"/dev", nil), true, "a backslash after ~ is a separator")
+	// The separator-sensitive expansions are POSIX-only: a drive-less home ("/home/testuser") is not absolute
+	// on Windows, so the expanded pattern never equals the value there (the Windows flavor has its own twins).
+	if runtime.GOOS != "windows" {
+		eq(t, WildcardMatch(`~\dev`, fakeHome+"/dev", nil), true, "a backslash after ~ is a separator")
+		eq(t, WildcardMatch("${HOME}/x", fakeHome+"/x", nil), true, "${HOME}")
+	}
 	eq(t, WildcardMatch("~", fakeHome, nil), true, "bare ~ is the home directory")
 	eq(t, WildcardMatch("$HOME", fakeHome, nil), true, "bare $HOME")
-	eq(t, WildcardMatch("${HOME}/x", fakeHome+"/x", nil), true, "${HOME}")
 	eq(t, WildcardMatch("~x", fakeHome+"x", nil), false, "~x is not a home prefix")
 	eq(t, WildcardMatch("~x", "~x", nil), true, "~x is literal")
 	ci := &MatchOptions{CaseInsensitive: true}

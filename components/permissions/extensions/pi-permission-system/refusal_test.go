@@ -80,9 +80,7 @@ func TestEveryRefusalIsExact(t *testing.T) {
 			"path rules with value patterns for the 'read' tool (path matching)"},
 		{"shellTools", `{"permission":{` + wide + `,"exec_command":"allow"},"shellTools":{"exec_command":{"commandArgument":"cmd"}}}`, "exec_command", map[string]any{"cmd": "ls"},
 			"the 'shellTools' option (the 'exec_command' tool routed through the bash surface)"},
-		{"the MCP proxy", `{"permission":{"mcp":"allow"}}`, "mcp", nil, "permissions for the 'mcp' tool (the MCP and skill surfaces)"},
-		{"the skill tool", `{"permission":{"skill":"allow"}}`, "skill", nil, "permissions for the 'skill' tool (the MCP and skill surfaces)"},
-		{"a built-in MCP tool", `{"permission":{"mcp":"allow"}}`, "mcp__srv__tool", nil, "permissions for the 'mcp__srv__tool' tool (the MCP and skill surfaces)"},
+		{"the skill tool", `{"permission":{"skill":"allow"}}`, "skill", nil, "permissions for the 'skill' tool (the skill surface)"},
 	} {
 		cfg := parseConfig([]byte(c.config), "config.json")
 		eq(t, cfg.Issue, "", c.name+": the config is valid")

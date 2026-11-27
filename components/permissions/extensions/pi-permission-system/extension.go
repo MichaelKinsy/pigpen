@@ -146,7 +146,7 @@ func Extension() *sdk.Extension {
 			}
 		}
 		st.mu.Lock()
-		res := st.baseline.resolveExposed(active, registered, func(n string) bool { return !p.IsToolFullyDenied(n) })
+		res := st.baseline.resolveExposed(active, registered, func(n string) bool { return !p.IsToolFullyDenied(n, ctx.Cwd()) })
 		st.mu.Unlock()
 		ctx.SetActiveTools(res.exposed)
 		return nil, nil

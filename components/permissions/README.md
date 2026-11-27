@@ -58,6 +58,15 @@ turns asks into allows, as in the original. The skill
 gates (a listed skill's files, a `/skill:<name>` input) ask without the session option, as in the original, and a denied
 `/skill:` input is handled with the original's notice.
 
+**MCP.** A `mcp` proxy call and a built-in `mcp__<server>__<tool>` call are decided on the `mcp` surface by the
+candidates their input and name derive — `mcp-dap_start_session`, `mcp-dap:start_session`, `mcp-dap`,
+`mcp_dap_start_session`, `start_session`, the full Pi name and `mcp_call` for `mcp__mcp_dap__start_session` when `mcp-dap`
+is a server in `mcp.json` (the agent's or the project's) — and the last rule matching any candidate wins, so a rule
+can be written either way: `"mcp": {"mcp_dap*": "allow"}` and the top-level `"mcp__mcp_dap__*": "allow"` (relocated
+onto the `mcp` surface) allow the same call. An ask shows the candidate the deciding rule matched and offers the exact
+tool name for the session (the proxy offers the target's server pattern); a deny names the `mcp` surface and withholds
+the tool from the model, as in the original.
+
 **Paths.** A call's `path` input and the words of a simple `bash` command are judged against the working directory: a path
 inside it is decided by the tool's rules (and by explicit `path` rules, which the original's backward-compatibility rule
 makes fire only when the config writes them), and a path outside it consults `external_directory_read` /
@@ -79,8 +88,8 @@ outside the working directory.
 - a `bash` command the port cannot read (quotes, `$`, redirection, `&`, ...) while the config has bash *patterns*: the raw
 text cannot be matched against rules the original matches against its parse. With no patterns the command asks instead;
 - a path-bearing tool (`read`, `write`, `edit`, `find`, `grep`, `ls`) whose own rules have path patterns;
-- a tool that `shellTools` routes through the bash surface, and the MCP and skill *surfaces* (a `mcp`, `skill` or
-`mcp__server__tool` tool call);
+- a tool that `shellTools` routes through the bash surface, and the `skill` *surface* (a `skill` tool call: PiG registers
+no `skill` tool — a skill is read as a file, which the skill-read gate decides);
 - the project scope (`<project>/.pi/extensions/pi-permission-system/config.json`, read by the original only for a trusted
 project) and the agent scope (`permission` in the frontmatter of an agent definition): while one applies, every call the
 port would allow is refused, and a warning at session start says which file;
