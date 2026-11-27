@@ -457,17 +457,32 @@ func nvEvalTableNode(sc *nvScope, id string, view map[string]any) kit.Node {
 	colsRaw := nvSlice(view, "columns")
 	rowsRaw := nvSlice(view, "rows")
 	var headers []string
+	var aligns []string
+	hasNumeric := false
 	for _, raw := range colsRaw {
 		if cm := nvToMap(raw); cm != nil {
 			headers = append(headers, nvPlainLine(nvStr(cm, "head")))
+			if num, _ := cm["numeric"].(bool); num {
+				aligns = append(aligns, "end")
+				hasNumeric = true
+			} else {
+				aligns = append(aligns, "start")
+			}
 		}
 	}
 	var items []kit.ListItem
+	var rows []string
 	if len(headers) > 0 {
+		detail := ""
+		if hasNumeric && len(rowsRaw) > 0 {
+			detail = "align=" + strings.Join(aligns, ",")
+		}
 		items = append(items, kit.ListItem{
 			Label:   headers[0],
+			Detail:  detail,
 			Columns: headers[1:],
 		})
+		rows = append(rows, strings.Join(headers, " · "))
 	}
 	for _, rawRow := range rowsRaw {
 		cells := nvToStrSliceAny(rawRow)
@@ -482,8 +497,21 @@ func nvEvalTableNode(sc *nvScope, id string, view map[string]any) kit.Node {
 			Label:   clean[0],
 			Columns: clean[1:],
 		})
+		rows = append(rows, strings.Join(clean, " · "))
 	}
-	return sc.listLines(id, items)
+	if len(items) > nvMaxLinesPerNode {
+		items = items[:nvMaxLinesPerNode]
+		rows = rows[:nvMaxLinesPerNode]
+	}
+	sc.add(1)
+	if len(items) == 0 {
+		return &kit.Lines{ID: id, Lines: []string{}}
+	}
+	return &kit.Lines{
+		ID:    id,
+		Lines: rows,
+		List:  &kit.List{Items: items, Selected: -1},
+	}
 }
 
 func nvToStrSliceAny(v any) []string {

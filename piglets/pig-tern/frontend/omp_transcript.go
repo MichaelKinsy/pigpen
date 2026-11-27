@@ -131,11 +131,57 @@ func ompFormatDuration(ms int64) string {
 	}
 }
 
-// ompUserMarkdownNode builds omp's user message card (chat/user-message.ts:255-286):
-// a user-toned card with role "omp.user", optional "omp.user.images" thumbnail
-// row when the user message carries images, and its md child.
+// ompTurnHoldEntries builds omp's `actions.hold` menu entries for user and
+// assistant turns (upstream: chat/transcript-actions.ts:84-92), keeping only
+// actions backed by real PiG handlers (omitting dead retry-turn).
+func ompTurnHoldEntries(role string, copyID, copyLabel string) []map[string]any {
+	entries := make([]map[string]any, 0, 4)
+	entries = append(entries, map[string]any{"id": copyID, "label": copyLabel, "icon": "copy"})
+	if role == "user" {
+		entries = append(entries, map[string]any{"id": "edit-turn", "label": "Edit & resend", "icon": "edit", "detail": "To composer"})
+	}
+	entries = append(entries,
+		map[string]any{"id": "rewind-turn", "label": "Rewind to here…", "icon": "rewind"},
+		map[string]any{"id": "fork-turn", "label": "Fork from here", "icon": "branch", "detail": "New session"},
+	)
+	return entries
+}
+
+// ompUserMarkdownNode builds omp's user message card (chat/user-message.ts:228-315):
+// a user-toned card with role "omp.user", hover tools row `omp.user.tools`
+// (Copy + Rewind), optional `omp.user.images` thumbnail row, its md child,
+// and `actions.hold` entries.
 func (s *session) ompUserMarkdownNode(id string, md fe.MarkdownText) tern.WireNode {
-	children := make([]tern.WireNode, 0, 2)
+	children := make([]tern.WireNode, 0, 3)
+	children = append(children, tern.WireNode{
+		ID: id + ".tools",
+		K:  tern.KindRow,
+		P:  map[string]any{"gap": "xs", "align": "center", "role": "omp.user.tools"},
+		C: []tern.WireNode{
+			{
+				ID: id + ".tools.copy",
+				K:  tern.KindIcon,
+				P: map[string]any{
+					"name":    "copy",
+					"role":    "omp.user.tool",
+					"title":   "Copy message",
+					"aria":    "Copy message",
+					"actions": map[string]any{"click": "copy-message"},
+				},
+			},
+			{
+				ID: id + ".tools.rewind",
+				K:  tern.KindIcon,
+				P: map[string]any{
+					"name":    "rewind",
+					"role":    "omp.user.tool",
+					"title":   "Rewind the conversation to an earlier message",
+					"aria":    "Rewind",
+					"actions": map[string]any{"click": "rewind"},
+				},
+			},
+		},
+	})
 	if len(md.Images) > 0 {
 		thumbs := make([]tern.WireNode, 0, len(md.Images))
 		for i := range md.Images {
@@ -167,9 +213,212 @@ func (s *session) ompUserMarkdownNode(id string, md fe.MarkdownText) tern.WireNo
 	return tern.WireNode{
 		ID: id,
 		K:  tern.KindCard,
-		P:  map[string]any{"role": "omp.user", "tone": "user"},
+		P: map[string]any{
+			"role":    "omp.user",
+			"tone":    "user",
+			"actions": map[string]any{"hold": ompTurnHoldEntries("user", "copy-message", "Copy message")},
+		},
+		C: children,
+	}
+}
+
+// ompAssistantMarkdownNode builds omp's assistant message column
+// (chat/assistant-message.ts:1180-1218): `col[omp.assistant]` containing `md`
+// plus, once settled with a paired TurnUsageRecord and non-empty answer text,
+// `row[omp.turn.usage]` (Copy icon + `·` + formatted turn usage) and
+// `actions.hold` (`copy-answer`, `rewind-turn`, `fork-turn`).
+func (s *session) ompAssistantMarkdownNode(id string, md fe.MarkdownText, usage *TurnUsageRecord) tern.WireNode {
+	children := make([]tern.WireNode, 0, 2)
+	children = append(children, tern.WireNode{
+		ID: id + ".md",
+		K:  tern.KindMd,
+		P:  map[string]any{"text": md.Text, "stream": md.Streaming},
+	})
+	props := map[string]any{"role": "omp.assistant"}
+	answered := !md.Streaming && strings.TrimSpace(md.Text) != ""
+	if usage != nil && answered && ((usage.Input+usage.CacheWrite+usage.Output) > 0 || usage.Cost > 0) {
+		text, title := ompFormatTurnUsage(*usage)
+		line := []tern.WireNode{
+			{
+				ID: id + ".turn-usage.copy",
+				K:  tern.KindIcon,
+				P: map[string]any{
+					"name":    "copy",
+					"role":    "omp.turn.copy",
+					"title":   "Copy answer",
+					"aria":    "Copy answer",
+					"actions": map[string]any{"click": "copy-answer"},
+				},
+			},
+			{
+				ID: id + ".turn-usage.dot",
+				K:  tern.KindText,
+				P:  map[string]any{"text": "·"},
+			},
+			{
+				ID: id + ".turn-usage.text",
+				K:  tern.KindText,
+				P:  map[string]any{"text": text},
+			},
+		}
+		children = append(children, tern.WireNode{
+			ID: id + ".turn-usage",
+			K:  tern.KindRow,
+			P: map[string]any{
+				"role":  "omp.turn.usage",
+				"gap":   "xs",
+				"align": "center",
+				"title": title,
+			},
+			C: line,
+		})
+		props["actions"] = map[string]any{"hold": ompTurnHoldEntries("assistant", "copy-answer", "Copy reply")}
+	}
+	return tern.WireNode{
+		ID: id,
+		K:  tern.KindCol,
+		P:  props,
 		C:  children,
 	}
+}
+
+// ompFormatTurnUsage mirrors omp's formatTurnUsage
+// (packages/tui/src/overlays/usage-row.ts:97-105).
+func ompFormatTurnUsage(u TurnUsageRecord) (text, title string) {
+	in := u.Input + u.CacheWrite
+	tokens := in + u.Output
+	var cost string
+	if u.Cost > 0 {
+		if u.Cost < 0.005 {
+			cost = "<$0.01"
+		} else {
+			cost = "$" + toFixed(u.Cost, 2)
+		}
+	}
+	var elapsed string
+	if u.ElapsedMs > 0 {
+		elapsed = ompFormatDuration(u.ElapsedMs)
+	}
+	var textParts []string
+	if elapsed != "" {
+		textParts = append(textParts, elapsed)
+	}
+	textParts = append(textParts, ompFormatNumber(tokens)+" tok")
+	if cost != "" {
+		textParts = append(textParts, cost)
+	}
+	text = strings.Join(textParts, " · ") + " this turn"
+
+	exact := fmt.Sprintf("%s tokens (%s in · %s out)", ompFormatCommas(tokens), ompFormatCommas(in), ompFormatCommas(u.Output))
+	var titleParts []string
+	if elapsed != "" {
+		titleParts = append(titleParts, elapsed)
+	}
+	titleParts = append(titleParts, exact)
+	if cost != "" {
+		titleParts = append(titleParts, cost)
+	}
+	title = "This turn: " + strings.Join(titleParts, " · ")
+	return text, title
+}
+
+func ompFormatCommas(n int) string {
+	neg := n < 0
+	if neg {
+		n = -n
+	}
+	s := strconv.Itoa(n)
+	if len(s) <= 3 {
+		if neg {
+			return "-" + s
+		}
+		return s
+	}
+	var b strings.Builder
+	if neg {
+		b.WriteByte('-')
+	}
+	rem := len(s) % 3
+	if rem > 0 {
+		b.WriteString(s[:rem])
+		if len(s) > rem {
+			b.WriteByte(',')
+		}
+	}
+	for i := rem; i < len(s); i += 3 {
+		if i > rem {
+			b.WriteByte(',')
+		}
+		b.WriteString(s[i : i+3])
+	}
+	return b.String()
+}
+
+// onTurnUsage attaches a completed TurnUsageRecord to the most recent settled
+// non-empty assistant MarkdownText entry that does not yet have one, and
+// replaces that entry in `main` so `row[omp.turn.usage]` and `actions.hold`
+// appear immediately.
+func (s *session) onTurnUsage(rec TurnUsageRecord) {
+	if (rec.Input+rec.CacheWrite+rec.Output) <= 0 && rec.Cost <= 0 {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed || s.fellBack || !s.ompRoles {
+		return
+	}
+	for i := len(s.order) - 1; i >= 0; i-- {
+		id := s.order[i]
+		pigID, ok := strings.CutPrefix(id, "n.")
+		if !ok {
+			continue
+		}
+		e := s.sent[pigID]
+		if e == nil || e.gone {
+			continue
+		}
+		md, ok := e.node.(fe.MarkdownText)
+		if !ok {
+			continue
+		}
+		if md.Role == fe.RoleUser {
+			// Reached the current turn's user message before PiG inserted its
+			// assistant reply: stash for when the reply is inserted/settled,
+			// without crossing into an earlier turn.
+			cp := rec
+			s.pendingTurnUsage = &cp
+			return
+		}
+		if md.Role != fe.RoleAssistant {
+			continue
+		}
+		if md.Streaming {
+			// Newest assistant reply in this turn is still streaming: defer
+			// attachment until its Streaming: false update arrives.
+			cp := rec
+			s.pendingTurnUsage = &cp
+			return
+		}
+		if strings.TrimSpace(md.Text) == "" {
+			// Settled empty assistant reply: stop without leaking to an older turn.
+			return
+		}
+		if e.turnUsage != nil {
+			return
+		}
+		cp := rec
+		e.turnUsage = &cp
+		s.pendingTurnUsage = nil
+		before := s.liveFrom(i + 1)
+		s.queue(tern.OpDel(e.id), tern.OpAdd("main", before, s.mainNodeFor(e, e.node)))
+		e.settled = false
+		s.settle(e, i)
+		_ = s.flushLocked()
+		return
+	}
+	// No assistant node in the current turn yet: stash for when it arrives.
+	cp := rec
+	s.pendingTurnUsage = &cp
 }
 
 // ompErrorStatusCode matches an HTTP status code prefix like "500 upstream..."
@@ -456,15 +705,23 @@ func ompFormatProviderErrorText(raw string) string {
 	return core + " (" + strings.Join(extras, " ") + ")"
 }
 
-// ompErrorAction handles click actions emitted by omp.error.actions rows in the
-// transcript ("copy-error" -> OSC 52 clipboard copy; "switch-model" -> "/model").
-func (s *session) ompErrorAction(action *tern.Action) bool {
+// ompTranscriptAction handles click and hold-menu actions emitted by omp
+// transcript nodes: error actions ("copy-error", "switch-model"), user message
+// actions ("copy-message", "edit-turn", "rewind", "rewind-turn", "fork-turn"),
+// and assistant message actions ("copy-answer", "rewind-turn", "fork-turn").
+func (s *session) ompTranscriptAction(action *tern.Action) bool {
 	if action.SF != surfaceID {
 		return false
 	}
 	switch action.Act {
 	case "switch-model":
 		s.runCommand("/model")
+		return true
+	case "rewind", "rewind-turn":
+		s.runCommand("/rewind")
+		return true
+	case "fork-turn":
+		s.runCommand("/fork")
 		return true
 	case "copy-error":
 		nodeID, ok := strings.CutSuffix(action.ID, ".error.actions.copy-error")
@@ -488,13 +745,75 @@ func (s *session) ompErrorAction(action *tern.Action) bool {
 		}
 		suspended := s.suspended || s.closed || s.fellBack
 		s.mu.Unlock()
-		if text != "" && !suspended && s.out != nil {
-			encoded := base64.StdEncoding.EncodeToString([]byte(text))
-			_, _ = io.WriteString(s.out, "\x1b]52;c;"+encoded+"\x07")
+		if text != "" && !suspended {
+			s.writeOSC52Clipboard(text)
+		}
+		return true
+	case "copy-message":
+		nodeID := strings.TrimSuffix(action.ID, ".tools.copy")
+		text := s.ompTranscriptMarkdownText(nodeID, fe.RoleUser)
+		if text != "" {
+			s.writeOSC52Clipboard(text)
+		}
+		return true
+	case "copy-answer":
+		nodeID := strings.TrimSuffix(action.ID, ".turn-usage.copy")
+		text := s.ompTranscriptMarkdownText(nodeID, fe.RoleAssistant)
+		if text != "" {
+			s.writeOSC52Clipboard(text)
+		}
+		return true
+	case "edit-turn":
+		text := s.ompTranscriptMarkdownText(action.ID, fe.RoleUser)
+		if text == "" {
+			return true
+		}
+		s.mu.Lock()
+		ok := s.hasEditor && !s.closed && !s.fellBack
+		curLen := utf16Len(s.editor.Text)
+		s.mu.Unlock()
+		if ok && s.env.Edit != nil {
+			s.env.Edit(fe.Edit{From: 0, To: curLen, Text: text, Cursor: utf16Len(text), Len: curLen})
 		}
 		return true
 	}
 	return false
+}
+
+func (s *session) ompTranscriptMarkdownText(nodeID string, role fe.Role) string {
+	pigID, ok := strings.CutPrefix(nodeID, "n.")
+	if !ok {
+		return ""
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.suspended || s.closed || s.fellBack {
+		return ""
+	}
+	if e := s.sent[pigID]; e != nil {
+		if md, ok := e.node.(fe.MarkdownText); ok && md.Role == role {
+			return md.Text
+		}
+	}
+	return ""
+}
+
+const maxOSC52ClipboardBytes = 256 * 1024
+
+func (s *session) writeOSC52Clipboard(text string) {
+	if text == "" {
+		return
+	}
+	if len(text) > maxOSC52ClipboardBytes {
+		text = text[:maxOSC52ClipboardBytes]
+	}
+	encoded := base64.StdEncoding.EncodeToString([]byte(text))
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.suspended || s.closed || s.fellBack || s.out == nil {
+		return
+	}
+	_, _ = io.WriteString(s.out, "\x1b]52;c;"+encoded+"\x07")
 }
 
 // ompDividerNode recognizes PiG's DynamicBorder horizontal rule lines (one

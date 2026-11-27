@@ -15,6 +15,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ast"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autolearn"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autoresearch"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autothinking"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/browser"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/checkpoint"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/commit"
@@ -64,6 +65,7 @@ var registrars = []func(*sdk.Extension){
 	github.Register,
 	checkpoint.Register,
 	autolearn.Register,
+	autothinking.Register,
 	eval.Register,
 	commit.Register,
 	ratchet.Register,

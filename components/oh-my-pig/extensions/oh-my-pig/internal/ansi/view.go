@@ -284,6 +284,7 @@ func (p palette) renderCodeCellLines(opts codeCellOpts) []string {
 	}
 
 	contentW := outputBlockContentWidth(opts.width, nil, nil)
+	highlighted := p.highlightCodeLines(visible, opts.language)
 	var displayCode []string
 	if numWidth > 0 {
 		contPad := strings.Repeat(" ", numWidth+1)
@@ -293,11 +294,19 @@ func (p palette) renderCodeCellLines(opts codeCellOpts) []string {
 				gutter = fmt.Sprintf("%*d", numWidth, lineNums[i])
 			}
 			prefix := p.fg("dim", gutter+" ")
-			displayCode = append(displayCode, wrapPrefixedLine(prefix, contPad, p.fg("toolOutput", line), contentW)...)
+			styledLine := p.fg("toolOutput", line)
+			if highlighted != nil && i < len(highlighted) {
+				styledLine = highlighted[i]
+			}
+			displayCode = append(displayCode, wrapPrefixedLine(prefix, contPad, styledLine, contentW)...)
 		}
 	} else {
-		for _, line := range visible {
-			displayCode = append(displayCode, p.fg("toolOutput", line))
+		for i, line := range visible {
+			if highlighted != nil && i < len(highlighted) {
+				displayCode = append(displayCode, highlighted[i])
+			} else {
+				displayCode = append(displayCode, p.fg("toolOutput", line))
+			}
 		}
 	}
 

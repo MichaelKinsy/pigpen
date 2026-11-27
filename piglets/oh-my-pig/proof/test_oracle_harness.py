@@ -1454,7 +1454,17 @@ class TestDrawingHarnessFixes(unittest.TestCase):
             if extra_output_prop:
                 out_props.update(extra_output_prop)
             if cmd_kind == "shell":
-                cmd_props: dict = {"role": "omp.tool.bash.command", "lang": "bash", "preview": {"lines": 6}, "presentation": {"view": "pseudo"}}
+                cmd_props: dict = {
+                    "role": "omp.tool.bash.command",
+                    "lang": "bash",
+                    "preview": {"lines": 6},
+                    "presentation": {
+                        "preferences": {"view": "pseudo"},
+                        "rows": [{"depth": 0, "role": "stmt", "segments": [{"text": cmd_text, "style": "cmd"}], "effects": []}],
+                        "running": False,
+                        "executing": False,
+                    },
+                }
             else:
                 cmd_props = {"role": "omp.tool.bash.command", "lang": cmd_lang, "text": cmd_text}
                 if cmd_wrap is not None:
@@ -1483,37 +1493,48 @@ class TestDrawingHarnessFixes(unittest.TestCase):
 
         dom = {"regions": {"sf-main": [{"kind": "tool", "class": "sf sf-tool", "children": []}]}}
         omp_doc = _make_bash_doc("shell")
-        pig_ok = _make_bash_doc("code")
+        omp_doc.nodes["cmd"].props["steps"] = True
+        omp_doc.nodes["cmd"].props["focus"] = []
+        omp_doc.nodes["cmd"].props["presentation"]["timeline"] = {"length": 4, "cursor": 4}
+        pig_ok = _make_bash_doc("shell")
+        pig_ok.nodes["cmd"].props["presentation"]["timeline"] = {"length": 0, "cursor": 0}
         omp_info = compare.summarize_part(omp_doc, dom, "sf-main", [omp_doc.nodes["t1"]])
         pig_ok_info = compare.summarize_part(pig_ok, dom, "sf-main", [pig_ok.nodes["t1"]])
 
-        # 1. ONLY the allowlisted `shell` vs `code` sub-diff with matching command/lang/wrap/preview -> expected
+        # 1. ONLY the allowlisted shell trace props (presentation trace fields, steps, focus) with identical pseudo-code -> expected
         res_expected = compare.compare_part("tool card: bash", "04-tool-bash", omp_doc, pig_ok, omp_info, pig_ok_info, allowlist=allow)
         self.assertEqual(res_expected["verdict"], "expected")
-        self.assertEqual(len(res_expected["allowlisted_diffs"]), 1)
+        self.assertEqual(len(res_expected["allowlisted_diffs"]), 3)
         self.assertEqual(len(res_expected["unexpected_diffs"]), 0)
 
-        # 2. Audit Finding 8 demonstrating input: port bash command mutated to `rm -rf / # WRONG COMMAND`,
-        #    lang='cobol', wrap removed -> MUST be `differs`, NEVER swallowed by `$kind`!
-        pig_wrong_cmd = _make_bash_doc("code", cmd_text="rm -rf / # WRONG COMMAND", cmd_lang="cobol", cmd_wrap=None)
+        # 2. Tampered pseudo-code text inside `shell` presentation -> MUST be `differs`!
+        pig_wrong_cmd = _make_bash_doc("shell", cmd_text="rm -rf / # WRONG COMMAND")
         pig_wrong_info = compare.summarize_part(pig_wrong_cmd, dom, "sf-main", [pig_wrong_cmd.nodes["t1"]])
         res_wrong = compare.compare_part("tool card: bash", "04-tool-bash", omp_doc, pig_wrong_cmd, omp_info, pig_wrong_info, allowlist=allow)
         self.assertEqual(res_wrong["verdict"], "differs")
         unexp_props = {d["prop"] for d in res_wrong["unexpected_diffs"]}
-        self.assertIn("$projection.command", unexp_props)
-        self.assertIn("lang", unexp_props)
-        self.assertIn("wrap", unexp_props)
+        self.assertIn("presentation", unexp_props)
+
+        # 2b. Cross-kind projection (`shell` vs `code`) still flags tampered command/lang/wrap below `$kind`!
+        pig_code_wrong = _make_bash_doc("code", cmd_text="rm -rf / # WRONG COMMAND", cmd_lang="cobol", cmd_wrap=None)
+        pig_code_wrong_info = compare.summarize_part(pig_code_wrong, dom, "sf-main", [pig_code_wrong.nodes["t1"]])
+        res_code_wrong = compare.compare_part("tool card: bash", "04-tool-bash", omp_doc, pig_code_wrong, omp_info, pig_code_wrong_info, allowlist=allow)
+        self.assertEqual(res_code_wrong["verdict"], "differs")
+        code_unexp_props = {d["prop"] for d in res_code_wrong["unexpected_diffs"]}
+        self.assertIn("$projection.command", code_unexp_props)
+        self.assertIn("lang", code_unexp_props)
+        self.assertIn("wrap", code_unexp_props)
 
         # 3. Same allowlisted sub-diff PLUS one extra prop difference on a sibling node (`preview.lines: 10` vs `5`) -> differs!
-        pig_extra = _make_bash_doc("code", extra_output_prop={"preview": {"lines": 5}})
+        pig_extra = _make_bash_doc("shell", extra_output_prop={"preview": {"lines": 5}})
+        pig_extra.nodes["cmd"].props["presentation"]["timeline"] = {"length": 0, "cursor": 0}
         pig_extra_info = compare.summarize_part(pig_extra, dom, "sf-main", [pig_extra.nodes["t1"]])
         res_differs = compare.compare_part("tool card: bash", "04-tool-bash", omp_doc, pig_extra, omp_info, pig_extra_info, allowlist=allow)
         self.assertEqual(res_differs["verdict"], "differs")
-        self.assertEqual(len(res_differs["allowlisted_diffs"]), 1)
+        self.assertEqual(len(res_differs["allowlisted_diffs"]), 3)
         self.assertEqual(len(res_differs["unexpected_diffs"]), 1)
         self.assertEqual(res_differs["unexpected_diffs"][0]["node_path"], "col[omp.run] > ansi[omp.tool.bash.output]")
         self.assertEqual(res_differs["unexpected_diffs"][0]["prop"], "preview")
-
         # 4. Native `slash menu` (`overlay[omp.autocomplete]`) is now mounted on both sides:
         #    missing on pig must report `missing` (no longer allowlisted as host-absent), while
         #    matching native overlay with pinned anchor/list diffs yields `expected`.
@@ -1736,24 +1757,36 @@ class TestDrawingHarnessFixes(unittest.TestCase):
         self.assertEqual(len(res_style["timing_diffs"]), 0)
 
     def test_terminal_allowlist_paired_bash_and_audit_finding19_inputs(self) -> None:
-        """Audit Findings 19 & 25: bash visualizer requires exact paired commands; wrong command / unit swap / ++ line / bad tip / blank rows are caught or counted."""
+        """Audit Findings 19 & 25: paired bash visualizer matcher, wrong command / unit swap / ++ line / bad tip / blank rows are caught or counted."""
         allow = ansi_capture.load_terminal_allowlist()
         omp_txt = "│   print(\"alpha\\\\nbeta\\\\n\")                               │\n"
         pig_ok = "│ $ printf 'alpha\\nbeta\\n'                                 │\n"
-        rep_exp = ansi_capture.classify_terminal_diff(omp_txt, pig_ok, allow)
+        # Now that shellviz is ported, the bash-shell-visualizer entry is retired from
+        # terminal_allowlist.json; an explicit synthetic bash_shell_visualizer_pair entry
+        # still tests the paired matcher logic.
+        bash_pair_allow = [{
+            "name": "bash-shell-visualizer",
+            "kind": "text",
+            "match_kind": "bash_shell_visualizer_pair",
+            "class": "LISTED",
+            "ref": "internal/ansi/UPSTREAM.md:95",
+            "why": "synthetic test entry",
+            "_re": None, "_omp_re": None, "_pig_re": None,
+        }]
+        rep_exp = ansi_capture.classify_terminal_diff(omp_txt, pig_ok, bash_pair_allow)
         self.assertEqual(rep_exp["verdict"], "expected")
         self.assertEqual(rep_exp["summary"]["expected"], 1)
         self.assertEqual(rep_exp["summary"]["unexplained_lines"], 0)
 
         # Audit Finding 19 demonstrating input (3): port row changed to `rm -rf ~` -> MUST be `differs`!
         pig_wrong_bash = "│ $ printf WRONG; rm -rf ~   # not the command that ran    │\n"
-        rep_wrong_bash = ansi_capture.classify_terminal_diff(omp_txt, pig_wrong_bash, allow)
+        rep_wrong_bash = ansi_capture.classify_terminal_diff(omp_txt, pig_wrong_bash, bash_pair_allow)
         self.assertEqual(rep_wrong_bash["verdict"], "differs")
         self.assertEqual(rep_wrong_bash["summary"]["unexplained_lines"], 2)
 
         # Adding one unexplained line in the same hunk must flip the hunk to `differs`!
         pig_bad = pig_ok + "│ UNEXPECTED_EXTRA_LINE                                    │\n"
-        rep_diff = ansi_capture.classify_terminal_diff(omp_txt, pig_bad, allow)
+        rep_diff = ansi_capture.classify_terminal_diff(omp_txt, pig_bad, bash_pair_allow)
         self.assertEqual(rep_diff["verdict"], "differs")
         self.assertEqual(rep_diff["summary"]["unexplained_lines"], 1)
 
@@ -1763,10 +1796,9 @@ class TestDrawingHarnessFixes(unittest.TestCase):
         self.assertEqual(rep_dashes["summary"]["unexplained_lines"], 2)
 
         # Blank rows added inside a hunk are counted explicitly in `blank_row_diff`!
-        rep_blanks = ansi_capture.classify_terminal_diff(omp_txt, pig_ok + "\n\n\n", allow)
+        rep_blanks = ansi_capture.classify_terminal_diff(omp_txt, pig_ok + "\n\n\n", bash_pair_allow)
         self.assertEqual(rep_blanks["blank_row_diff"]["pig_blank_lines_added"], 3)
         self.assertEqual(rep_blanks["blank_row_diff"]["total_blank_rows_changed"], 3)
-
     def test_ansi_width_preserving_normalization_durations_side_and_welcome_tip_block(self) -> None:
         """Unit-preserving durations, /private preservation, width guard, and validated welcome tip block (Findings 2, 19, 25)."""
         # 1a. Equal raw 80-col lines with same-unit durations (`210ms` vs `95ms`) and same-prefix `/tmp/...` paths -> equal!
@@ -2174,7 +2206,7 @@ class TestDrawingHarnessFixes(unittest.TestCase):
         sides = sorted(u["side"] for u in res3["unmatched_children"])
         self.assertEqual(sides, ["omp-only", "port-only"])
 
-        # 4. Allowlisted child inside matched user card (`row[omp.user.tools]` with 5 nodes) accounts for +5 delta as `expected`!
+        # 4. Allowlisted timestamp children inside matched user card (`row[omp.user.tools]` has copy+rewind on both sides, dot+time on omp only) account for +2 delta as `expected`!
         omp_user_with_tools = _make_doc(
             ["u1"],
             extra_nodes={
@@ -2186,14 +2218,21 @@ class TestDrawingHarnessFixes(unittest.TestCase):
                 "t_b": compare.TspNode(id="t_b", kind="text", props={"role": "omp.user.time", "text": "12:00"}, children=[]),
             },
         )
-        pig_user_clean = _make_doc(["u1"])
-        res4 = compare.align_and_classify_step_regions("01-markdown", omp_user_with_tools, pig_user_clean, allow)
+        pig_user_with_tools = _make_doc(
+            ["u1"],
+            extra_nodes={
+                "u1": compare.TspNode(id="u1", kind="card", props={"role": "omp.user"}, children=["ut", "u1m"]),
+                "ut": compare.TspNode(id="ut", kind="row", props={"role": "omp.user.tools"}, children=["i1", "i2"]),
+                "i1": compare.TspNode(id="i1", kind="icon", props={"role": "omp.user.tool"}, children=[]),
+                "i2": compare.TspNode(id="i2", kind="icon", props={"role": "omp.user.tool"}, children=[]),
+            },
+        )
+        res4 = compare.align_and_classify_step_regions("01-markdown", omp_user_with_tools, pig_user_with_tools, allow)
         self.assertEqual(res4["unexplained_unmatched_count"], 0)
         self.assertEqual(res4["unexplained_count_delta_count"], 0)
         self.assertEqual(res4["expected_count_delta_count"], 1)
-        self.assertEqual(res4["matched_count_deltas"][0]["delta"], 5)
+        self.assertEqual(res4["matched_count_deltas"][0]["delta"], 2)
         self.assertEqual(res4["matched_count_deltas"][0]["unaccounted_delta"], 0)
-
         # 5. Terminal allowlist enforces `ref_subject` (rejects entry pointing to an unrelated row)
         with tempfile.TemporaryDirectory() as td:
             bad_path = Path(td) / "bad_term.json"

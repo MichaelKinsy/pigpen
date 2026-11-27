@@ -1406,9 +1406,18 @@ def width_preserving_normalize_pair(omp_raw_text: str, pig_raw_text: str) -> tup
                             a_out[ai] = _collapse_box_fill_for_comparison(norm_a)
                             b_out[bj] = _collapse_box_fill_for_comparison(norm_b)
                     elif norm_a == norm_b:
-                        a_out[ai] = f"{norm_a} [raw_width={raw_wa}]"
-                        b_out[bj] = f"{norm_b} [raw_width={raw_wb}]"
-
+                        # Only flag raw_width mismatch on fixed-width framed/box rows
+                        # (`╭...╮`, `╰...╯`, `│...│`) where padding keeps both sides equal
+                        # width despite variable durations; unframed lines like
+                        # `└─ ✔ ⟦task⟧ ProofChild · 49ms` vs `136ms` legitimately differ
+                        # in raw width by the digit count of the masked variable field.
+                        is_framed = (
+                            (a_raw[ai].startswith(("╭", "╰", "│")) and a_raw[ai].endswith(("╮", "╯", "│")))
+                            or (b_raw[bj].startswith(("╭", "╰", "│")) and b_raw[bj].endswith(("╮", "╯", "│")))
+                        )
+                        if is_framed:
+                            a_out[ai] = f"{norm_a} [raw_width={raw_wa}]"
+                            b_out[bj] = f"{norm_b} [raw_width={raw_wb}]"
     t_a = "\n" if omp_raw_text.endswith("\n") else ""
     t_b = "\n" if pig_raw_text.endswith("\n") else ""
     return "\n".join(a_out) + t_a, "\n".join(b_out) + t_b

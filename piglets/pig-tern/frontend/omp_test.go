@@ -3407,7 +3407,7 @@ func TestOmpDockTodoHudAndErrorBannerParityAgainstProof13(t *testing.T) {
 	}
 	wantSlots := []string{
 		"btw", "omfg", "cleanse", "errorBanner",
-		"modelCycle", "deferred", "above", "activity",
+		"modelCycle", "deferred", "progressHud", "above", "activity",
 		"pending", "editor", "below",
 	}
 	if !reflect.DeepEqual(slotKeys, wantSlots) {

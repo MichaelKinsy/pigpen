@@ -60,6 +60,13 @@ type mainEntry struct {
 	// readGroupLastWire caches the last emitted WireNode for a coalesced group
 	// leader so incremental updates diff cleanly without re-sending unchanged ops.
 	readGroupLastWire *tern.WireNode
+	// turnUsage holds the completed turn usage paired with a settled assistant
+	// MarkdownText entry under ompRoles (renders row[omp.turn.usage] and
+	// actions.hold).
+	turnUsage *TurnUsageRecord
+	// shellMemo caches the last computed shell presentation for a bash ToolCard
+	// so repeated re-renders with identical inputs avoid re-running the parser.
+	shellMemo *ompShellMemo
 }
 
 // textRef is the boxed TSP id that streamed assistant text patches: the
@@ -97,6 +104,15 @@ func (s *session) convertMain(op fe.Op) {
 		e := &mainEntry{id: id, ref: s.textRef(id, op.Node), node: op.Node}
 		if s.ompRoles {
 			s.recordMainTiming(e, nil, op.Node)
+			if md, ok := op.Node.(fe.MarkdownText); ok {
+				switch {
+				case md.Role == fe.RoleUser:
+					s.pendingTurnUsage = nil
+				case md.Role == fe.RoleAssistant && !md.Streaming && strings.TrimSpace(md.Text) != "" && s.pendingTurnUsage != nil:
+					e.turnUsage = s.pendingTurnUsage
+					s.pendingTurnUsage = nil
+				}
+			}
 		}
 		s.sent[op.ID] = e
 		wire := s.mainNodeFor(e, op.Node)
@@ -137,6 +153,14 @@ func (s *session) convertMain(op fe.Op) {
 		if s.ompRoles && e.readGroupHostID != "" {
 			s.syncOmpReadGroups()
 			return
+		}
+		if s.ompRoles && s.pendingTurnUsage != nil {
+			if p, ok := prev.(fe.MarkdownText); ok && p.Role == fe.RoleAssistant && p.Streaming {
+				if n, ok := op.Node.(fe.MarkdownText); ok && n.Role == fe.RoleAssistant && !n.Streaming && strings.TrimSpace(n.Text) != "" {
+					e.turnUsage = s.pendingTurnUsage
+					s.pendingTurnUsage = nil
+				}
+			}
 		}
 		queued := s.queued
 		if !s.patchMain(e, prev, op.Node) {
@@ -275,6 +299,9 @@ func (s *session) patchMain(e *mainEntry, prev, next fe.Node) bool {
 			}
 			s.patchText(id+".md", p.Text, n.Text)
 			return true
+		}
+		if s.ompRoles && n.Role == fe.RoleAssistant && p.Streaming && !n.Streaming && e.turnUsage != nil {
+			return false
 		}
 		s.patchText(e.ref, p.Text, n.Text)
 		if p.Streaming != n.Streaming {
@@ -507,10 +534,13 @@ func (s *session) mainNodeFor(e *mainEntry, node fe.Node) tern.WireNode {
 		}
 		return s.toolNode(id, n)
 	case fe.MarkdownText:
-		if s.ompRoles && n.Role == fe.RoleUser {
-			return s.ompUserMarkdownNode(id, n)
+		if s.ompRoles {
+			if n.Role == fe.RoleUser {
+				return s.ompUserMarkdownNode(id, n)
+			}
+			return s.ompAssistantMarkdownNode(id, n, e.turnUsage)
 		}
-		return markdownNode(id, n, s.ompRoles)
+		return markdownNode(id, n, false)
 	case fe.Lines:
 		if n.Click != nil {
 			if s.ompRoles && isPiGHeaderLines(n.Lines, n.Click) {

@@ -66,6 +66,7 @@ func Add(sessionID string, j Job) {
 	}
 	set[j.ID()] = j
 	mu.Unlock()
+	PublishJobsHud(sessionID)
 	go func() {
 		<-j.Done()
 		mu.Lock()
@@ -74,6 +75,7 @@ func Add(sessionID string, j Job) {
 			fns = append(fns, fn)
 		}
 		mu.Unlock()
+		PublishJobsHud(sessionID)
 		for _, fn := range fns {
 			fn(sessionID, j)
 		}
@@ -105,6 +107,7 @@ func Remove(sessionID, id string) {
 	mu.Lock()
 	delete(bySession[sessionID], id)
 	mu.Unlock()
+	PublishJobsHud(sessionID)
 }
 
 // OnFinish registers a listener for every job that finishes and returns the

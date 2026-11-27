@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"image"
 	"maps"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	fe "github.com/MichaelKinsy/PiG/extensions/sdk/frontend"
 	"github.com/stencil-hq/tern-sdk/go/tern"
@@ -72,6 +75,13 @@ func (s *session) ompViewBodyChildrenWithHead(id string, tool fe.ToolCard, v *fe
 		theme:  v.Theme,
 	}
 	ctx := &ompViewCtx{s: s, tool: tool}
+	if pigID, ok := strings.CutPrefix(id, "n."); ok {
+		if e := s.sent[pigID]; e != nil {
+			ctx.entry = e
+			ctx.startedAt = e.startedAt
+		}
+	}
+	ctx.bashOutput = ompExtractBashOutput(b, v, lines, tool)
 	b.ompMap = ctx.mapNode
 
 	viewID := id + ".view"
@@ -165,9 +175,21 @@ func isOmpToolRootWrapper(role string) bool {
 	return strings.HasSuffix(rest, ".call")
 }
 
+type ompShellMemo struct {
+	cmd      string
+	running  bool
+	hasExit  bool
+	exitCode int
+	output   string
+	pres     map[string]any
+}
+
 type ompViewCtx struct {
-	s    *session
-	tool fe.ToolCard
+	s          *session
+	tool       fe.ToolCard
+	entry      *mainEntry
+	startedAt  time.Time
+	bashOutput string
 	// localStopped tracks per-cell (`omp.run.foot`) or per-job (`omp.job.tile.head`)
 	// settled state while recursing into their children, so a finished cell/job
 	// inside a still-running eval/wait freezes its elapsed timer (fixes N4).
@@ -869,7 +891,56 @@ func (c *ompViewCtx) mapNode(b *viewer, n *fe.ViewNode, id string, r region, pat
 
 	// ── Bash steps, command & output (tools/bash.ts:503-541, 1051-1060; tools/tool-commands.ts:232-236) ──
 	case "omp.tool.bash.command":
-		// upstream: tools/bash.ts:503, native-view.ts:281-286
+		// upstream: tools/bash.ts:503, 950-951, 1036-1051, native-view.ts:281-286
+		displayCmd := ompViewLeafCodeText(b, n, r)
+		rawCmd, _ := c.tool.Arguments["command"].(string)
+		if c.s != nil && c.s.buildShellPresentationFn != nil && strings.TrimSpace(rawCmd) != "" {
+			running := c.tool.Status == fe.ToolRunning
+			var exitCode *int
+			hasExit := false
+			exitVal := 0
+			if c.explicitHead.exit != nil {
+				code := *c.explicitHead.exit
+				exitCode = &code
+				hasExit = true
+				exitVal = code
+			}
+			var pres map[string]any
+			if c.entry != nil && c.entry.shellMemo != nil &&
+				c.entry.shellMemo.cmd == rawCmd &&
+				c.entry.shellMemo.running == running &&
+				c.entry.shellMemo.hasExit == hasExit &&
+				c.entry.shellMemo.exitCode == exitVal &&
+				c.entry.shellMemo.output == c.bashOutput {
+				pres = c.entry.shellMemo.pres
+			} else {
+				pres = c.s.buildShellPresentationFn(rawCmd, running, exitCode, c.bashOutput)
+				if c.entry != nil && pres != nil {
+					c.entry.shellMemo = &ompShellMemo{
+						cmd:      rawCmd,
+						running:  running,
+						hasExit:  hasExit,
+						exitCode: exitVal,
+						output:   c.bashOutput,
+						pres:     pres,
+					}
+				}
+			}
+			if pres != nil {
+				props := map[string]any{
+					"role":         role,
+					"presentation": pres,
+					"lang":         "bash",
+					"preview":      map[string]any{"lines": 6},
+					"replayEpoch":  0,
+					"liveOrigin":   !c.startedAt.IsZero(),
+				}
+				if workdir := c.ompBashDisplayWorkdir(); workdir != "" {
+					props["cwd"] = workdir
+				}
+				return tern.Node{Kind: tern.KindShell, Props: props}, true
+			}
+		}
 		return tern.Node{
 			Kind: tern.KindCode,
 			Props: map[string]any{
@@ -877,7 +948,7 @@ func (c *ompViewCtx) mapNode(b *viewer, n *fe.ViewNode, id string, r region, pat
 				"lang":    "bash",
 				"wrap":    true,
 				"preview": map[string]any{"lines": 6},
-				"text":    ompViewLeafCodeText(b, n, r),
+				"text":    displayCmd,
 			},
 		}, true
 
@@ -1390,7 +1461,11 @@ func (c *ompViewCtx) mapNode(b *viewer, n *fe.ViewNode, id string, r region, pat
 		}, true
 
 	case "omp.job.tile.chart":
-		// upstream: tools/job-widget.ts:498-502 (AnsiNative emits sparkline summary text).
+		// upstream: tools/job-widget.ts:498-502 — native chart when spark series present,
+		// else plain text summary fallback.
+		if chartNode, ok := ompJobTileChartNode(b, n, r, role); ok {
+			return chartNode, true
+		}
 		return tern.Node{
 			Kind:  tern.KindText,
 			Props: map[string]any{"role": role, "wrap": "none", "truncate": "end", "text": ompViewLeafPlainText(b, n, r)},
@@ -1928,7 +2003,10 @@ func (c *ompViewCtx) mapNode(b *viewer, n *fe.ViewNode, id string, r region, pat
 		props["role"] = role
 		return tern.Node{Kind: tern.KindDiff, Props: props}, true
 	case "omp.tool.eval.table":
-		// upstream: tools/eval.ts:820 — table view from Lines.List or ansi fallback.
+		// upstream: tools/eval.ts:807-825 — native table when List.Items has header + >=1 rows.
+		if tableNode, ok := ompEvalTableNode(n, role); ok {
+			return tableNode, true
+		}
 		return ompViewItemList(b, n, id, r, path, role, ""), true
 
 	// ── Edit, Write, Diagnostics, Read, Memory, Think ──
@@ -2214,6 +2292,301 @@ func ompViewItemList(b *viewer, n *fe.ViewNode, id string, r region, path []int,
 		}
 	}
 	return tern.Node{Kind: tern.KindList, Props: props, Children: items}
+}
+
+// ompExtractBashOutput extracts the bash tool's output text from a sibling
+// `omp.tool.bash.output` view node (or falls back to tool.Output).
+func ompExtractBashOutput(b *viewer, v *fe.View, lines []string, tool fe.ToolCard) string {
+	if tool.Name != "bash" {
+		return ""
+	}
+	if v != nil {
+		if out, ok := findOmpBashOutputNode(b, &v.Root, region{0, 0, v.Root.Rows, v.Root.Width}); ok {
+			return out
+		}
+	}
+	return tool.Output
+}
+
+func findOmpBashOutputNode(b *viewer, n *fe.ViewNode, r region) (string, bool) {
+	if n == nil {
+		return "", false
+	}
+	if role, ok := ompViewRole(n.ID); ok && role == "omp.tool.bash.output" {
+		return ompViewLeafRawText(b, n, r), true
+	}
+	row := r.row
+	for i := range n.Children {
+		child := &n.Children[i]
+		childR := region{row, r.col, child.Rows, r.width}
+		row += child.Rows + n.Gap*boolInt(n.Kind == fe.ViewKindVStack)
+		if out, ok := findOmpBashOutputNode(b, child, childR); ok {
+			return out, true
+		}
+	}
+	return "", false
+}
+
+// ompBashDisplayWorkdir extracts a display working directory for a completed
+// bash tool call, formatted like omp's formatToolWorkingDirectory:
+//   - only emitted when a result exists (not pending/running);
+//   - reads `cwd` from Arguments["cwd"];
+//   - omits when equal to session cwd; relative when inside session cwd;
+//     `~`-shortened when under $HOME outside session cwd.
+func (c *ompViewCtx) ompBashDisplayWorkdir() string {
+	if c.tool.Status == fe.ToolPending || c.tool.Status == fe.ToolRunning {
+		return ""
+	}
+	var raw string
+	if c.tool.Arguments != nil {
+		if v, ok := c.tool.Arguments["cwd"].(string); ok {
+			raw = strings.TrimSpace(v)
+		}
+	}
+	if raw == "" {
+		return ""
+	}
+	disp := raw
+	var sessionCwd string
+	if c.s != nil {
+		sessionCwd = strings.TrimSpace(c.s.footer.Cwd)
+		if c.s.displayPath != nil {
+			disp = c.s.displayPath(raw)
+			if sessionCwd != "" {
+				sessionCwd = c.s.displayPath(sessionCwd)
+			}
+		}
+	}
+	cleanDisp := filepath.Clean(disp)
+	if sessionCwd != "" {
+		cleanSession := filepath.Clean(sessionCwd)
+		if cleanDisp == cleanSession {
+			return ""
+		}
+		if rel, err := filepath.Rel(cleanSession, cleanDisp); err == nil && rel != "." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) && rel != ".." {
+			return rel
+		}
+	}
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		cleanHome := filepath.Clean(home)
+		if cleanDisp == cleanHome {
+			return "~"
+		}
+		if strings.HasPrefix(cleanDisp, cleanHome+string(filepath.Separator)) {
+			return "~" + cleanDisp[len(cleanHome):]
+		}
+	}
+	return disp
+}
+
+// ompEvalTableNode converts an `omp.tool.eval.table` `*fe.ViewNode` carrying
+// `List.Items` (item 0 = column headers, items 1..N = data rows) into Tern's
+// native `table` node (upstream: packages/tui/src/tools/eval.ts:807-825).
+// Honors optional `"align=start,end,..."` on `List.Items[0].Detail` and falls
+// back to numeric auto-detection across data rows when absent.
+func ompEvalTableNode(n *fe.ViewNode, role string) (tern.Node, bool) {
+	if n == nil || n.List == nil || len(n.List.Items) < 2 {
+		return tern.Node{}, false
+	}
+	headerItem := n.List.Items[0]
+	headers := make([]string, 0, 1+len(headerItem.Columns))
+	headers = append(headers, strings.TrimSpace(stripANSI(headerItem.Label)))
+	for _, h := range headerItem.Columns {
+		headers = append(headers, strings.TrimSpace(stripANSI(h)))
+	}
+	if len(headers) == 0 {
+		return tern.Node{}, false
+	}
+	// Parse explicit alignment hints if provided in Items[0].Detail ("align=start,end,...").
+	var explicitAlign []string
+	if detail := strings.TrimSpace(stripANSI(headerItem.Detail)); strings.HasPrefix(detail, "align=") {
+		for part := range strings.SplitSeq(strings.TrimPrefix(detail, "align="), ",") {
+			explicitAlign = append(explicitAlign, strings.TrimSpace(part))
+		}
+	}
+	dataItems := n.List.Items[1:]
+	rows := make([]any, 0, len(dataItems))
+	allNumeric := make([]bool, len(headers))
+	hasNonEmpty := make([]bool, len(headers))
+	for i := range allNumeric {
+		allNumeric[i] = true
+	}
+	for rIdx, item := range dataItems {
+		vals := make([]string, 0, 1+len(item.Columns))
+		vals = append(vals, strings.TrimSpace(stripANSI(item.Label)))
+		for _, colVal := range item.Columns {
+			vals = append(vals, strings.TrimSpace(stripANSI(colVal)))
+		}
+		cells := make(map[string]any, len(headers))
+		for cIdx := range headers {
+			var v string
+			if cIdx < len(vals) {
+				v = vals[cIdx]
+			}
+			cells["c"+strconv.Itoa(cIdx)] = v
+			if v != "" {
+				hasNonEmpty[cIdx] = true
+				if allNumeric[cIdx] && !isOmpNumericCell(v) {
+					allNumeric[cIdx] = false
+				}
+			}
+		}
+		rows = append(rows, map[string]any{
+			"id":    "r" + strconv.Itoa(rIdx),
+			"cells": cells,
+		})
+	}
+	cols := make([]any, 0, len(headers))
+	for cIdx, head := range headers {
+		col := map[string]any{
+			"id":   "c" + strconv.Itoa(cIdx),
+			"head": head,
+		}
+		if cIdx < len(explicitAlign) {
+			if explicitAlign[cIdx] == "end" {
+				col["align"] = "end"
+			}
+		} else if hasNonEmpty[cIdx] && allNumeric[cIdx] {
+			col["align"] = "end"
+		}
+		cols = append(cols, col)
+	}
+	return tern.Node{
+		Kind: tern.KindTable,
+		Props: map[string]any{
+			"role": role,
+			"cols": cols,
+			"rows": rows,
+		},
+	}, true
+}
+
+func isOmpNumericCell(s string) bool {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return false
+	}
+	s = strings.TrimPrefix(s, "$")
+	s = strings.TrimSuffix(s, "%")
+	s = strings.ReplaceAll(s, ",", "")
+	_, err := strconv.ParseFloat(s, 64)
+	return err == nil
+}
+
+// ompJobTileChartNode parses sparkline numeric values from `omp.job.tile.chart`
+// (either a VStack containing `omp.job.tile.chart.summary` + `omp.job.tile.chart.series`
+// CSV floats, or a leaf text carrying `spark:<csv>`) and emits Tern's native
+// `chart` node (upstream: packages/tui/src/tools/job-widget.ts:498-502).
+func ompJobTileChartNode(b *viewer, n *fe.ViewNode, r region, role string) (tern.Node, bool) {
+	if n == nil {
+		return tern.Node{}, false
+	}
+	var summary string
+	var seriesCSV string
+	var minVal, maxVal *float64
+	token := "accent"
+	if len(n.Children) > 0 {
+		row := r.row
+		for i := range n.Children {
+			child := &n.Children[i]
+			childR := region{row, r.col, child.Rows, r.width}
+			row += child.Rows + n.Gap*boolInt(n.Kind == fe.ViewKindVStack)
+			cr, _ := ompViewRole(child.ID)
+			txt := ompViewLeafPlainText(b, child, childR)
+			switch cr {
+			case "omp.job.tile.chart.summary":
+				summary = txt
+			case "omp.job.tile.chart.series":
+				seriesCSV = txt
+			case "omp.job.tile.chart.min":
+				if v, err := strconv.ParseFloat(strings.TrimSpace(txt), 64); err == nil {
+					minVal = &v
+				}
+			case "omp.job.tile.chart.max":
+				if v, err := strconv.ParseFloat(strings.TrimSpace(txt), 64); err == nil {
+					maxVal = &v
+				}
+			case "omp.job.tile.chart.tone":
+				if t := strings.TrimSpace(txt); t != "" {
+					token = t
+				}
+			default:
+				if strings.HasPrefix(txt, "spark:") {
+					seriesCSV = strings.TrimPrefix(txt, "spark:")
+				} else if summary == "" {
+					summary = txt
+				}
+			}
+		}
+	} else {
+		raw := ompViewLeafPlainText(b, n, r)
+		if idx := strings.Index(raw, "spark:"); idx >= 0 {
+			summary = strings.TrimSpace(raw[:idx])
+			rest := strings.TrimSpace(raw[idx+len("spark:"):])
+			if sp := strings.IndexByte(rest, '|'); sp >= 0 {
+				seriesCSV = strings.TrimSpace(rest[:sp])
+				if summary == "" {
+					summary = strings.TrimSpace(rest[sp+1:])
+				}
+			} else {
+				seriesCSV = rest
+			}
+		}
+	}
+	vals := parseOmpSparkSeries(seriesCSV)
+	if len(vals) == 0 {
+		return tern.Node{}, false
+	}
+	lo, hi := vals[0], vals[0]
+	series := make([]any, len(vals))
+	for i, v := range vals {
+		if v < lo {
+			lo = v
+		}
+		if v > hi {
+			hi = v
+		}
+		series[i] = map[string]any{"value": v}
+	}
+	if minVal != nil {
+		lo = *minVal
+	}
+	if maxVal != nil {
+		hi = *maxVal
+	}
+	props := map[string]any{
+		"role":   role,
+		"kind":   "bars",
+		"size":   "sm",
+		"token":  token,
+		"min":    lo,
+		"max":    hi,
+		"series": series,
+	}
+	if summary != "" {
+		props["summary"] = summary
+	}
+	return tern.Node{Kind: tern.KindChart, Props: props}, true
+}
+
+func parseOmpSparkSeries(csv string) []float64 {
+	csv = strings.TrimSpace(csv)
+	if csv == "" {
+		return nil
+	}
+	var out []float64
+	for part := range strings.SplitSeq(csv, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		v, err := strconv.ParseFloat(part, 64)
+		if err != nil {
+			return nil
+		}
+		out = append(out, v)
+	}
+	return out
 }
 
 func ompBaseName(file string) string {

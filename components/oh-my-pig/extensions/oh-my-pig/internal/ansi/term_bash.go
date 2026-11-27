@@ -96,13 +96,12 @@ func stripBashNotices(raw string, details map[string]any) (text string, artifact
 	return cur, artifactID
 }
 
-// formatBashCommandLines mirrors packages/tui/src/tools/bash.ts:316-332:
-// dim `$ [cd <dir> &&|;] ` prefix on line 0, followed by sanitized command lines.
-func (p palette) formatBashCommandLines(args map[string]any, details map[string]any, sessionCwd string) []string {
+// formatBashCommandLines mirrors packages/tui/src/tools/bash.ts:316-332 & 569-582:
+// renders non-empty commands via the Go shell visualizer (`BuildShellVizPresentation`
+// + `RenderShellVizTerminal`), prefixed with a `$ cd <dir> &&` context line when a
+// non-default working directory is active. Falls back to `$ …` when command is empty.
+func (p palette) formatBashCommandLines(args map[string]any, details map[string]any, sessionCwd string, contentWidth int, running bool, exitCode *int) []string {
 	cmd := strField(args, "command")
-	if cmd == "" {
-		cmd = "…"
-	}
 	cwd := strField(args, "cwd")
 	if cwd == "" {
 		cwd = strField(details, "cwd")
@@ -111,25 +110,45 @@ func (p palette) formatBashCommandLines(args map[string]any, details map[string]
 	if cdSep == "" {
 		cdSep = " &&"
 	}
+	displayWorkdir := formatToolWorkingDirectory(cwd, sessionCwd)
 
 	prefixParts := []string{"$"}
-	if displayWorkdir := formatToolWorkingDirectory(cwd, sessionCwd); displayWorkdir != "" {
+	if displayWorkdir != "" {
 		prefixParts = append(prefixParts, fmt.Sprintf("cd %s%s", displayWorkdir, cdSep))
 	}
 	prefix := p.fg("dim", strings.Join(prefixParts, " ")+" ")
-	lines := sanitizeDisplayLines(cmd)
-	if len(lines) == 0 {
+
+	if strings.TrimSpace(cmd) == "" || strings.TrimSpace(cmd) == "…" {
+		if cmd == "" {
+			cmd = "…"
+		}
+		lines := sanitizeDisplayLines(cmd)
+		if len(lines) == 0 {
+			return []string{strings.TrimRight(prefix, " ")}
+		}
+		out := make([]string, len(lines))
+		for i, l := range lines {
+			if i == 0 {
+				out[i] = prefix + p.fg("text", l)
+			} else {
+				out[i] = p.fg("text", l)
+			}
+		}
+		return out
+	}
+
+	if contentWidth < 1 {
+		contentWidth = 80
+	}
+	pres := BuildShellVizPresentation(cmd, running, exitCode, "")
+	vizLines := RenderShellVizTerminal(p, pres, contentWidth)
+	if len(vizLines) == 0 {
 		return []string{strings.TrimRight(prefix, " ")}
 	}
-	out := make([]string, len(lines))
-	for i, l := range lines {
-		if i == 0 {
-			out[i] = prefix + p.fg("text", l)
-		} else {
-			out[i] = p.fg("text", l)
-		}
+	if displayWorkdir != "" {
+		return append([]string{strings.TrimRight(prefix, " ")}, vizLines...)
 	}
-	return out
+	return vizLines
 }
 
 func serviceStateSymbol(state string) string {
@@ -243,7 +262,8 @@ func callIntentHeader(p palette, args map[string]any) string {
 func termBashCall(ctx sdk.Context, args map[string]any, _ sdk.ToolRenderContext, width int) (kit.Node, error) {
 	p := newPalette(ctx)
 	header := callIntentHeader(p, args)
-	cmdLines := p.formatBashCommandLines(args, nil, ctx.Cwd())
+	contentW := outputBlockContentWidth(width, nil, nil)
+	cmdLines := p.formatBashCommandLines(args, nil, ctx.Cwd(), contentW, true, nil)
 	capped := p.capPreviewLines(cmdLines, previewWindowFallback, false, "", true)
 	rows := p.renderOutputBlock(blockOpts{
 		header:      header,
@@ -334,7 +354,11 @@ func termBashResult(ctx sdk.Context, res sdk.ToolRenderResult, opts sdk.ToolRend
 
 	var cmdLines []string
 	if rc.Args != nil {
-		cmdLines = p.capPreviewLines(p.formatBashCommandLines(rc.Args, details, ctx.Cwd()), previewWindowFallback, opts.Expanded, "", true)
+		var exitPtr *int
+		if ec, ok := intField(details, "exitCode"); ok {
+			exitPtr = &ec
+		}
+		cmdLines = p.capPreviewLines(p.formatBashCommandLines(rc.Args, details, ctx.Cwd(), contentW, isPartial, exitPtr), previewWindowFallback, opts.Expanded, "", true)
 	}
 
 	borderColor := "dim"

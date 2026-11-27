@@ -628,8 +628,8 @@ func (s *session) ompView() tern.View {
 		activitySlot = slot("activity")
 	}
 
-	dock := make(tern.Nodes, 0, 12)
-	if hudNode, ok := s.ompAgentsHudNode(); ok {
+	dock := make(tern.Nodes, 0, 13)
+	if hudNode, ok := s.ompHudPillsNode(); ok {
 		dock = append(dock, hudNode)
 	}
 	dock = append(dock,
@@ -639,6 +639,7 @@ func (s *session) ompView() tern.View {
 		slot("errorBanner", errorBannerChildren...),
 		slot("modelCycle"),
 		slot("deferred"),
+		slot("progressHud", s.ompJudgeHudNode(), s.ompDownloadsHudNode(), s.ompCompactionHudNode()),
 		slot("above", aboveChildren...),
 		activitySlot,
 		slot("pending"),
@@ -724,7 +725,7 @@ func (s *session) runCommand(command string) {
 		switch command {
 		case "/model", "/thinking":
 			allowWhileWorking = true
-		case "/context", "/usage":
+		case "/context", "/usage", "/jobs":
 			allowWhileWorking = s.ompDerived
 		}
 	}

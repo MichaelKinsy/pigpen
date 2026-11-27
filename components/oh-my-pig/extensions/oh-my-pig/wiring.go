@@ -1,6 +1,7 @@
 package ohmypig
 
 import (
+	"context"
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"math"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ask"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ast"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autolearn"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autothinking"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/browser"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/checkpoint"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/commit"
@@ -139,6 +141,28 @@ func wireSettings() {
 	// version on the welcome banner.
 	ansi.Setting = settings.Any
 	ansi.PigletVersion = surface.Version
+	ansi.IsSubagent = agents.IsSubagent
+	surface.SetShellVizBuilder(ansi.BuildShellVizPresentation)
+	autothinking.Setting = settings.Any
+	autothinking.ResolveModelRole = providerwire.ResolveRoleWithThinking
+	autothinking.IsSubagent = agents.IsSubagent
+	agents.ClassifyAutoThinking = func(goCtx context.Context, sdkCtx sdk.Context, targetModel map[string]any, solutionSpace, assignment, maxEffort string) (string, bool) {
+		lvl, err := autothinking.ClassifyDifficulty(goCtx, sdkCtx, autothinking.Input{
+			Request:       assignment,
+			SolutionSpace: solutionSpace,
+			TargetModel:   targetModel,
+			MaxEffort:     maxEffort,
+		})
+		return lvl, err == nil && lvl != ""
+	}
+	jobs.IsSubagentSession = func(sessionID string) bool {
+		if sessionID == "" {
+			return false
+		}
+		_, isChild := agents.DefaultRuntime().Registry.ChildMeta(sessionID)
+		return isChild
+	}
+	eval.IsSubagentSession = jobs.IsSubagentSession
 
 	// shell.Setting serves BOTH security-sensitive keys (`bash.patterns` and
 	// `bash.allowedEnvVars`) from operator layers only (`settings.OperatorAny`)

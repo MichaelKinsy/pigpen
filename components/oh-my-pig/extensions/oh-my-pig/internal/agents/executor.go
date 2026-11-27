@@ -554,6 +554,12 @@ func ResolveChildToolNames(agent AgentDefinition, childDepth, maxDepth int, stru
 // upstream: packages/coding-agent/src/config/model-resolver.ts
 var ResolveModelRole func(ctx sdk.Context, selector string) (provider, id, thinking string, ok bool)
 
+// ClassifyAutoThinking classifies a subagent whose effective thinking level is
+// `"auto"` using the delegator's `solutionSpace` (or assignment) and target model.
+// Wired to `autothinking.ClassifyDifficulty` in `wiring.go`.
+// upstream: packages/coding-agent/src/auto-thinking/classifier.ts
+var ClassifyAutoThinking func(goCtx context.Context, sdkCtx sdk.Context, targetModel map[string]any, solutionSpace, assignment, maxEffort string) (string, bool)
+
 // splitSelectorThinking splits an optional trailing `:thinkingLevel` suffix
 // from a model selector when the suffix is a recognized omp thinking level.
 func splitSelectorThinking(sel string) (base, suffix string) {
@@ -770,6 +776,39 @@ func modelMapSupportsEffort(modelObj map[string]any, level string) bool {
 	return true
 }
 
+// RawChildThinkingLevel resolves the effective configured thinking selector
+// before collapsing `"auto"` to its provisional fallback `"high"`.
+func RawChildThinkingLevel(agentLevel, effortOverride, modelSuffix string) string {
+	level := modelSuffix
+	if effortOverride != "" {
+		level = normalizeThinkingLevel(effortOverride)
+	}
+	if level == "" {
+		level = normalizeThinkingLevel(agentLevel)
+	}
+	switch level {
+	case "off", "minimal", "low", "medium", "high", "xhigh", "max", "auto":
+		return level
+	default:
+		return ""
+	}
+}
+
+// resolveChildThinkingWithAuto resolves the concrete thinking level for a
+// subagent spawn or revive, invoking ClassifyAutoThinking when the effective
+// selector is `"auto"` and falling back to ResolveChildThinkingLevel (`"high"`).
+func resolveChildThinkingWithAuto(goCtx context.Context, sdkCtx sdk.Context, modelObj map[string]any, req RunRequest, modelThinkSuffix string) string {
+	if RawChildThinkingLevel(req.Agent.ThinkingLevel, req.Effort, modelThinkSuffix) == "auto" {
+		var zero sdk.Context
+		if ClassifyAutoThinking != nil && sdkCtx != zero {
+			if classified, ok := ClassifyAutoThinking(goCtx, sdkCtx, modelObj, req.SolutionSpace, req.Assignment, req.MaxEffort); ok && classified != "" {
+				return ClampThinkingLevelToCeiling(modelObj, classified, req.MaxEffort)
+			}
+		}
+	}
+	return ClampThinkingLevelToCeiling(modelObj, ResolveChildThinkingLevel(req.Agent.ThinkingLevel, req.Effort, modelThinkSuffix), req.MaxEffort)
+}
+
 // ResolveChildThinkingLevel maps omp's effort ("lo"/"med"/"hi"), explicit
 // model `:level` suffix, and agent frontmatter `thinkingLevel` to PiG's
 // `ThinkingLevel` option.
@@ -968,7 +1007,7 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 		modelCandidates = req.Agent.Model
 	}
 	modelObj, modelThinkSuffix, resolvedModelRole := resolveModelForChildWithRole(req.SDK, modelCandidates)
-	thinkingLevel := ClampThinkingLevelToCeiling(modelObj, ResolveChildThinkingLevel(req.Agent.ThinkingLevel, req.Effort, modelThinkSuffix), req.MaxEffort)
+	thinkingLevel := resolveChildThinkingWithAuto(runCtx, req.SDK, modelObj, req, modelThinkSuffix)
 	ref.mu.Lock()
 	ref.ModelRole = resolvedModelRole
 	ref.ThinkingLevel = thinkingLevel
@@ -2780,7 +2819,7 @@ func makeReviveHandler(reg *Registry, ref *AgentRef, req RunRequest, structured 
 			modelCandidates = req.Agent.Model
 		}
 		modelObj, modelThinkSuffix, _ := resolveModelForChildWithRole(req.SDK, modelCandidates)
-		thinkingLevel := ClampThinkingLevelToCeiling(modelObj, ResolveChildThinkingLevel(req.Agent.ThinkingLevel, req.Effort, modelThinkSuffix), req.MaxEffort)
+		thinkingLevel := resolveChildThinkingWithAuto(context.Background(), req.SDK, modelObj, req, modelThinkSuffix)
 
 		// Prepare CustomTools: copy caller custom tools + inject `yield` when structured.
 		var customTools []sdk.ToolDefinition

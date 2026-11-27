@@ -12,6 +12,7 @@ import (
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/surface"
 )
 
 // upstream: packages/coding-agent/src/session/async-job-delivery.ts,
@@ -163,6 +164,106 @@ type DeliverySink func(sessionID, customType, content string, display bool, opts
 // artifactId) to `local://<N>.log` and returns its URL. Nil disables spilling
 // from the delivery layer (preview truncation still applies).
 var SpillFunc func(ctx sdk.Context, data []byte) (url string, err error)
+
+// IsSubagentSession reports whether sessionID belongs to a spawned child
+// subagent session (optional hook wired by the integrator). When non-nil and
+// returning true, PublishJobsHud skips updating Tern's top-level jobs HUD pill.
+var IsSubagentSession func(sessionID string) bool
+
+var (
+	jobsHudMu      sync.Mutex
+	jobsHudDirty   = map[string]bool{}
+	jobsHudRunning = map[string]bool{}
+)
+
+// PublishJobsHud schedules an asynchronous, coalesced publication of currently
+// running non-agent background jobs (bash/service/eval) for sessionID into
+// surface.SetJobsHud. Safe to call while callers hold their own locks; never
+// blocks on Tern frame I/O and always converges to the latest state.
+func PublishJobsHud(sessionID string) {
+	if sessionID == "" {
+		return
+	}
+	jobsHudMu.Lock()
+	jobsHudDirty[sessionID] = true
+	if jobsHudRunning[sessionID] {
+		jobsHudMu.Unlock()
+		return
+	}
+	jobsHudRunning[sessionID] = true
+	jobsHudMu.Unlock()
+	go drainJobsHud(sessionID)
+}
+
+func drainJobsHud(sessionID string) {
+	for {
+		jobsHudMu.Lock()
+		if !jobsHudDirty[sessionID] {
+			delete(jobsHudRunning, sessionID)
+			jobsHudMu.Unlock()
+			return
+		}
+		delete(jobsHudDirty, sessionID)
+		jobsHudMu.Unlock()
+		publishJobsHudSync(sessionID)
+	}
+}
+
+func publishJobsHudSync(sessionID string) {
+	if sessionID == "" {
+		return
+	}
+	if IsSubagentSession != nil && IsSubagentSession(sessionID) {
+		return
+	}
+	all := List(sessionID)
+	now := time.Now()
+	items := make([]surface.JobHudItem, 0, len(all))
+	for _, j := range all {
+		if j == nil || j.Kind() == KindAgent {
+			continue
+		}
+		if doneCh := j.Done(); doneCh != nil {
+			select {
+			case <-doneCh:
+				continue
+			default:
+			}
+		} else if j.Status() != "running" {
+			continue
+		}
+		item := surface.JobHudItem{
+			ID:        j.ID(),
+			Kind:      string(j.Kind()),
+			Label:     j.Label(),
+			Status:    "running",
+			StartedMs: j.Started().UnixMilli(),
+		}
+		if wp, ok := j.(WidgetProvider); ok {
+			if wv := wp.WidgetView(now); wv != nil {
+				if wv.Title != "" {
+					item.Label = wv.Title
+				}
+				item.Summary = wv.Stage
+				for _, blk := range wv.Blocks {
+					if blk.Kind == "stat" && len(blk.Items) > 0 && item.GlanceText == "" {
+						parts := make([]string, 0, len(blk.Items))
+						for _, st := range blk.Items {
+							if st.Label != "" && st.Text != "" {
+								parts = append(parts, st.Label+" "+st.Text)
+							} else if st.Text != "" {
+								parts = append(parts, st.Text)
+							}
+						}
+						item.GlanceText = strings.Join(parts, " · ")
+					}
+				}
+			}
+		}
+		items = append(items, item)
+	}
+	surface.SetJobsHud(len(items), items)
+}
 
 type sessionBinding struct {
 	ctx   sdk.Context

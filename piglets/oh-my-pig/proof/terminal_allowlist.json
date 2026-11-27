@@ -64,21 +64,6 @@
     "why": "PiG's built-in assistant markdown renderer indents fenced code lines by 3 columns (`markdown.codeBlockIndent` default `\"  \"` + 1 column host margin), which a Piglet manifest or extension cannot override."
   },
   {
-    "name": "bash-shell-visualizer",
-    "match_kind": "bash_shell_visualizer_pair",
-    "class": "LISTED",
-    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
-    "ref_term": [
-      "Bash visible command visualizer",
-      "ShellVizPresentation"
-    ],
-    "ref_subject": [
-      "ShellVizPresentation",
-      "plain fallback"
-    ],
-    "why": "omp renders bash commands via its Rust shell visualizer (`print(...)`, `seq 1 30 → awk ...`, `reject ...`), while oh-my-pig renders omp's plain `$ <command>` fallback; matched strictly as paired omp/pig rows for the same scripted command."
-  },
-  {
     "name": "host-ctrl-o-status-text",
     "omp_regex": "^ Tool output expansion: enabled$",
     "pig_regex": "^ Tool output: expanded$",
@@ -229,27 +214,6 @@
       "Plan mode enabled"
     ],
     "why": "PiG renders `ctx.Notify(..., \"info\")` transcript status notices (such as `Plan mode enabled. Plan file: local://PLAN.md`) with host `ActiveTheme().Fg(\"dim\", msg)` (`\\x1b[39m\\x1b[2m`, SGR faint + default fg) in `internal/codingagent/interactive_chat.go:583-604`, while omp renders dim truecolor `rgb:107;114;128` without SGR faint."
-  },
-  {
-    "name": "listed-eval-syntax-highlighting-fg",
-    "kind": "colour",
-    "regions": [
-      "card:eval"
-    ],
-    "omp_fg": "@omp_syntax_fg",
-    "pig_fg": "rgb:156;163;176",
-    "bg_must_match": true,
-    "class": "LISTED",
-    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
-    "ref_term": [
-      "Syntax highlighting inside",
-      "eval"
-    ],
-    "ref_subject": [
-      "Syntax highlighting",
-      "eval"
-    ],
-    "why": "omp applies Rust tree-sitter/syntect syntax highlighting to `eval` code bodies while oh-my-pig renders plain `toolOutput` (`rgb:156;163;176`); requires matching background and identical SGR attributes."
   },
   {
     "name": "blank-welcome-and-startup-notices",

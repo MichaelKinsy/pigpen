@@ -193,6 +193,90 @@ type CompactionMeta struct {
 	Warning      string
 }
 
+// TurnUsageRecord holds per-turn token, cost, and wall-clock metrics published
+// by an extension so Tern renders omp's `row[omp.turn.usage]` footer on
+// settled assistant replies.
+type TurnUsageRecord struct {
+	TurnSeq     int
+	Input       int
+	Output      int
+	CacheRead   int
+	CacheWrite  int
+	Cost        float64
+	ElapsedMs   int64
+	TimestampMs int64
+}
+
+// ComposerMeta carries live composer facts not present on PiG's frontend.Footer:
+// auto-compact threshold/speculation mark percentages, live generation tok/s,
+// GitHub Copilot premium request counts, and advisor spend.
+type ComposerMeta struct {
+	HasBoundaries      bool
+	AutoCompactEnabled bool
+	ThresholdPercent   float64
+	SpeculationPercent float64
+	SpeculationState   string
+	PremiumRequests    float64
+	AdvisorCost        float64
+	AdvisorSub         bool
+	TokensPerSec       float64
+}
+
+// JudgeBatchHudItem describes one active eval judge_batch progress row for
+// Tern's `col[omp.hud.judge]`.
+type JudgeBatchHudItem struct {
+	ID     string
+	Intent string
+	Done   int
+	Total  int
+	Failed int
+	Cost   float64
+}
+
+// DownloadHudItem describes one active download/install activity row for
+// Tern's `col[omp.hud.downloads]`.
+type DownloadHudItem struct {
+	ID     string
+	Label  string
+	Detail string
+	State  string
+	Loaded int64
+	Total  int64
+	Unit   string
+	Error  string
+}
+
+// CompactionHudItem describes an active background compaction row for Tern's
+// `col[omp.hud.compaction]`.
+type CompactionHudItem struct {
+	Active      bool
+	Label       string
+	StartedAtMs int64
+}
+
+// JobHudItem describes one running non-agent background job (bash/service/eval)
+// for Tern's `omp.hud.seg` ("jobs") pill beside the agents pill.
+type JobHudItem struct {
+	ID         string
+	Kind       string
+	Label      string
+	Status     string
+	StartedMs  int64
+	Summary    string
+	GlanceText string
+	SparkVals  []float64
+}
+
+// ProgressHudSnapshot aggregates background job pills and dock progress rows
+// (`omp.hud.judge`, `omp.hud.downloads`, `omp.hud.compaction`).
+type ProgressHudSnapshot struct {
+	JudgeBatches []JudgeBatchHudItem
+	Downloads    []DownloadHudItem
+	Compaction   CompactionHudItem
+	RunningJobs  int
+	Jobs         []JobHudItem
+}
+
 // Options are what a Piglet that derives from pig-tern fixes for its member.
 type Options struct {
 	// Omp draws the transcript and the dock with omp's roles and node
@@ -242,6 +326,24 @@ type Options struct {
 	// LookupCompaction resolves compaction metadata by tokensBefore for omp's
 	// native `section[omp.compaction]` divider.
 	LookupCompaction func(tokensBefore int) (CompactionMeta, bool)
+	// OnTurnUsage subscribes to completed turn usage records and returns an
+	// unsubscribe function.
+	OnTurnUsage func(func(TurnUsageRecord)) func()
+	// LatestTurnUsage returns the most recently recorded TurnUsageRecord, if any.
+	LatestTurnUsage func() (TurnUsageRecord, bool)
+	// ComposerMeta returns the current ComposerMeta snapshot.
+	ComposerMeta func() ComposerMeta
+	// OnComposerMetaChange subscribes to live ComposerMeta updates and returns
+	// an unsubscribe function.
+	OnComposerMetaChange func(func(ComposerMeta)) func()
+	// ProgressHudSnapshot returns the current ProgressHudSnapshot.
+	ProgressHudSnapshot func() ProgressHudSnapshot
+	// OnProgressHudChange subscribes to live ProgressHudSnapshot updates and
+	// returns an unsubscribe function.
+	OnProgressHudChange func(func(ProgressHudSnapshot)) func()
+	// BuildShellPresentation builds omp's canonical ShellVizPresentation map
+	// for Tern's native `shell` node, or returns nil to fall back to `code`.
+	BuildShellPresentation func(command string, running bool, exitCode *int, output string) map[string]any
 }
 
 // own member returns.
@@ -286,7 +388,14 @@ func (m member) Open(env fe.Env) (fe.Session, error) {
 	s.reviveAgentFn = m.opts.ReviveAgent
 	s.sendAgentMessageFn = m.opts.SendAgentMessage
 	s.lookupCompaction = m.opts.LookupCompaction
-	s.initAgentHub()
+	s.onTurnUsageFn = m.opts.OnTurnUsage
+	s.latestTurnUsageFn = m.opts.LatestTurnUsage
+	s.composerMetaFn = m.opts.ComposerMeta
+	s.onComposerMetaChangeFn = m.opts.OnComposerMetaChange
+	s.progressHudSnapshotFn = m.opts.ProgressHudSnapshot
+	s.onProgressHudChangeFn = m.opts.OnProgressHudChange
+	s.buildShellPresentationFn = m.opts.BuildShellPresentation
+	s.initOmpBridge()
 	s.start()
 	return s, nil
 }
@@ -463,6 +572,24 @@ type session struct {
 	agentHubUnsub         func()
 	agentHub              AgentHubSnapshot
 	agentHubUI            *ompAgentHubState
+	// Wave 7 omp bridge callbacks & live state (turn usage, composer meta, progress HUD, shell viz).
+	onTurnUsageFn            func(func(TurnUsageRecord)) func()
+	latestTurnUsageFn        func() (TurnUsageRecord, bool)
+	composerMetaFn           func() ComposerMeta
+	onComposerMetaChangeFn   func(func(ComposerMeta)) func()
+	progressHudSnapshotFn    func() ProgressHudSnapshot
+	onProgressHudChangeFn    func(func(ProgressHudSnapshot)) func()
+	buildShellPresentationFn func(command string, running bool, exitCode *int, output string) map[string]any
+	turnUsageUnsub           func()
+	composerMetaUnsub        func()
+	progressHudUnsub         func()
+	composerMeta             ComposerMeta
+	progressHud              ProgressHudSnapshot
+	pendingTurnUsage         *TurnUsageRecord
+	compactionHudCached      bool
+	compactionHudStartedAtMs int64
+	compactionHudLabel       string
+	compactionHudNode        tern.Node
 	// surfaceMu serializes callbacks and re-checks closed/fellBack so a late
 	// open notification can never overwrite a Close or fallback(false) (fixes N6).
 	onSurface    func(native bool)
@@ -962,10 +1089,25 @@ func (s *session) Close() error {
 	s.closed = true
 	unsub := s.agentHubUnsub
 	s.agentHubUnsub = nil
+	turnUnsub := s.turnUsageUnsub
+	s.turnUsageUnsub = nil
+	composerUnsub := s.composerMetaUnsub
+	s.composerMetaUnsub = nil
+	progressUnsub := s.progressHudUnsub
+	s.progressHudUnsub = nil
 	setOpener := s.setAgentHubOpenerFn
 	s.mu.Unlock()
 	if unsub != nil {
 		unsub()
+	}
+	if turnUnsub != nil {
+		turnUnsub()
+	}
+	if composerUnsub != nil {
+		composerUnsub()
+	}
+	if progressUnsub != nil {
+		progressUnsub()
 	}
 	if setOpener != nil {
 		setOpener(nil)

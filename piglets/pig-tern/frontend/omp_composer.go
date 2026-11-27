@@ -66,12 +66,12 @@ func (s *session) ompComposerElement(e *entry, editor fe.Editor, interactive boo
 	var barChildren []tern.Element
 	var children []tern.Element
 	if s.hasFooter {
-		children = append(children, ompContextMeter(s.footer, interactive, s.runCommand))
+		children = append(children, ompContextMeter(s.footer, s.composerMeta, interactive, s.runCommand))
 		barChildren = append(barChildren, ompComposerModelChip(s.footer, s.resolveModelDisplayName(s.footer.Model), interactive, s.runCommand))
 	}
-	barChildren = append(barChildren, ompComposerExtras(s.hasFooter, s.footer))
+	barChildren = append(barChildren, ompComposerExtras(s.hasFooter, s.footer, s.composerMeta, running))
 	if s.hasFooter {
-		barChildren = append(barChildren, ompComposerUsageText(s.footer, s.agentHub.SubagentCost, interactive, s.runCommand))
+		barChildren = append(barChildren, ompComposerUsageText(s.footer, s.agentHub.SubagentCost, s.composerMeta, interactive, s.runCommand))
 	}
 	if running {
 		barChildren = append(barChildren, ompComposerStopControl())
@@ -117,7 +117,7 @@ func (s *session) submitEditorDraft() {
 
 // ompContextMeter builds omp's context hairline meter above the composer
 // (status-line/component.ts:3925-3977).
-func ompContextMeter(footer fe.Footer, interactive bool, run func(string)) ui.Meter {
+func ompContextMeter(footer fe.Footer, meta ComposerMeta, interactive bool, run func(string)) ui.Meter {
 	usage := footer.ContextUsage
 	var value *float64
 	var label ui.Rich
@@ -130,7 +130,7 @@ func ompContextMeter(footer fe.Footer, interactive bool, run func(string)) ui.Me
 	if usage.ContextWindow > 0 {
 		total = ui.T(ompFormatNumber(usage.ContextWindow))
 	}
-	lines := make([]string, 0, 3)
+	lines := make([]string, 0, 4)
 	if usage.Unknown {
 		lines = append(lines, "Context usage unknown")
 	} else {
@@ -141,8 +141,44 @@ func ompContextMeter(footer fe.Footer, interactive bool, run func(string)) ui.Me
 	} else {
 		lines = append(lines, "No context window")
 	}
-	if footer.AutoCompact {
+	var marks []ui.MeterMark
+	var parts []ui.Part
+	if footer.AutoCompact && meta.HasBoundaries && meta.AutoCompactEnabled && meta.ThresholdPercent > 0 {
+		thresholdPct := int(math.Round(meta.ThresholdPercent))
+		lines = append(lines, "Auto-compact at "+strconv.Itoa(thresholdPct)+"%")
+		var specAt *float64
+		if meta.SpeculationPercent > 0 {
+			at := math.Min(1, meta.SpeculationPercent/100)
+			specAt = &at
+			specMark := ui.MeterMark{
+				At:    at,
+				Icon:  ui.IconName("context.speculation"),
+				Title: "Compaction summary starts at " + strconv.Itoa(int(math.Round(at*100))) + "%",
+			}
+			if meta.SpeculationState == "running" || meta.SpeculationState == "armed" {
+				specMark.Tone = ui.ToneAccent
+			}
+			marks = append(marks, specMark)
+		}
+		marks = append(marks, ui.MeterMark{
+			At:    math.Min(1, meta.ThresholdPercent/100),
+			Icon:  ui.IconName("context.compaction"),
+			Title: "Auto-compact at " + strconv.Itoa(thresholdPct) + "%",
+		})
+		if value != nil && specAt != nil && *value > *specAt {
+			parts = []ui.Part{
+				{Value: *specAt},
+				{Value: *value - *specAt, Token: "accent"},
+			}
+		}
+	} else if footer.AutoCompact {
 		lines = append(lines, "Auto-compact enabled")
+	}
+	switch meta.SpeculationState {
+	case "running":
+		lines = append(lines, "Compaction summary in progress")
+	case "armed":
+		lines = append(lines, "Compaction summary ready")
 	}
 	common := ui.Common{
 		Key:   "context",
@@ -156,8 +192,10 @@ func ompContextMeter(footer fe.Footer, interactive bool, run func(string)) ui.Me
 	return ui.Meter{
 		Common:     common,
 		Value:      value,
+		Parts:      parts,
 		Style:      ui.MeterBar,
 		Thresholds: ompContextThresholds(usage.ContextWindow),
+		Marks:      marks,
 		Label:      label,
 		Total:      total,
 	}
@@ -227,7 +265,7 @@ func ompComposerModelChip(footer fe.Footer, displayName string, interactive bool
 // (status-line/component.ts:3655-3684, 3765): transparent status with role
 // "omp.composer.extras" and grow=1, holding git branch and extension statuses
 // as `seg` nodes with role "omp.composer.fact".
-func ompComposerExtras(hasFooter bool, footer fe.Footer) ui.Status {
+func ompComposerExtras(hasFooter bool, footer fe.Footer, meta ComposerMeta, running bool) ui.Status {
 	var segs []tern.Element
 	if hasFooter {
 		if footer.GitBranch != "" {
@@ -236,6 +274,17 @@ func ompComposerExtras(hasFooter bool, footer fe.Footer) ui.Status {
 				Icon:     ui.IconBranch,
 				Spans:    []ui.Span{{T: footer.GitBranch, S: "statusLineGitClean"}},
 				Priority: 1001,
+			})
+		}
+		if running && meta.TokensPerSec >= 0.05 && !math.IsNaN(meta.TokensPerSec) && !math.IsInf(meta.TokensPerSec, 0) {
+			rounded := math.Round(meta.TokensPerSec*10) / 10
+			segs = append(segs, ui.Seg{
+				Common:   ui.Common{Key: "token_rate", Role: "omp.composer.fact"},
+				Icon:     ui.IconName("throughput"),
+				Priority: 2,
+				Children: []tern.Element{
+					ui.Rate{Common: ui.Common{Key: "rate"}, Value: rounded, Unit: "tok/s"},
+				},
 			})
 		}
 		for i, st := range footer.ExtensionStatuses {
@@ -303,8 +352,8 @@ func ompModeFactSeg(text string) (ui.Seg, bool) {
 
 // ompComposerUsageText builds omp's session cost text in the composer bar
 // (status-line/component.ts:3740-3755).
-func ompComposerUsageText(footer fe.Footer, subagentCost float64, interactive bool, run func(string)) ui.Text {
-	cost := ompCostSummary(footer, subagentCost)
+func ompComposerUsageText(footer fe.Footer, subagentCost float64, meta ComposerMeta, interactive bool, run func(string)) ui.Text {
+	cost := ompCostSummaryWithMeta(footer, subagentCost, meta)
 	title := ""
 	if cost != "" {
 		title = "Session cost " + cost
@@ -423,10 +472,21 @@ func ompThinkingLevelToken(level string) string {
 // (`nf-md-currency_usd_off`, packages/tui/src/theme/symbols.ts:882).
 const ompSubscriptionIcon = "\U000f067a"
 
+// ompAdvisorIcon is omp's nerd-preset advisor icon
+// (`nf-cod-lightbulb`, packages/tui/src/theme/symbols.ts:884).
+const ompAdvisorIcon = "\uea70"
+
 // ompCostSummary formats PiG's UsageTotals cost and optional subagent spend as
 // omp's billing summary (status-line/metrics.ts:34-38, 59-104), with two
 // decimal places and Tern's forced nerd symbol preset.
 func ompCostSummary(footer fe.Footer, subagentCost float64) string {
+	return ompCostSummaryWithMeta(footer, subagentCost, ComposerMeta{})
+}
+
+// ompCostSummaryWithMeta formats PiG's UsageTotals cost, optional subagent
+// spend, GitHub Copilot premium requests (`★ N`), and advisor spend as omp's
+// billing summary (status-line/metrics.ts:34-38, 59-104).
+func ompCostSummaryWithMeta(footer fe.Footer, subagentCost float64, meta ComposerMeta) string {
 	cost := footer.UsageTotals.Cost
 	if math.IsNaN(cost) || math.IsInf(cost, 0) || cost < 0 {
 		cost = 0
@@ -434,26 +494,77 @@ func ompCostSummary(footer fe.Footer, subagentCost float64) string {
 	if math.IsNaN(subagentCost) || math.IsInf(subagentCost, 0) || subagentCost < 0 {
 		subagentCost = 0
 	}
+	premium := meta.PremiumRequests
+	if math.IsNaN(premium) || math.IsInf(premium, 0) || premium < 0 {
+		premium = 0
+	}
+	premium = math.Round((premium+1e-12)*100) / 100
+	advisorCost := meta.AdvisorCost
+	if math.IsNaN(advisorCost) || math.IsInf(advisorCost, 0) || advisorCost < 0 {
+		advisorCost = 0
+	}
+
 	hasCost := cost != 0
 	hasSubagent := subagentCost > 0
-	if !hasCost && !hasSubagent && !footer.UsingSubscription {
+	hasPremium := premium > 0
+	hasAdvisor := advisorCost > 0
+	if !hasCost && !hasSubagent && !hasAdvisor && !footer.UsingSubscription && !hasPremium {
 		return ""
 	}
-	var summary string
+
+	var parts []string
+	shownUnit := 0 // 0=none, 1=metered, 2=subscription
+	primaryUnit := 1
+	if footer.UsingSubscription {
+		primaryUnit = 2
+	}
 	if hasCost || hasSubagent {
-		formatted := toFixed(cost, 2)
-		if footer.UsingSubscription {
-			summary = ompSubscriptionIcon + " " + formatted
-		} else {
-			summary = "$" + formatted
-		}
-	} else {
-		summary = ompSubscriptionIcon
+		parts = append(parts, ompFormatSpend(cost, footer.UsingSubscription, true))
+		shownUnit = primaryUnit
+	} else if footer.UsingSubscription {
+		parts = append(parts, ompSubscriptionIcon)
+		shownUnit = primaryUnit
 	}
 	if hasSubagent {
-		summary += " (+" + toFixed(subagentCost, 2) + ")"
+		parts = append(parts, "(+"+toFixed(subagentCost, 2)+")")
 	}
-	return summary
+	if hasPremium {
+		parts = append(parts, "★ "+ompFormatPremiumRequests(premium))
+	}
+	if hasAdvisor {
+		prefix := ""
+		if len(parts) > 0 {
+			prefix = "+ "
+		}
+		advisorUnit := 1
+		if meta.AdvisorSub {
+			advisorUnit = 2
+		}
+		spend := ompFormatSpend(advisorCost, meta.AdvisorSub, shownUnit != advisorUnit)
+		parts = append(parts, prefix+ompAdvisorIcon+" "+spend)
+	}
+	return strings.Join(parts, " ")
+}
+
+func ompFormatSpend(amount float64, usingSubscription bool, showUnit bool) string {
+	formatted := toFixed(amount, 2)
+	if !showUnit {
+		return formatted
+	}
+	if !usingSubscription {
+		return "$" + formatted
+	}
+	return ompSubscriptionIcon + " " + formatted
+}
+
+func ompFormatPremiumRequests(n float64) string {
+	if n == math.Trunc(n) {
+		return ompFormatNumber(int(n))
+	}
+	if n < 1_000 {
+		return strconv.FormatFloat(n, 'f', -1, 64)
+	}
+	return ompFormatNumber(int(math.Round(n)))
 }
 
 // ompFormatNumber mirrors omp's formatNumber (packages/utils/src/format.ts:38-52).

@@ -19,6 +19,7 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/surface"
 )
 
 // upstream: packages/coding-agent/src/eval/budget-bridge.ts:1-48
@@ -53,6 +54,11 @@ var ResolveModelRole func(ctx sdk.Context, selector string) (provider, id, think
 // CompleteFn executes a one-shot completion request. Overridable in tests.
 // Defaults to running sdkCtx.Complete in a goroutine with goCtx.Done() select.
 var CompleteFn = defaultEvalComplete
+
+// IsSubagentSession reports whether sessionID belongs to a spawned child
+// subagent session (optional hook wired by wiring.go). When non-nil and
+// returning true, judge_batch skips updating Tern's top-level HUD.
+var IsSubagentSession func(sessionID string) bool
 
 func defaultEvalComplete(goCtx context.Context, sdkCtx sdk.Context, modelObj, req, auth map[string]any) (json.RawMessage, error) {
 	type result struct {
@@ -1247,7 +1253,31 @@ func newJudgmentBatch(
 	}
 }
 
+func (b *judgmentBatch) hudSnapshotLocked() surface.JudgeBatchHudItem {
+	return surface.JudgeBatchHudItem{
+		ID:     b.id,
+		Intent: b.intent,
+		Done:   len(b.settled),
+		Total:  b.total,
+		Failed: b.failed,
+	}
+}
+
+func (b *judgmentBatch) publishHud(hud surface.JudgeBatchHudItem) {
+	if IsSubagentSession != nil && IsSubagentSession(b.sessionID) {
+		return
+	}
+	if b.ctx.Err() != nil {
+		return
+	}
+	surface.UpdateJudgeBatchHud(hud)
+}
+
 func (b *judgmentBatch) start() {
+	b.mu.Lock()
+	hud := b.hudSnapshotLocked()
+	b.mu.Unlock()
+	b.publishHud(hud)
 	go b.run()
 }
 
@@ -1270,6 +1300,7 @@ func (b *judgmentBatch) run() {
 		close(b.notify)
 		b.notify = make(chan struct{})
 		b.mu.Unlock()
+		surface.RemoveJudgeBatchHud(b.id)
 		close(b.done)
 	}()
 
@@ -1305,7 +1336,9 @@ func (b *judgmentBatch) run() {
 				item := b.judgeItem(model, inp)
 				b.mu.Lock()
 				b.settleLocked(item)
+				hud := b.hudSnapshotLocked()
 				b.mu.Unlock()
+				b.publishHud(hud)
 			}
 		}()
 	}
@@ -1503,6 +1536,7 @@ func (b *judgmentBatch) cancelBatch() bool {
 		return false
 	}
 	b.cancel()
+	surface.RemoveJudgeBatchHud(b.id)
 	return true
 }
 
@@ -1546,6 +1580,7 @@ func releaseJudgmentBatches(sessionID string) {
 
 	for _, b := range toCancel {
 		b.cancelBatch()
+		surface.RemoveJudgeBatchHud(b.id)
 	}
 }
 
@@ -1736,6 +1771,7 @@ func dispatchJudgeBatchCall(run *bridgeRun, rawArgs json.RawMessage) (any, error
 			return nil, err
 		}
 		b.cancelBatch()
+		surface.RemoveJudgeBatchHud(b.id)
 		judgeBatchMu.Lock()
 		delete(judgeBatches, b.id)
 		judgeBatchMu.Unlock()

@@ -114,6 +114,44 @@ func Frontend() fe.Frontend {
 				Warning:      m.Warning,
 			}, true
 		},
+		OnTurnUsage: func(fn func(ternfe.TurnUsageRecord)) func() {
+			if fn == nil {
+				return func() {}
+			}
+			return surface.OnTurnUsage(func(r surface.TurnUsageRecord) {
+				fn(convertTurnUsageRecord(r))
+			})
+		},
+		LatestTurnUsage: func() (ternfe.TurnUsageRecord, bool) {
+			r, ok := surface.LatestTurnUsage()
+			if !ok {
+				return ternfe.TurnUsageRecord{}, false
+			}
+			return convertTurnUsageRecord(r), true
+		},
+		ComposerMeta: func() ternfe.ComposerMeta {
+			return convertComposerMeta(surface.GetComposerMeta())
+		},
+		OnComposerMetaChange: func(fn func(ternfe.ComposerMeta)) func() {
+			if fn == nil {
+				return func() {}
+			}
+			return surface.OnComposerMetaChange(func(m surface.ComposerMeta) {
+				fn(convertComposerMeta(m))
+			})
+		},
+		ProgressHudSnapshot: func() ternfe.ProgressHudSnapshot {
+			return convertProgressHudSnapshot(surface.GetProgressHudSnapshot())
+		},
+		OnProgressHudChange: func(fn func(ternfe.ProgressHudSnapshot)) func() {
+			if fn == nil {
+				return func() {}
+			}
+			return surface.OnProgressHudChange(func(s surface.ProgressHudSnapshot) {
+				fn(convertProgressHudSnapshot(s))
+			})
+		},
+		BuildShellPresentation: surface.BuildShellPresentation,
 	})
 }
 
@@ -167,6 +205,93 @@ func convertAgentHubSnapshot(s surface.AgentHubSnapshot) ternfe.AgentHubSnapshot
 				Detail:      a.Detail,
 				Status:      a.Status,
 				TimestampMs: a.TimestampMs,
+			}
+		}
+	}
+	return out
+}
+
+func convertTurnUsageRecord(r surface.TurnUsageRecord) ternfe.TurnUsageRecord {
+	return ternfe.TurnUsageRecord{
+		TurnSeq:     r.TurnSeq,
+		Input:       r.Input,
+		Output:      r.Output,
+		CacheRead:   r.CacheRead,
+		CacheWrite:  r.CacheWrite,
+		Cost:        r.Cost,
+		ElapsedMs:   r.ElapsedMs,
+		TimestampMs: r.TimestampMs,
+	}
+}
+
+func convertComposerMeta(m surface.ComposerMeta) ternfe.ComposerMeta {
+	return ternfe.ComposerMeta{
+		HasBoundaries:      m.HasBoundaries,
+		AutoCompactEnabled: m.AutoCompactEnabled,
+		ThresholdPercent:   m.ThresholdPercent,
+		SpeculationPercent: m.SpeculationPercent,
+		SpeculationState:   m.SpeculationState,
+		PremiumRequests:    m.PremiumRequests,
+		AdvisorCost:        m.AdvisorCost,
+		AdvisorSub:         m.AdvisorSub,
+		TokensPerSec:       m.TokensPerSec,
+	}
+}
+
+func convertProgressHudSnapshot(s surface.ProgressHudSnapshot) ternfe.ProgressHudSnapshot {
+	out := ternfe.ProgressHudSnapshot{
+		Compaction: ternfe.CompactionHudItem{
+			Active:      s.Compaction.Active,
+			Label:       s.Compaction.Label,
+			StartedAtMs: s.Compaction.StartedAtMs,
+		},
+		RunningJobs: s.RunningJobs,
+	}
+	if len(s.JudgeBatches) > 0 {
+		out.JudgeBatches = make([]ternfe.JudgeBatchHudItem, len(s.JudgeBatches))
+		for i, jb := range s.JudgeBatches {
+			out.JudgeBatches[i] = ternfe.JudgeBatchHudItem{
+				ID:     jb.ID,
+				Intent: jb.Intent,
+				Done:   jb.Done,
+				Total:  jb.Total,
+				Failed: jb.Failed,
+				Cost:   jb.Cost,
+			}
+		}
+	}
+	if len(s.Downloads) > 0 {
+		out.Downloads = make([]ternfe.DownloadHudItem, len(s.Downloads))
+		for i, dl := range s.Downloads {
+			out.Downloads[i] = ternfe.DownloadHudItem{
+				ID:     dl.ID,
+				Label:  dl.Label,
+				Detail: dl.Detail,
+				State:  dl.State,
+				Loaded: dl.Loaded,
+				Total:  dl.Total,
+				Unit:   dl.Unit,
+				Error:  dl.Error,
+			}
+		}
+	}
+	if len(s.Jobs) > 0 {
+		out.Jobs = make([]ternfe.JobHudItem, len(s.Jobs))
+		for i, j := range s.Jobs {
+			var spark []float64
+			if len(j.SparkVals) > 0 {
+				spark = make([]float64, len(j.SparkVals))
+				copy(spark, j.SparkVals)
+			}
+			out.Jobs[i] = ternfe.JobHudItem{
+				ID:         j.ID,
+				Kind:       j.Kind,
+				Label:      j.Label,
+				Status:     j.Status,
+				StartedMs:  j.StartedMs,
+				Summary:    j.Summary,
+				GlanceText: j.GlanceText,
+				SparkVals:  spark,
 			}
 		}
 	}

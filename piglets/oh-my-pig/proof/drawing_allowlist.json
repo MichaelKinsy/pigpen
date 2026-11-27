@@ -184,68 +184,136 @@
     "part": "user message",
     "node_path": "$",
     "prop": "actions",
-    "side": "omp-only",
+    "side": "value",
     "class": "HOST",
-    "class_in_doubt": true,
+    "omp": {
+      "hold": [
+        {"id": "copy-message", "label": "Copy message", "icon": "copy"},
+        {"id": "edit-turn", "label": "Edit & resend", "icon": "edit", "detail": "To composer"},
+        {"id": "retry-turn", "label": "Retry turn", "icon": "refresh"},
+        {"id": "rewind-turn", "label": "Rewind to here…", "icon": "rewind"},
+        {"id": "fork-turn", "label": "Fork from here", "icon": "branch", "detail": "New session"}
+      ]
+    },
+    "pig": {
+      "hold": [
+        {"id": "copy-message", "label": "Copy message", "icon": "copy"},
+        {"id": "edit-turn", "label": "Edit & resend", "icon": "edit", "detail": "To composer"},
+        {"id": "rewind-turn", "label": "Rewind to here…", "icon": "rewind"},
+        {"id": "fork-turn", "label": "Fork from here", "icon": "branch", "detail": "New session"}
+      ]
+    },
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
       "| `user message` |",
-      "omp.user.tools"
+      "retry-turn"
     ],
     "ref_subject": [
-      "actions.hold"
+      "actions.hold",
+      "retry-turn"
     ],
-    "why": "PiG frontend.Env has no rewind/copy/edit-turn callbacks so `actions.hold` is omitted on `card[omp.user]` (class_in_doubt: audit Finding 20 notes copy via OSC 52 and /rewind via Env.Send are reachable)."
+    "why": "`card[omp.user]` ports `copy-message`, `edit-turn`, `rewind-turn`, and `fork-turn` hold actions; only `retry-turn` is omitted because PiG `frontend.Env` has no retry callback or `/retry` command."
   },
   {
     "part": "user message",
-    "node_path": "row[omp.user.tools]",
+    "node_path": "row[omp.user.tools] > text@2",
     "prop": "$node",
     "side": "omp-only",
     "class": "HOST",
-    "class_in_doubt": true,
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
       "| `user message` |",
-      "omp.user.tools"
+      "omp.user.time"
     ],
     "ref_subject": [
-      "omp.user.tools"
+      "omp.user.tools",
+      "omp.user.time"
     ],
-    "why": "PiG frontend.MarkdownText has no message timestamp or id and frontend.Env has no rewind/copy callbacks, so `row[omp.user.tools]` is omitted (class_in_doubt: audit Finding 20 notes timestamp is HOST while copy/rewind may be reachable)."
+    "why": "`row[omp.user.tools]` ports `copy` and `rewind` icons; omits the `·` separator before timestamp because PiG `frontend.MarkdownText` carries no message timestamp."
+  },
+  {
+    "part": "user message",
+    "node_path": "row[omp.user.tools] > text[omp.user.time]",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `user message` |",
+      "omp.user.time"
+    ],
+    "ref_subject": [
+      "omp.user.time"
+    ],
+    "why": "PiG `frontend.MarkdownText` carries no message timestamp, so `text[omp.user.time]` is omitted inside `row[omp.user.tools]`."
   },
   {
     "part": "assistant text (markdown)",
     "node_path": "$",
     "prop": "actions",
-    "side": "omp-only",
+    "side": "value",
     "class": "HOST",
-    "class_in_doubt": true,
+    "omp": {
+      "hold": [
+        {"id": "copy-answer", "label": "Copy reply", "icon": "copy"},
+        {"id": "retry-turn", "label": "Retry turn", "icon": "refresh"},
+        {"id": "rewind-turn", "label": "Rewind to here…", "icon": "rewind"},
+        {"id": "fork-turn", "label": "Fork from here", "icon": "branch", "detail": "New session"}
+      ]
+    },
+    "pig": {
+      "hold": [
+        {"id": "copy-answer", "label": "Copy reply", "icon": "copy"},
+        {"id": "rewind-turn", "label": "Rewind to here…", "icon": "rewind"},
+        {"id": "fork-turn", "label": "Fork from here", "icon": "branch", "detail": "New session"}
+      ]
+    },
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
       "| `assistant text (markdown)` |",
-      "omp.turn.usage"
+      "retry-turn"
     ],
     "ref_subject": [
-      "actions.hold"
+      "actions.hold",
+      "retry-turn"
     ],
-    "why": "PiG frontend.Env has no rewind/copy/retry-turn callbacks so `actions.hold` is omitted on `col[omp.assistant]` (class_in_doubt: audit Finding 20 notes copy via OSC 52 and /rewind via Env.Send are reachable)."
+    "why": "`col[omp.assistant]` ports `copy-answer`, `rewind-turn`, and `fork-turn` hold actions; only `retry-turn` is omitted because PiG `frontend.Env` has no retry callback or `/retry` command."
   },
   {
     "part": "assistant text (markdown)",
     "node_path": "row[omp.turn.usage]",
-    "prop": "$node",
-    "side": "omp-only",
-    "class": "HOST",
+    "prop": "title",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "match_kind": "turn_usage_timing",
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
       "| `assistant text (markdown)` |",
       "omp.turn.usage"
     ],
     "ref_subject": [
+      "omp.turn.usage",
+      "<DUR>"
+    ],
+    "why": "`row[omp.turn.usage]` title differs only by run-specific wall-clock elapsed duration (`<DUR>`); exact token counts and wording are checked equal."
+  },
+  {
+    "part": "assistant text (markdown)",
+    "node_path": "row[omp.turn.usage] > text@2",
+    "prop": "text",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "match_kind": "turn_usage_timing",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `assistant text (markdown)` |",
       "omp.turn.usage"
     ],
-    "why": "PiG frontend.Frame exposes no per-turn token/duration metrics (only session totals in Footer.UsageTotals), so `row[omp.turn.usage]` is omitted."
+    "ref_subject": [
+      "omp.turn.usage",
+      "<DUR>"
+    ],
+    "why": "`row[omp.turn.usage]` summary text differs only by run-specific wall-clock elapsed duration (`<DUR>`); exact token count and wording are checked equal."
   },
   {
     "part": "working row",
@@ -318,58 +386,70 @@
   },
   {
     "part": "tool card: bash",
-    "node_path": "col[omp.run] > [omp.tool.bash.command]",
-    "prop": "$kind",
+    "parts": [
+      "tool card: bash",
+      "long bash (folded)",
+      "long bash (expanded)"
+    ],
+    "node_path": "col[omp.run] > shell[omp.tool.bash.command]",
+    "prop": "presentation",
     "side": "value",
     "class": "LISTED",
-    "omp": "shell",
-    "pig": "code",
+    "match_kind": "shell_presentation_semantic",
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
       "| `tool card: bash` |",
-      "ShellVizPresentation"
+      "omp.tool.bash.command"
     ],
     "ref_subject": [
       "omp.tool.bash.command",
-      "ShellVizPresentation"
+      "presentation"
     ],
-    "why": "Shell visualizer AST (`shell` with `presentation`) is not ported; port draws `code[omp.tool.bash.command]` (`lang:\"bash\"`). Shared props (`lang`, `preview`) and command text vs tool `command` are still compared below `$kind`."
+    "why": "Native `shell` node matches omp's pseudo-code `presentation` semantically (preferences, rows, segment text/style/language, effects); differs only in omp's embedded-shell VM runtime trace metadata (`executedAtNs`, `executionSeq`, `timeline`, `argv` detail)."
   },
   {
-    "part": "long bash (folded)",
-    "node_path": "col[omp.run] > [omp.tool.bash.command]",
-    "prop": "$kind",
-    "side": "value",
+    "part": "tool card: bash",
+    "parts": [
+      "tool card: bash",
+      "long bash (folded)",
+      "long bash (expanded)"
+    ],
+    "node_path": "col[omp.run] > shell[omp.tool.bash.command]",
+    "prop": "steps",
+    "side": "omp-only",
     "class": "LISTED",
-    "omp": "shell",
-    "pig": "code",
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
-      "| `long bash (folded)` |",
-      "omp.tool.bash.command"
+      "| `tool card: bash` |",
+      "steps"
     ],
     "ref_subject": [
+      "steps",
       "omp.tool.bash.command"
     ],
-    "why": "Shell visualizer AST (`shell` with `presentation`) is not ported; port draws `code[omp.tool.bash.command]` (`lang:\"bash\"`). Shared props and command text are still compared below `$kind`."
+    "why": "Interactive per-step stream pinning (`steps: true`) requires omp's embedded-shell VM pipe-tap trace; host bash omits it."
   },
   {
-    "part": "long bash (expanded)",
-    "node_path": "col[omp.run] > [omp.tool.bash.command]",
-    "prop": "$kind",
-    "side": "value",
+    "part": "tool card: bash",
+    "parts": [
+      "tool card: bash",
+      "long bash (folded)",
+      "long bash (expanded)"
+    ],
+    "node_path": "col[omp.run] > shell[omp.tool.bash.command]",
+    "prop": "focus",
+    "side": "omp-only",
     "class": "LISTED",
-    "omp": "shell",
-    "pig": "code",
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
-      "| `long bash (expanded)` |",
-      "omp.tool.bash.command"
+      "| `tool card: bash` |",
+      "focus"
     ],
     "ref_subject": [
+      "focus",
       "omp.tool.bash.command"
     ],
-    "why": "Shell visualizer AST (`shell` with `presentation`) is not ported; port draws `code[omp.tool.bash.command]` (`lang:\"bash\"`). Shared props and command text are still compared below `$kind`."
+    "why": "Interactive per-step stream pinning (`focus: []`) requires omp's embedded-shell VM pipe-tap trace; host bash omits it."
   },
   {
     "part": "ask form (live)",
@@ -635,47 +715,21 @@
   },
   {
     "part": "composer",
-    "parts": [
-      "composer",
-      "slash closed (composer)",
-      "narrow 80 (composer)"
-    ],
-    "node_path": "meter[omp.composer.context]",
-    "prop": "marks",
-    "side": "omp-only",
-    "class": "HOST",
-    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
-    "ref_term": [
-      "| Context meter auto-compact threshold marks"
-    ],
-    "ref_subject": [
-      "marks",
-      "ContextUsage"
-    ],
-    "why": "`frontend.Footer.ContextUsage` carries no auto-compact threshold positions (`marks`)."
-  },
-  {
-    "part": "composer",
-    "parts": [
-      "composer",
-      "slash closed (composer)",
-      "narrow 80 (composer)"
-    ],
     "node_path": "meter[omp.composer.context]",
     "prop": "title",
     "side": "value",
     "class": "HOST",
-    "omp_regex": "^Context (?:0|1)% used\\n(?:120|1\\.4K) of 128K tokens\\nAuto-compact at 85%$",
-    "pig_regex": "^Context (?:0|1)% used\\n(?:155|1\\.4K) of 128K tokens\\nAuto-compact enabled$",
+    "omp": "Context 0% used\n120 of 128K tokens\nAuto-compact at 85%",
+    "pig": "Context 0% used\n155 of 128K tokens\nAuto-compact at 85%",
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
-      "| Context meter auto-compact threshold marks"
+      "| Context meter token count"
     ],
     "ref_subject": [
-      "Auto-compact enabled",
-      "TotalTokens"
+      "TotalTokens",
+      "155"
     ],
-    "why": "PiG `frontend.Footer.ContextUsage` has only bool `Footer.AutoCompact` (no compaction threshold %) and computes `Tokens` via `agent/context_tokens.go:32-37` (`TotalTokens` = 155 vs omp's prompt-only 120)."
+    "why": "`Auto-compact at 85%` and threshold `marks` now match omp; only the token count differs because PiG `agent/context_tokens.go:32-37` computes `TotalTokens` (`155`) whereas omp reports prompt tokens (`120`) at `01-markdown`."
   },
   {
     "part": "composer",
@@ -687,7 +741,7 @@
     "pig": 0.0012109375,
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
-      "| Context meter auto-compact threshold marks"
+      "| Context meter token count"
     ],
     "ref_subject": [
       "TotalTokens",
@@ -709,56 +763,13 @@
     "pig": 0.010968749999999998,
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
-      "| Context meter auto-compact threshold marks"
+      "| Context meter token count"
     ],
     "ref_subject": [
       "TotalTokens",
       "155"
     ],
     "why": "PiG `agent/context_tokens.go:32-37` reports `TotalTokens` (1404/128K = 0.01096875) whereas omp reports prompt tokens (1366/128K = 0.010671875) at `17b-slash-closed` / `18-narrow-80`."
-  },
-  {
-    "part": "tool card: task",
-    "node_path": "agent@1",
-    "prop": "thinking",
-    "side": "value",
-    "class": "LISTED",
-    "omp": "thinkingLow",
-    "pig": "thinkingHigh",
-    "ref_file": "internal/agents/UPSTREAM.md",
-    "ref_term": [
-      "| `auto` thinking-level classification",
-      "auto-thinking/classifier.ts"
-    ],
-    "ref_subject": [
-      "thinking",
-      "fallback"
-    ],
-    "why": "omp's `auto` thinking level runs an LLM judge per child (`auto-thinking/classifier.ts:147-197`) that selects `thinkingLow`, whereas the port has no judge classifier and uses the fallback `thinkingHigh`."
-  },
-  {
-    "kind": "frame_child",
-    "region": "dock",
-    "side": "omp-only",
-    "node_kind": "col",
-    "role": "",
-    "child_roles": [
-      "col[omp.hud.judge]",
-      "col[omp.hud.downloads]",
-      "col[omp.hud.compaction]"
-    ],
-    "class": "HOST",
-    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
-    "ref_term": [
-      "omp.hud.judge",
-      "omp.hud.downloads"
-    ],
-    "ref_subject": [
-      "omp.hud.judge",
-      "omp.hud.downloads",
-      "omp.hud.compaction"
-    ],
-    "why": "PiG frontend.Frame has no dock judge/downloads/compaction container."
   },
   {
     "kind": "frame_child",

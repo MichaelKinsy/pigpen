@@ -27,6 +27,15 @@ import (
 // (`ansi.Setting = settings.Any`); nil falls back to omp v19.1.1 defaults.
 var Setting func(ctx sdk.Context, key string) any
 
+// IsSubagent reports whether ctx belongs to a spawned child subagent session
+// (wired by wiring.go to internal/agents.IsSubagent). Defaults to false when
+// nil so top-level sessions publish surface turn usage and composer metadata.
+var IsSubagent func(ctx sdk.Context) bool
+
+func isTopLevelSession(ctx sdk.Context) bool {
+	return IsSubagent == nil || !IsSubagent(ctx)
+}
+
 // PigletVersion is the oh-my-pig Piglet release version shown on the welcome
 // banner's version row (matching piglets/oh-my-pig/piglet.yaml `release.version`).
 var PigletVersion = "0.1.0"
@@ -49,6 +58,61 @@ func settingString(ctx sdk.Context, key string, fallback string) string {
 		return strings.TrimSpace(s)
 	}
 	return fallback
+}
+
+func settingFloat(ctx sdk.Context, key string, fallback float64) (float64, bool) {
+	if Setting == nil {
+		return fallback, false
+	}
+	v := Setting(ctx, key)
+	if v == nil {
+		return fallback, false
+	}
+	switch n := v.(type) {
+	case float64:
+		if !math.IsNaN(n) && !math.IsInf(n, 0) {
+			return n, true
+		}
+	case float32:
+		f := float64(n)
+		if !math.IsNaN(f) && !math.IsInf(f, 0) {
+			return f, true
+		}
+	case int:
+		return float64(n), true
+	case int64:
+		return float64(n), true
+	case uint:
+		return float64(n), true
+	case uint64:
+		return float64(n), true
+	}
+	return fallback, false
+}
+
+func settingStringSlice(ctx sdk.Context, key string) ([]string, bool) {
+	if Setting == nil {
+		return nil, false
+	}
+	v := Setting(ctx, key)
+	if v == nil {
+		return nil, false
+	}
+	switch arr := v.(type) {
+	case []string:
+		out := make([]string, len(arr))
+		copy(out, arr)
+		return out, true
+	case []any:
+		out := make([]string, 0, len(arr))
+		for _, el := range arr {
+			if s, ok := el.(string); ok {
+				out = append(out, s)
+			}
+		}
+		return out, true
+	}
+	return nil, false
 }
 
 var (
@@ -966,6 +1030,26 @@ type chromeState struct {
 	cacheReadPer1M    float64
 	cacheWritePer1M   float64
 	countedUsageEntry int
+
+	// Per-turn usage & live composer metadata (Wave 7 surface publishers)
+	modelProvider      string
+	modelID            string
+	modelWindow        int
+	modelHasVision     bool
+	modelPremiumMult   float64
+	turnSeq            int
+	turnStartedAt      time.Time
+	turnInput          int
+	turnOutput         int
+	turnCacheRead      int
+	turnCacheWrite     int
+	turnCost           float64
+	turnHasUsage       bool
+	turnPremiumCounted bool
+	premiumRequests    float64
+	advisorCost        float64
+	advisorSub         bool
+	lastTokPerSec      float64
 }
 
 func newChromeState() *chromeState {
@@ -1184,13 +1268,23 @@ func formatModeSegment(raw string) (text string, color string) {
 
 func (s *chromeState) startTurn() {
 	s.mu.Lock()
+	now := time.Now()
 	s.data.Working = true
 	s.data.WorkingMessage = defaultWorkingMessage
-	s.data.WorkingStartedAt = time.Now()
+	s.data.WorkingStartedAt = now
 	s.data.SpinnerGlyph = ompActivitySpinnerFrames[0]
 	hadPinnedErr := s.data.PinnedError != ""
 	s.data.PinnedError = ""
 	s.lastIntent = ""
+	s.turnStartedAt = now
+	s.turnInput = 0
+	s.turnOutput = 0
+	s.turnCacheRead = 0
+	s.turnCacheWrite = 0
+	s.turnCost = 0
+	s.turnHasUsage = false
+	s.turnPremiumCounted = false
+	s.lastTokPerSec = 0
 	s.stopWorkingTickerLocked()
 	c := s.sessionCtx
 	hasSess := s.hasSession
@@ -1208,7 +1302,8 @@ func (s *chromeState) startTurn() {
 	}
 	s.requestFooterRepaint()
 }
-func (s *chromeState) endTurn() {
+
+func (s *chromeState) endTurn(ctx sdk.Context) {
 	s.mu.Lock()
 	s.data.Working = false
 	s.data.WorkingMessage = ""
@@ -1216,7 +1311,38 @@ func (s *chromeState) endTurn() {
 	s.data.SpinnerGlyph = ""
 	s.lastIntent = ""
 	s.stopWorkingTickerLocked()
+
+	var (
+		shouldPublish bool
+		rec           surface.TurnUsageRecord
+	)
+	if s.turnHasUsage {
+		s.turnSeq++
+		var elapsedMs int64
+		if !s.turnStartedAt.IsZero() {
+			elapsedMs = time.Since(s.turnStartedAt).Milliseconds()
+			if elapsedMs < 0 {
+				elapsedMs = 0
+			}
+		}
+		rec = surface.TurnUsageRecord{
+			TurnSeq:     s.turnSeq,
+			Input:       s.turnInput,
+			Output:      s.turnOutput,
+			CacheRead:   s.turnCacheRead,
+			CacheWrite:  s.turnCacheWrite,
+			Cost:        s.turnCost,
+			ElapsedMs:   elapsedMs,
+			TimestampMs: time.Now().UnixMilli(),
+		}
+		shouldPublish = true
+	}
+	s.turnHasUsage = false
 	s.mu.Unlock()
+
+	if shouldPublish && isTopLevelSession(ctx) {
+		surface.RecordTurnUsage(rec)
+	}
 	s.requestFooterRepaint()
 }
 
@@ -1446,6 +1572,7 @@ func (s *chromeState) refreshAll(ctx sdk.Context) {
 	s.updateContext(ctx)
 	s.updateSessionInfo(ctx)
 	s.seedBranchCost(ctx)
+	s.publishComposerMeta(ctx)
 }
 
 // installThinkingApplier registers the active session's thinking-level setter
@@ -1533,9 +1660,18 @@ func (s *chromeState) updateModel(ctx sdk.Context) bool {
 	// member looks the shown name up here.
 	surface.SetModelDisplayName(model.ID, shown)
 	var levels []string
-	if model.Reasoning {
-		if raw, rerr := ctx.ModelRegistry().Find(model.Provider, model.ID); rerr == nil && raw != nil {
+	var rawModel map[string]any
+	if raw, rerr := ctx.ModelRegistry().Find(model.Provider, model.ID); rerr == nil && raw != nil {
+		rawModel = raw
+		if model.Reasoning {
 			levels = sdk.GetSupportedThinkingLevels(raw)
+		}
+	}
+	hasVision := modelSendsImageInputOnWire(rawModel)
+	var premMult float64
+	if rawModel != nil {
+		if m, ok := floatField(rawModel, "premiumRequestMultiplier"); ok && m > 0 {
+			premMult = m
 		}
 	}
 	surface.UpsertModel(surface.ModelMeta{
@@ -1557,6 +1693,11 @@ func (s *chromeState) updateModel(ctx sdk.Context) bool {
 	s.outCostPer1M = model.OutputCostPer1M
 	s.cacheReadPer1M = model.CacheReadCostPer1M
 	s.cacheWritePer1M = model.CacheWriteCostPer1M
+	s.modelProvider = model.Provider
+	s.modelID = model.ID
+	s.modelWindow = model.ContextWindow
+	s.modelHasVision = hasVision
+	s.modelPremiumMult = premMult
 	s.mu.Unlock()
 	return true
 }
@@ -1569,6 +1710,7 @@ func (s *chromeState) refreshModel(ctx sdk.Context) {
 		s.requestFooterRepaint()
 	}
 	s.publishModelCatalog(ctx)
+	s.publishComposerMeta(ctx)
 }
 
 func (s *chromeState) updateThinking(ctx sdk.Context) bool {
@@ -1589,6 +1731,10 @@ func (s *chromeState) refreshThinking(ctx sdk.Context) {
 }
 
 func (s *chromeState) updateContext(ctx sdk.Context) bool {
+	var zero sdk.Context
+	if ctx == zero {
+		return false
+	}
 	usage, err := ctx.GetContextUsage()
 	if err != nil || usage == nil {
 		return false
@@ -1598,6 +1744,7 @@ func (s *chromeState) updateContext(ctx sdk.Context) bool {
 	s.data.ContextWindow = usage.ContextWindow
 	s.data.ContextPercent = usage.Percent
 	s.mu.Unlock()
+	s.publishComposerMeta(ctx)
 	return true
 }
 
@@ -1659,12 +1806,43 @@ func (s *chromeState) onTurnEnd(ctx sdk.Context, data map[string]any) {
 			outTok, _ := floatField(usage, "output")
 			crTok, _ := floatField(usage, "cacheRead")
 			cwTok, _ := floatField(usage, "cacheWrite")
+			premReq, _ := floatField(usage, "premiumRequests")
+			var explicitCost float64
+			if costMap := asMap(usage["cost"]); costMap != nil {
+				explicitCost, _ = floatField(costMap, "total")
+			}
+
 			s.mu.Lock()
-			if s.inCostPer1M > 0 || s.outCostPer1M > 0 || s.cacheReadPer1M > 0 || s.cacheWritePer1M > 0 {
-				s.data.EstimatedCost += (inTok*s.inCostPer1M +
+			var stepCost float64
+			if explicitCost > 0 {
+				stepCost = explicitCost
+			} else if s.inCostPer1M > 0 || s.outCostPer1M > 0 || s.cacheReadPer1M > 0 || s.cacheWritePer1M > 0 {
+				stepCost = (inTok*s.inCostPer1M +
 					outTok*s.outCostPer1M +
 					crTok*s.cacheReadPer1M +
 					cwTok*s.cacheWritePer1M) / 1_000_000.0
+			}
+			s.data.EstimatedCost += stepCost
+			if inTok > 0 || outTok > 0 || crTok > 0 || cwTok > 0 || stepCost > 0 {
+				s.turnInput += int(math.Round(inTok))
+				s.turnOutput += int(math.Round(outTok))
+				s.turnCacheRead += int(math.Round(crTok))
+				s.turnCacheWrite += int(math.Round(cwTok))
+				s.turnCost += stepCost
+				s.turnHasUsage = true
+			}
+			if premReq > 0 {
+				s.premiumRequests += premReq
+				s.turnPremiumCounted = true
+			} else if !s.turnPremiumCounted && s.modelPremiumMult > 0 && (inTok > 0 || outTok > 0) {
+				s.premiumRequests += s.modelPremiumMult
+				s.turnPremiumCounted = true
+			}
+			if s.turnOutput > 0 && !s.turnStartedAt.IsZero() {
+				elapsedMs := time.Since(s.turnStartedAt).Milliseconds()
+				if elapsedMs >= 100 {
+					s.lastTokPerSec = float64(s.turnOutput) / (float64(elapsedMs) / 1000.0)
+				}
 			}
 			s.mu.Unlock()
 		}
@@ -1685,9 +1863,253 @@ func (s *chromeState) onTurnEnd(ctx sdk.Context, data map[string]any) {
 			}
 		}
 	}
+	s.publishComposerMeta(ctx)
 	s.requestFooterRepaint()
 }
 func (s *chromeState) refreshFooter(ctx sdk.Context) {
 	s.updateContext(ctx)
 	s.requestFooterRepaint()
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Compaction boundaries & live composer metadata
+// upstream:
+//   packages/agent/src/compaction/compaction.ts:341-437
+//   packages/coding-agent/src/session/context-usage-runtime.ts:20-37
+//   packages/coding-agent/src/session/speculation-lead.ts:13-24
+//   packages/coding-agent/src/session/compaction-methods.ts:45-51,119-136
+// ═══════════════════════════════════════════════════════════════════════════
+
+const (
+	defaultCompactionReserveTokens = 16384
+	speculationLeadFraction        = 0.125
+	speculationLeadMinTokens       = 8192
+	speculationLeadMaxTokens       = 32000
+)
+
+var defaultCompactionMethodOrder = []string{
+	"remote",
+	"snapcompact",
+	"handoff",
+	"shake",
+	"soft",
+}
+
+type compactionPolicy struct {
+	Enabled          bool
+	Strategy         string
+	ThresholdTokens  int
+	ThresholdPercent float64
+	ReserveTokens    int
+	HasReserveTokens bool
+	BaseWindowTokens int
+	AsyncEnabled     bool
+	MethodOrder      []string
+	RemoteEndpoint   string
+}
+
+// modelSendsImageInputOnWire mirrors sendsImageInputOnWire in
+// packages/ai/src/providers/vision-guard.ts:58-62.
+func modelSendsImageInputOnWire(raw map[string]any) bool {
+	if raw == nil {
+		return false
+	}
+	hasImage := false
+	switch in := raw["input"].(type) {
+	case []string:
+		for _, m := range in {
+			if m == "image" {
+				hasImage = true
+				break
+			}
+		}
+	case []any:
+		for _, el := range in {
+			if s, ok := el.(string); ok && s == "image" {
+				hasImage = true
+				break
+			}
+		}
+	}
+	if !hasImage {
+		return false
+	}
+	if transport, _ := raw["transport"].(string); transport == "pi-native" {
+		return true
+	}
+	if compat, ok := raw["compat"].(map[string]any); ok {
+		if strip, _ := compat["stripImageInput"].(bool); strip {
+			return false
+		}
+	}
+	return true
+}
+
+func readCompactionPolicy(ctx sdk.Context) compactionPolicy {
+	p := compactionPolicy{
+		Enabled:          settingBool(ctx, "compaction.enabled", true),
+		Strategy:         settingString(ctx, "compaction.strategy", ""),
+		ThresholdTokens:  -1,
+		ThresholdPercent: -1,
+		AsyncEnabled:     settingBool(ctx, "compaction.asyncEnabled", true),
+		RemoteEndpoint:   settingString(ctx, "compaction.remoteEndpoint", ""),
+	}
+	if v, ok := settingFloat(ctx, "compaction.thresholdTokens", -1); ok {
+		p.ThresholdTokens = int(math.Floor(v))
+	}
+	if v, ok := settingFloat(ctx, "compaction.thresholdPercent", -1); ok {
+		p.ThresholdPercent = v
+	}
+	if v, ok := settingFloat(ctx, "compaction.reserveTokens", defaultCompactionReserveTokens); ok {
+		p.ReserveTokens = int(math.Floor(v))
+		p.HasReserveTokens = true
+	}
+	if order, ok := settingStringSlice(ctx, "compaction.methodOrder"); ok && len(order) > 0 {
+		p.MethodOrder = order
+	} else {
+		p.MethodOrder = defaultCompactionMethodOrder
+	}
+	return p
+}
+
+// effectiveReserveTokens mirrors compaction.ts:341-343.
+func effectiveReserveTokens(contextWindow int, p compactionPolicy) int {
+	reserve := defaultCompactionReserveTokens
+	if p.HasReserveTokens {
+		reserve = p.ReserveTokens
+	}
+	prop := int(math.Floor(float64(contextWindow) * 0.15))
+	if prop > reserve {
+		return prop
+	}
+	return reserve
+}
+
+// resolveBudgetReserveTokens mirrors compaction.ts:357-366.
+func resolveBudgetReserveTokens(contextWindow int, p compactionPolicy) int {
+	reserveTokens := effectiveReserveTokens(contextWindow, p)
+	proportionalReserveTokens := max(1, int(math.Floor(float64(contextWindow)*0.15)))
+	reserveWasDefaulted := !p.HasReserveTokens
+	defaultReserveIsEffectivelyImpossible := reserveWasDefaulted && reserveTokens >= contextWindow-proportionalReserveTokens
+	reserveExceedsWindow := reserveTokens >= contextWindow
+	if defaultReserveIsEffectivelyImpossible || reserveExceedsWindow {
+		return proportionalReserveTokens
+	}
+	return reserveTokens
+}
+
+// promptBudgetTokens mirrors compaction.ts:403-405.
+func promptBudgetTokens(contextWindow int, p compactionPolicy) int {
+	return max(0, min(contextWindow-1, contextWindow-resolveBudgetReserveTokens(contextWindow, p)))
+}
+
+// resolveThresholdTokens mirrors compaction.ts:407-437.
+func resolveThresholdTokens(contextWindow int, p compactionPolicy) int {
+	if p.ThresholdTokens > 0 {
+		if p.ThresholdTokens >= contextWindow {
+			return promptBudgetTokens(contextWindow, p)
+		}
+		return min(contextWindow-1, max(1, p.ThresholdTokens))
+	}
+	if p.BaseWindowTokens > 0 && p.BaseWindowTokens < contextWindow {
+		contextWindow = p.BaseWindowTokens
+	}
+	if math.IsNaN(p.ThresholdPercent) || math.IsInf(p.ThresholdPercent, 0) || p.ThresholdPercent <= 0 {
+		return promptBudgetTokens(contextWindow, p)
+	}
+	clamped := min(99.0, max(1.0, p.ThresholdPercent))
+	return int(math.Floor(float64(contextWindow) * (clamped / 100.0)))
+}
+
+// resolveSpeculationLeadTokens mirrors speculation-lead.ts:19-24.
+func resolveSpeculationLeadTokens(thresholdTokens int) int {
+	scaled := int(math.Floor(float64(thresholdTokens) * speculationLeadFraction))
+	return min(speculationLeadMaxTokens, max(speculationLeadMinTokens, scaled))
+}
+
+// resolveSpeculationMethod mirrors compaction-methods.ts:119-136.
+func resolveSpeculationMethod(hasVision bool, p compactionPolicy) string {
+	seen := make(map[string]bool, len(p.MethodOrder))
+	for _, candidate := range p.MethodOrder {
+		switch candidate {
+		case "remote", "snapcompact", "handoff", "shake", "soft":
+		default:
+			continue
+		}
+		if seen[candidate] {
+			continue
+		}
+		seen[candidate] = true
+
+		var available bool
+		switch candidate {
+		case "remote":
+			available = strings.TrimSpace(p.RemoteEndpoint) != ""
+		case "snapcompact":
+			available = hasVision
+		default:
+			available = true
+		}
+		if !available {
+			continue
+		}
+		if candidate == "remote" || candidate == "handoff" || candidate == "soft" {
+			return candidate
+		}
+		return ""
+	}
+	return ""
+}
+
+// computeCompactionBoundaries mirrors getSessionCompactionBoundaries +
+// computeCompactionBoundaries (context-usage-runtime.ts:20-37, context-usage.ts:99-115).
+func computeCompactionBoundaries(p compactionPolicy, contextWindow int, hasVision bool) (hasBoundaries bool, thresholdPct float64, specPct float64) {
+	if contextWindow <= 0 || !p.Enabled || p.Strategy == "off" {
+		return false, 0, 0
+	}
+	threshold := resolveThresholdTokens(contextWindow, p)
+	if threshold <= 0 || threshold > contextWindow {
+		return false, 0, 0
+	}
+	thresholdPct = (float64(threshold) / float64(contextWindow)) * 100.0
+	if p.AsyncEnabled && resolveSpeculationMethod(hasVision, p) != "" {
+		lead := resolveSpeculationLeadTokens(threshold)
+		specPct = (float64(max(0, threshold-lead)) / float64(contextWindow)) * 100.0
+	}
+	return true, thresholdPct, specPct
+}
+
+func (s *chromeState) publishComposerMeta(ctx sdk.Context) {
+	if !isTopLevelSession(ctx) {
+		return
+	}
+	s.mu.Lock()
+	cw := s.data.ContextWindow
+	if cw <= 0 {
+		cw = s.modelWindow
+	}
+	hasVision := s.modelHasVision
+	prem := s.premiumRequests
+	advCost := s.advisorCost
+	advSub := s.advisorSub
+	tokPerSec := s.lastTokPerSec
+	s.mu.Unlock()
+
+	p := readCompactionPolicy(ctx)
+	hasBounds, threshPct, specPct := computeCompactionBoundaries(p, cw, hasVision)
+	specState := ""
+	if hasBounds && specPct > 0 {
+		specState = "idle"
+	}
+	surface.SetComposerMeta(surface.ComposerMeta{
+		HasBoundaries:      hasBounds,
+		AutoCompactEnabled: p.Enabled && p.Strategy != "off",
+		ThresholdPercent:   threshPct,
+		SpeculationPercent: specPct,
+		SpeculationState:   specState,
+		PremiumRequests:    prem,
+		AdvisorCost:        advCost,
+		AdvisorSub:         advSub,
+		TokensPerSec:       tokPerSec,
+	})
 }

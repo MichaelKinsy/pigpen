@@ -46,6 +46,7 @@ var (
 	agentHubSnapshot  AgentHubSnapshot
 	agentHubListeners = map[int]func(AgentHubSnapshot){}
 	agentHubNextID    int
+	agentHubNotifyMu  sync.Mutex
 	agentHubHandlers  AgentHubHandlers
 	agentHubOpenHook  func()
 	// compactionMetas holds recent compaction metadata (method, tokensBefore,
@@ -53,6 +54,26 @@ var (
 	// Tern draws omp's collapsible `section[omp.compaction]` divider instead of
 	// PiG's purple ANSI `[compaction]` box.
 	compactionMetas []CompactionMeta
+	// turnUsageRecords holds per-turn usage records published at agent_end for
+	// Tern's `row[omp.turn.usage]` footer on settled assistant messages.
+	turnUsageRecords   []TurnUsageRecord
+	turnUsageListeners = map[int]func(TurnUsageRecord){}
+	turnUsageNextID    int
+	turnUsageNotifyMu  sync.Mutex
+	// Copilot premium requests, advisor spend) published by internal/ansi and
+	// internal/snapcompact.
+	composerMeta          ComposerMeta
+	composerMetaListeners = map[int]func(ComposerMeta){}
+	composerMetaNextID    int
+	composerNotifyMu      sync.Mutex
+	// progressHudSnapshot holds live background-job HUD pill data plus active
+	// judge-batch, download, and background-compaction progress rows.
+	progressHudSnapshot  ProgressHudSnapshot
+	progressHudListeners = map[int]func(ProgressHudSnapshot){}
+	progressHudNextID    int
+	progressNotifyMu     sync.Mutex
+	// ShellVizPresentation wire map for Tern's native `shell` node.
+	shellVizBuilder func(command string, running bool, exitCode *int, output string) map[string]any
 )
 
 // maxModelNames bounds modelNames; a session uses a handful of models.
@@ -283,6 +304,15 @@ func SetAgentHubSnapshot(snap AgentHubSnapshot) {
 	cp := cloneAgentHubSnapshot(snap)
 	mu.Lock()
 	agentHubSnapshot = cp
+	mu.Unlock()
+	notifyAgentHub()
+}
+
+func notifyAgentHub() {
+	agentHubNotifyMu.Lock()
+	defer agentHubNotifyMu.Unlock()
+	mu.Lock()
+	cp := cloneAgentHubSnapshot(agentHubSnapshot)
 	fns := make([]func(AgentHubSnapshot), 0, len(agentHubListeners))
 	for _, fn := range agentHubListeners {
 		fns = append(fns, fn)
@@ -440,6 +470,373 @@ func LookupCompaction(tokensBefore int) (CompactionMeta, bool) {
 	return CompactionMeta{}, false
 }
 
+// TurnUsageRecord holds per-turn token, cost, and wall-clock metrics published
+// by internal/ansi at agent_end so Tern renders omp's `row[omp.turn.usage]`
+// footer (`⧉ · 1.2s · 155 tok this turn`) on settled assistant replies.
+type TurnUsageRecord struct {
+	TurnSeq     int
+	Input       int
+	Output      int
+	CacheRead   int
+	CacheWrite  int
+	Cost        float64
+	ElapsedMs   int64
+	TimestampMs int64
+}
+
+const maxTurnUsageRecords = 128
+
+// RecordTurnUsage records a completed turn's usage metrics and notifies
+// subscribed frontend listeners.
+func RecordTurnUsage(r TurnUsageRecord) {
+	turnUsageNotifyMu.Lock()
+	defer turnUsageNotifyMu.Unlock()
+	mu.Lock()
+	turnUsageRecords = append(turnUsageRecords, r)
+	if len(turnUsageRecords) > maxTurnUsageRecords {
+		turnUsageRecords = turnUsageRecords[len(turnUsageRecords)-maxTurnUsageRecords:]
+	}
+	fns := make([]func(TurnUsageRecord), 0, len(turnUsageListeners))
+	for _, fn := range turnUsageListeners {
+		fns = append(fns, fn)
+	}
+	mu.Unlock()
+	for _, fn := range fns {
+		fn(r)
+	}
+}
+
+// LatestTurnUsage returns the most recently recorded TurnUsageRecord, if any.
+func LatestTurnUsage() (TurnUsageRecord, bool) {
+	mu.Lock()
+	defer mu.Unlock()
+	if len(turnUsageRecords) == 0 {
+		return TurnUsageRecord{}, false
+	}
+	return turnUsageRecords[len(turnUsageRecords)-1], true
+}
+
+// OnTurnUsage subscribes fn to completed turn usage records and returns an
+// unsubscribe function.
+func OnTurnUsage(fn func(TurnUsageRecord)) func() {
+	if fn == nil {
+		return func() {}
+	}
+	mu.Lock()
+	turnUsageNextID++
+	id := turnUsageNextID
+	turnUsageListeners[id] = fn
+	mu.Unlock()
+	return func() {
+		mu.Lock()
+		delete(turnUsageListeners, id)
+		mu.Unlock()
+	}
+}
+
+// ClearTurnUsage clears recorded turn usage history (e.g. on session switch).
+func ClearTurnUsage() {
+	mu.Lock()
+	turnUsageRecords = nil
+	mu.Unlock()
+}
+
+// ComposerMeta carries live composer facts not present on PiG's frontend.Footer:
+// auto-compact threshold/speculation mark percentages, live generation tok/s,
+// GitHub Copilot premium request counts, and advisor spend.
+type ComposerMeta struct {
+	HasBoundaries      bool
+	AutoCompactEnabled bool
+	ThresholdPercent   float64 // 0..100
+	SpeculationPercent float64 // 0..100 (<=0 means omitted)
+	SpeculationState   string  // "" | "idle" | "running" | "armed"
+	PremiumRequests    float64
+	AdvisorCost        float64
+	AdvisorSub         bool
+	TokensPerSec       float64
+}
+
+// SetComposerMeta publishes the latest ComposerMeta snapshot and notifies
+// subscribed frontend listeners when any field changed.
+func SetComposerMeta(m ComposerMeta) {
+	mu.Lock()
+	if composerMeta == m {
+		mu.Unlock()
+		return
+	}
+	composerMeta = m
+	mu.Unlock()
+	notifyComposerMeta()
+}
+
+func notifyComposerMeta() {
+	composerNotifyMu.Lock()
+	defer composerNotifyMu.Unlock()
+	mu.Lock()
+	m := composerMeta
+	fns := make([]func(ComposerMeta), 0, len(composerMetaListeners))
+	for _, fn := range composerMetaListeners {
+		fns = append(fns, fn)
+	}
+	mu.Unlock()
+	for _, fn := range fns {
+		fn(m)
+	}
+}
+
+// GetComposerMeta returns the latest published ComposerMeta snapshot.
+func GetComposerMeta() ComposerMeta {
+	mu.Lock()
+	defer mu.Unlock()
+	return composerMeta
+}
+
+// OnComposerMetaChange subscribes fn to ComposerMeta updates and returns an
+// unsubscribe function.
+func OnComposerMetaChange(fn func(ComposerMeta)) func() {
+	if fn == nil {
+		return func() {}
+	}
+	mu.Lock()
+	composerMetaNextID++
+	id := composerMetaNextID
+	composerMetaListeners[id] = fn
+	mu.Unlock()
+	return func() {
+		mu.Lock()
+		delete(composerMetaListeners, id)
+		mu.Unlock()
+	}
+}
+
+// JudgeBatchHudItem describes one active eval judge_batch progress row for
+// Tern's `col[omp.hud.judge]`.
+type JudgeBatchHudItem struct {
+	ID     string
+	Intent string
+	Done   int
+	Total  int
+	Failed int
+	Cost   float64
+}
+
+// DownloadHudItem describes one active download/install activity row for
+// Tern's `col[omp.hud.downloads]`.
+type DownloadHudItem struct {
+	ID     string
+	Label  string
+	Detail string
+	State  string // "running" | "done" | "failed"
+	Loaded int64
+	Total  int64
+	Unit   string // "bytes" | "steps"
+	Error  string
+}
+
+// CompactionHudItem describes an active background compaction row for Tern's
+// `col[omp.hud.compaction]`.
+type CompactionHudItem struct {
+	Active      bool
+	Label       string
+	StartedAtMs int64
+}
+
+// JobHudItem describes one running non-agent background job (bash/service/eval)
+// for Tern's `omp.hud.seg` ("jobs") pill beside the agents pill.
+type JobHudItem struct {
+	ID         string
+	Kind       string // "bash" | "service" | "eval"
+	Label      string
+	Status     string
+	StartedMs  int64
+	Summary    string
+	GlanceText string
+	SparkVals  []float64
+}
+
+// ProgressHudSnapshot aggregates background job pills and dock progress rows
+// (`omp.hud.judge`, `omp.hud.downloads`, `omp.hud.compaction`).
+type ProgressHudSnapshot struct {
+	JudgeBatches []JudgeBatchHudItem
+	Downloads    []DownloadHudItem
+	Compaction   CompactionHudItem
+	RunningJobs  int
+	Jobs         []JobHudItem
+}
+
+func cloneProgressHudSnapshot(s ProgressHudSnapshot) ProgressHudSnapshot {
+	if len(s.JudgeBatches) > 0 {
+		cp := make([]JudgeBatchHudItem, len(s.JudgeBatches))
+		copy(cp, s.JudgeBatches)
+		s.JudgeBatches = cp
+	}
+	if len(s.Downloads) > 0 {
+		cp := make([]DownloadHudItem, len(s.Downloads))
+		copy(cp, s.Downloads)
+		s.Downloads = cp
+	}
+	if len(s.Jobs) > 0 {
+		cp := make([]JobHudItem, len(s.Jobs))
+		for i, j := range s.Jobs {
+			if len(j.SparkVals) > 0 {
+				sv := make([]float64, len(j.SparkVals))
+				copy(sv, j.SparkVals)
+				j.SparkVals = sv
+			}
+			cp[i] = j
+		}
+		s.Jobs = cp
+	}
+	return s
+}
+
+func notifyProgressHud() {
+	progressNotifyMu.Lock()
+	defer progressNotifyMu.Unlock()
+	mu.Lock()
+	cp := cloneProgressHudSnapshot(progressHudSnapshot)
+	fns := make([]func(ProgressHudSnapshot), 0, len(progressHudListeners))
+	for _, fn := range progressHudListeners {
+		fns = append(fns, fn)
+	}
+	mu.Unlock()
+	for _, fn := range fns {
+		fn(cloneProgressHudSnapshot(cp))
+	}
+}
+
+// SetProgressHudSnapshot replaces the full ProgressHudSnapshot and notifies listeners.
+func SetProgressHudSnapshot(snap ProgressHudSnapshot) {
+	mu.Lock()
+	progressHudSnapshot = cloneProgressHudSnapshot(snap)
+	mu.Unlock()
+	notifyProgressHud()
+}
+
+// GetProgressHudSnapshot returns a deep copy of the latest ProgressHudSnapshot.
+func GetProgressHudSnapshot() ProgressHudSnapshot {
+	mu.Lock()
+	cp := cloneProgressHudSnapshot(progressHudSnapshot)
+	mu.Unlock()
+	return cp
+}
+
+// OnProgressHudChange subscribes fn to ProgressHudSnapshot updates and returns
+// an unsubscribe function.
+func OnProgressHudChange(fn func(ProgressHudSnapshot)) func() {
+	if fn == nil {
+		return func() {}
+	}
+	mu.Lock()
+	progressHudNextID++
+	id := progressHudNextID
+	progressHudListeners[id] = fn
+	mu.Unlock()
+	return func() {
+		mu.Lock()
+		delete(progressHudListeners, id)
+		mu.Unlock()
+	}
+}
+
+// UpdateJudgeBatchHud upserts one judge_batch progress row in ProgressHudSnapshot.
+func UpdateJudgeBatchHud(item JudgeBatchHudItem) {
+	if item.ID == "" {
+		return
+	}
+	mu.Lock()
+	replaced := false
+	for i := range progressHudSnapshot.JudgeBatches {
+		if progressHudSnapshot.JudgeBatches[i].ID == item.ID {
+			progressHudSnapshot.JudgeBatches[i] = item
+			replaced = true
+			break
+		}
+	}
+	if !replaced {
+		progressHudSnapshot.JudgeBatches = append(progressHudSnapshot.JudgeBatches, item)
+	}
+	mu.Unlock()
+	notifyProgressHud()
+}
+
+// RemoveJudgeBatchHud deletes one judge_batch progress row by ID.
+func RemoveJudgeBatchHud(id string) {
+	if id == "" {
+		return
+	}
+	mu.Lock()
+	idx := -1
+	for i := range progressHudSnapshot.JudgeBatches {
+		if progressHudSnapshot.JudgeBatches[i].ID == id {
+			idx = i
+			break
+		}
+	}
+	if idx < 0 {
+		mu.Unlock()
+		return
+	}
+	progressHudSnapshot.JudgeBatches = append(progressHudSnapshot.JudgeBatches[:idx], progressHudSnapshot.JudgeBatches[idx+1:]...)
+	mu.Unlock()
+	notifyProgressHud()
+}
+
+// SetCompactionHud updates the background compaction progress row.
+func SetCompactionHud(item CompactionHudItem) {
+	mu.Lock()
+	if progressHudSnapshot.Compaction == item {
+		mu.Unlock()
+		return
+	}
+	progressHudSnapshot.Compaction = item
+	mu.Unlock()
+	notifyProgressHud()
+}
+
+// SetJobsHud updates the running non-agent background jobs list for Tern's HUD pill.
+func SetJobsHud(running int, jobs []JobHudItem) {
+	mu.Lock()
+	progressHudSnapshot.RunningJobs = running
+	if len(jobs) == 0 {
+		progressHudSnapshot.Jobs = nil
+	} else {
+		cpJobs := make([]JobHudItem, len(jobs))
+		for i, j := range jobs {
+			if len(j.SparkVals) > 0 {
+				sv := make([]float64, len(j.SparkVals))
+				copy(sv, j.SparkVals)
+				j.SparkVals = sv
+			}
+			cpJobs[i] = j
+		}
+		progressHudSnapshot.Jobs = cpJobs
+	}
+	mu.Unlock()
+	notifyProgressHud()
+}
+
+// SetShellVizBuilder registers the extension's bash shell visualizer builder
+// (producing omp's canonical ShellVizPresentation JSON-compatible map for
+// Tern's native `shell` node).
+func SetShellVizBuilder(fn func(command string, running bool, exitCode *int, output string) map[string]any) {
+	mu.Lock()
+	shellVizBuilder = fn
+	mu.Unlock()
+}
+
+// BuildShellPresentation builds a ShellVizPresentation wire map via the
+// registered shell visualizer, or nil when none is registered.
+func BuildShellPresentation(command string, running bool, exitCode *int, output string) map[string]any {
+	mu.Lock()
+	fn := shellVizBuilder
+	mu.Unlock()
+	if fn == nil {
+		return nil
+	}
+	return fn(command, running, exitCode, output)
+}
+
 // DisplayPath is p as omp spells it for the user and the model: on macOS
 // without the leading /private when both spellings name the same place. The
 // frontend member uses it for the paths and links it draws, so that they match
@@ -515,5 +912,12 @@ func ResetForTests() {
 	agentHubHandlers = AgentHubHandlers{}
 	agentHubOpenHook = nil
 	compactionMetas = nil
+	turnUsageRecords = nil
+	turnUsageListeners = map[int]func(TurnUsageRecord){}
+	composerMeta = ComposerMeta{}
+	composerMetaListeners = map[int]func(ComposerMeta){}
+	progressHudSnapshot = ProgressHudSnapshot{}
+	progressHudListeners = map[int]func(ProgressHudSnapshot){}
+	shellVizBuilder = nil
 	mu.Unlock()
 }

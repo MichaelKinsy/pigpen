@@ -1645,7 +1645,37 @@ func nvDescribeJobTileVisual(sc *nvScope, tileIdx int, block map[string]any) kit
 		lbl := nvPlainLine(nvStr(block, "label"))
 		last := nvPlainLine(nvStr(block, "last"))
 		summary := strings.TrimSpace(lbl + " " + last)
-		return sc.text(sc.indexed("omp.job.tile.chart", tileIdx), summary)
+		csvParts := make([]string, 0, len(vals))
+		for _, raw := range vals {
+			switch n := raw.(type) {
+			case float64:
+				csvParts = append(csvParts, strconv.FormatFloat(n, 'f', -1, 64))
+			case float32:
+				csvParts = append(csvParts, strconv.FormatFloat(float64(n), 'f', -1, 64))
+			case int:
+				csvParts = append(csvParts, strconv.Itoa(n))
+			case int64:
+				csvParts = append(csvParts, strconv.FormatInt(n, 10))
+			}
+		}
+		if len(csvParts) == 0 {
+			return sc.text(sc.indexed("omp.job.tile.chart", tileIdx), summary)
+		}
+		var children []kit.Node
+		if summary != "" {
+			children = append(children, sc.text(sc.indexed("omp.job.tile.chart.summary", tileIdx), summary))
+		}
+		children = append(children, sc.text(sc.indexed("omp.job.tile.chart.series", tileIdx), strings.Join(csvParts, ",")))
+		if tone := nvPlainLine(nvStr(block, "tone")); tone != "" {
+			children = append(children, sc.text(sc.indexed("omp.job.tile.chart.tone", tileIdx), tone))
+		}
+		if minVal, ok := nvFloat(block, "min"); ok {
+			children = append(children, sc.text(sc.indexed("omp.job.tile.chart.min", tileIdx), strconv.FormatFloat(minVal, 'f', -1, 64)))
+		}
+		if maxVal, ok := nvFloat(block, "max"); ok {
+			children = append(children, sc.text(sc.indexed("omp.job.tile.chart.max", tileIdx), strconv.FormatFloat(maxVal, 'f', -1, 64)))
+		}
+		return sc.vstack(sc.indexed("omp.job.tile.chart", tileIdx), 0, children...)
 	case "meter":
 		val, _ := nvFloat(block, "value")
 		txt := nvPlainLine(nvStr(block, "text", "label"))

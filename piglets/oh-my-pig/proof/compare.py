@@ -1362,6 +1362,63 @@ def load_drawing_allowlist(path: Path | None = None) -> list[dict[str, Any]]:
     return resolved
 
 
+def _shell_presentation_semantic_projection(pres: Any) -> dict[str, Any] | None:
+    """Project a ShellVizPresentation onto its rendered visual content (preferences, rows' depth/role/segments text+style+language+effects).
+
+    Runtime embedded-shell trace fields (AST node IDs, per-command executedAtNs/executionSeq/state,
+    timeline counters, and argv trace detail) are excluded so static Go AST presentations are compared
+    strictly on rendered pseudo-code tokens, styles, and embedded languages.
+    """
+    if not isinstance(pres, dict):
+        return None
+    rows_raw = pres.get("rows")
+    if not isinstance(rows_raw, list):
+        return None
+    rows_out: list[dict[str, Any]] = []
+    for row in rows_raw:
+        if not isinstance(row, dict):
+            return None
+        segs_raw = row.get("segments")
+        if not isinstance(segs_raw, list):
+            return None
+        segs_out: list[dict[str, Any]] = []
+        for seg in segs_raw:
+            if not isinstance(seg, dict):
+                return None
+            item: dict[str, Any] = {"text": seg.get("text", "")}
+            if seg.get("style"):
+                item["style"] = seg["style"]
+            if seg.get("language"):
+                item["language"] = seg["language"]
+            segs_out.append(item)
+        rows_out.append({
+            "depth": row.get("depth", 0),
+            "role": row.get("role"),
+            "segments": segs_out,
+            "effects": [
+                {"kind": e.get("kind"), "glyph": e.get("glyph")}
+                for e in (row.get("effects") or [])
+                if isinstance(e, dict)
+            ],
+        })
+    return {
+        "preferences": pres.get("preferences"),
+        "rows": rows_out,
+        "running": bool(pres.get("running", False)),
+        "executing": bool(pres.get("executing", False)),
+    }
+
+
+_RE_TURN_USAGE_DUR = re.compile(r"\b\d+(?:\.\d+)?(?:ms|s|m\d*s?|h\d*m?|d\d*h?)\b")
+
+
+def _normalize_turn_usage_timing(val: Any) -> Any:
+    """Replace wall-clock elapsed duration inside omp.turn.usage text/title while preserving exact token counts and wording."""
+    if not isinstance(val, str):
+        return val
+    return _RE_TURN_USAGE_DUR.sub("<DUR>", val)
+
+
 def _match_side_expectation(entry: dict[str, Any], side_key: str, actual: Any) -> bool:
     regex_key = f"{side_key}_regex"
     if regex_key in entry:
@@ -1403,6 +1460,18 @@ def _match_allowlist_entry(
                         return (idx, entry)
                     continue
                 if is_valid_welcome_tip(diff.get("omp"), "omp") and is_valid_welcome_tip(diff.get("pig"), "pig"):
+                    return (idx, entry)
+                continue
+            if mk == "shell_presentation_semantic":
+                o_proj = _shell_presentation_semantic_projection(diff.get("omp"))
+                p_proj = _shell_presentation_semantic_projection(diff.get("pig"))
+                if o_proj is not None and p_proj is not None and o_proj == p_proj:
+                    return (idx, entry)
+                continue
+            if mk == "turn_usage_timing":
+                o_norm = _normalize_turn_usage_timing(diff.get("omp"))
+                p_norm = _normalize_turn_usage_timing(diff.get("pig"))
+                if isinstance(o_norm, str) and isinstance(p_norm, str) and o_norm == p_norm:
                     return (idx, entry)
                 continue
             if not _match_side_expectation(entry, "omp", diff.get("omp")):

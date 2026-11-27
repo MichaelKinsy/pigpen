@@ -56,7 +56,7 @@ const (
 	pickerClockReuse             = 5 * time.Second
 )
 
-func (s *session) initAgentHub() {
+func (s *session) initOmpBridge() {
 	if !s.ompRoles {
 		return
 	}
@@ -71,6 +71,87 @@ func (s *session) initAgentHub() {
 	if s.setAgentHubOpenerFn != nil {
 		s.setAgentHubOpenerFn(s.openAgentHub)
 	}
+	if s.composerMetaFn != nil {
+		s.composerMeta = s.composerMetaFn()
+	}
+	if s.onComposerMetaChangeFn != nil {
+		s.composerMetaUnsub = s.onComposerMetaChangeFn(func(meta ComposerMeta) {
+			s.onComposerMetaChange(meta)
+		})
+	}
+	if s.progressHudSnapshotFn != nil {
+		s.progressHud = cloneFrontendProgressHudSnapshot(s.progressHudSnapshotFn())
+	}
+	if s.onProgressHudChangeFn != nil {
+		s.progressHudUnsub = s.onProgressHudChangeFn(func(snap ProgressHudSnapshot) {
+			s.onProgressHudChange(snap)
+		})
+	}
+	if s.onTurnUsageFn != nil {
+		s.turnUsageUnsub = s.onTurnUsageFn(func(rec TurnUsageRecord) {
+			s.onTurnUsage(rec)
+		})
+	}
+}
+
+func cloneFrontendProgressHudSnapshot(s ProgressHudSnapshot) ProgressHudSnapshot {
+	if len(s.JudgeBatches) > 0 {
+		cp := make([]JudgeBatchHudItem, len(s.JudgeBatches))
+		copy(cp, s.JudgeBatches)
+		s.JudgeBatches = cp
+	}
+	if len(s.Downloads) > 0 {
+		cp := make([]DownloadHudItem, len(s.Downloads))
+		copy(cp, s.Downloads)
+		s.Downloads = cp
+	}
+	if len(s.Jobs) > 0 {
+		cp := make([]JobHudItem, len(s.Jobs))
+		for i, job := range s.Jobs {
+			if len(job.SparkVals) > 0 {
+				vals := make([]float64, len(job.SparkVals))
+				copy(vals, job.SparkVals)
+				job.SparkVals = vals
+			}
+			cp[i] = job
+		}
+		s.Jobs = cp
+	}
+	return s
+}
+
+func (s *session) onComposerMetaChange(meta ComposerMeta) {
+	s.mu.Lock()
+	if s.closed || s.fellBack {
+		s.mu.Unlock()
+		return
+	}
+	if s.composerMetaFn != nil {
+		meta = s.composerMetaFn()
+	}
+	if s.composerMeta == meta {
+		s.mu.Unlock()
+		return
+	}
+	s.composerMeta = meta
+	s.rebuildOmpEditor()
+	_ = s.flushLocked()
+	s.mu.Unlock()
+}
+
+func (s *session) onProgressHudChange(snap ProgressHudSnapshot) {
+	s.mu.Lock()
+	if s.closed || s.fellBack {
+		s.mu.Unlock()
+		return
+	}
+	if s.progressHudSnapshotFn != nil {
+		snap = s.progressHudSnapshotFn()
+	}
+	s.progressHud = cloneFrontendProgressHudSnapshot(snap)
+	s.dirty = true
+	_ = s.flushLocked()
+	s.mu.Unlock()
 }
 
 func cloneFrontendAgentHubSnapshot(s AgentHubSnapshot) AgentHubSnapshot {
@@ -92,6 +173,9 @@ func (s *session) onAgentHubSnapshot(snap AgentHubSnapshot) {
 	if s.closed || s.fellBack {
 		s.mu.Unlock()
 		return
+	}
+	if s.agentHubSnapshotFn != nil {
+		snap = s.agentHubSnapshotFn()
 	}
 	prevCost := s.agentHub.SubagentCost
 	s.agentHub = cloneFrontendAgentHubSnapshot(snap)
@@ -222,62 +306,70 @@ func (s *session) ensureAgentHubStateLocked() *ompAgentHubState {
 	return s.agentHubUI
 }
 
-// ompAgentsHudNode builds the subagents HUD pill row for ompView's first dock
-// slot (upstream: interactive-mode.ts:849-879, 955-975, 1720-1760).
-// Returns (_, false) when RunningCount == 0 && InspectableCount == 0 so
-// zero-agent frames stay identical to baseline.
-func (s *session) ompAgentsHudNode() (tern.Node, bool) {
+// ompHudPillsNode builds the HUD pills row (agents + jobs segments inside
+// `row[omp.hud.pill]`) for ompView's first dock slot
+// (upstream: interactive-mode.ts:849-879, 924-975, 1720-1760).
+// Returns (_, false) when neither agents nor running jobs are present so
+// idle frames stay identical to baseline.
+func (s *session) ompHudPillsNode() (tern.Node, bool) {
 	running := s.agentHub.RunningCount
 	inspectable := s.agentHub.InspectableCount
-	if running <= 0 && inspectable <= 0 {
+	runningJobs := s.progressHud.RunningJobs
+	if running <= 0 && inspectable <= 0 && runningJobs <= 0 {
 		return tern.Node{}, false
 	}
-	var (
-		title    string
-		aria     string
-		children []tern.Element
-	)
-	if running > 0 {
-		noun := "agents"
-		if running == 1 {
-			noun = "agent"
+	segs := make([]tern.Element, 0, 2)
+	if running > 0 || inspectable > 0 {
+		var (
+			title    string
+			aria     string
+			children []tern.Element
+		)
+		if running > 0 {
+			noun := "agents"
+			if running == 1 {
+				noun = "agent"
+			}
+			label := fmt.Sprintf("%d %s running", running, noun)
+			title = label + "  /agents"
+			aria = label
+			children = []tern.Element{
+				ui.Icon{Common: ui.Common{Key: "icon", Tone: ui.ToneAccent}, Name: ui.IconName("users")},
+				ui.Text{
+					Common: ui.Common{Key: "count"},
+					Spans:  []ui.Span{{T: strconv.Itoa(running), S: "num"}},
+					Wrap:   ui.WrapNone,
+				},
+			}
+		} else {
+			label := fmt.Sprintf("No agents running · %d in this session", inspectable)
+			title = label + "  /agents"
+			aria = label
+			children = []tern.Element{
+				ui.Icon{Common: ui.Common{Key: "icon", Tone: ui.ToneMuted}, Name: ui.IconName("users")},
+			}
 		}
-		label := fmt.Sprintf("%d %s running", running, noun)
-		title = label + "  /agents"
-		aria = label
-		children = []tern.Element{
-			ui.Icon{Common: ui.Common{Key: "icon", Tone: ui.ToneAccent}, Name: ui.IconName("users")},
-			ui.Text{
-				Common: ui.Common{Key: "count"},
-				Spans:  []ui.Span{{T: strconv.Itoa(running), S: "num"}},
-				Wrap:   ui.WrapNone,
+		segs = append(segs, ui.Row{
+			Common: ui.Common{
+				Key:     "agents",
+				Role:    "omp.hud.seg",
+				Title:   title,
+				Aria:    aria,
+				Actions: &ui.Actions{Click: "agents.open"},
+				OnClick: func(*tern.Action) { s.openAgentHub() },
 			},
-		}
-	} else {
-		label := fmt.Sprintf("No agents running · %d in this session", inspectable)
-		title = label + "  /agents"
-		aria = label
-		children = []tern.Element{
-			ui.Icon{Common: ui.Common{Key: "icon", Tone: ui.ToneMuted}, Name: ui.IconName("users")},
-		}
+			Gap:      ui.GapXS,
+			Align:    ui.AlignCenter,
+			Children: children,
+		})
 	}
-	seg := ui.Row{
-		Common: ui.Common{
-			Key:     "agents",
-			Role:    "omp.hud.seg",
-			Title:   title,
-			Aria:    aria,
-			Actions: &ui.Actions{Click: "agents.open"},
-			OnClick: func(*tern.Action) { s.openAgentHub() },
-		},
-		Gap:      ui.GapXS,
-		Align:    ui.AlignCenter,
-		Children: children,
+	if runningJobs > 0 {
+		segs = append(segs, s.ompJobsHudSegment(runningJobs, s.progressHud.Jobs))
 	}
 	pill := ui.Row{
 		Common:   ui.Common{Key: "running", Role: "omp.hud.pill"},
 		Align:    ui.AlignCenter,
-		Children: []tern.Element{seg},
+		Children: segs,
 	}
 	hud := ui.Row{
 		Common:   ui.Common{Key: "hud", Role: "omp.hud"},
@@ -285,6 +377,283 @@ func (s *session) ompAgentsHudNode() (tern.Node, bool) {
 		Children: []tern.Element{pill},
 	}
 	return buildNode(hud), true
+}
+
+// ompJobsHudSegment builds omp's `jobs` HUD pill segment
+// (upstream: interactive-mode.ts:924-963).
+func (s *session) ompJobsHudSegment(running int, jobs []JobHudItem) ui.Row {
+	noun := "jobs"
+	if running == 1 {
+		noun = "job"
+	}
+	label := fmt.Sprintf("%d %s running", running, noun)
+	titleLines := make([]string, 0, 1+len(jobs))
+	titleLines = append(titleLines, label+"  /jobs")
+	var glanceJob *JobHudItem
+	for i := range jobs {
+		job := &jobs[i]
+		summary := strings.TrimSpace(job.Summary)
+		if summary != "" {
+			if job.ID != "" {
+				titleLines = append(titleLines, job.ID+"  "+summary)
+			} else {
+				titleLines = append(titleLines, summary)
+			}
+		}
+		if strings.TrimSpace(job.GlanceText) != "" || len(job.SparkVals) > 0 {
+			glanceJob = job
+		}
+	}
+	var glanceText string
+	var sparkVals []float64
+	var sparkSummary string
+	if glanceJob != nil {
+		glanceText = strings.TrimSpace(glanceJob.GlanceText)
+		sparkVals = glanceJob.SparkVals
+		sparkSummary = glanceText
+		if sparkSummary == "" {
+			sparkSummary = strings.TrimSpace(glanceJob.Summary)
+		}
+	}
+	children := []tern.Element{
+		ui.Icon{Common: ui.Common{Key: "icon", Tone: ui.ToneWarning}, Name: ui.IconName("job")},
+		ui.Text{
+			Common: ui.Common{Key: "count"},
+			Spans:  []ui.Span{{T: strconv.Itoa(running), S: "num"}},
+			Wrap:   ui.WrapNone,
+		},
+	}
+	if glanceText != "" {
+		children = append(children, ui.Text{
+			Common: ui.Common{Key: "glance", Role: "omp.hud.glance"},
+			Spans:  []ui.Span{{T: glanceText, S: "num strong"}},
+			Wrap:   ui.WrapNone,
+		})
+	}
+	if len(sparkVals) > 0 {
+		pts := make([]ui.Point, len(sparkVals))
+		for i, v := range sparkVals {
+			pts[i] = ui.Point{Value: v}
+		}
+		chart := ui.Chart{
+			Common: ui.Common{Key: "spark", Role: "omp.hud.spark"},
+			Kind:   ui.ChartSpark,
+			Size:   ui.SizeSM,
+			Token:  "accent",
+			Series: pts,
+		}
+		if sparkSummary != "" {
+			chart.Summary = ui.T(sparkSummary)
+		}
+		children = append(children, chart)
+	}
+	return ui.Row{
+		Common: ui.Common{
+			Key:     "jobs",
+			Role:    "omp.hud.seg",
+			Title:   strings.Join(titleLines, "\n"),
+			Aria:    label,
+			Actions: &ui.Actions{Click: "jobs.open"},
+			OnClick: func(*tern.Action) { s.runCommand("/jobs") },
+		},
+		Gap:      ui.GapXS,
+		Align:    ui.AlignCenter,
+		Children: children,
+	}
+}
+
+// ompHudProgressRow builds one right-docked progress HUD row matching omp's
+// `describeHudRow` (packages/coding-agent/src/modes/progress-hud.ts:66-81).
+func ompHudProgressRow(key, label string, tail tern.Element, bar *float64, hasBar bool) tern.Node {
+	children := make([]tern.Element, 0, 3)
+	children = append(children, tern.Node{
+		Kind: tern.KindText,
+		Props: map[string]any{
+			"spans":    []any{map[string]any{"t": oneLineTrim(label, 120), "s": "dim"}},
+			"wrap":     "none",
+			"truncate": "end",
+			"shrink":   1,
+		},
+	})
+	if hasBar {
+		pProps := map[string]any{"max": map[string]any{"w": "18ch"}}
+		if bar != nil {
+			v := math.Min(1, math.Max(0, *bar))
+			pProps["value"] = v
+		} else {
+			pProps["value"] = nil
+		}
+		children = append(children, tern.Node{Kind: tern.KindProgress, Props: pProps})
+	}
+	children = append(children, tail)
+	return tern.Node{
+		Kind: tern.KindRow,
+		Props: map[string]any{
+			"key":     key,
+			"role":    "omp.hud.progress",
+			"justify": "end",
+			"gap":     "sm",
+			"align":   "center",
+		},
+		Children: children,
+	}
+}
+
+// ompJudgeHudNode builds `col[omp.hud.judge]` for dock slot `progressHud`
+// (upstream: progress-hud.ts:185-197).
+func (s *session) ompJudgeHudNode() tern.Node {
+	rows := make([]tern.Element, 0, len(s.progressHud.JudgeBatches))
+	for _, b := range s.progressHud.JudgeBatches {
+		total := b.Total
+		if total < 1 {
+			total = 1
+		}
+		spans := []any{map[string]any{"t": fmt.Sprintf("%d/%d", b.Done, b.Total), "s": "strong"}}
+		if b.Cost > 0 {
+			spans = append(spans, map[string]any{"t": " · " + ompFormatHubCost(b.Cost), "s": "dim"})
+		}
+		if b.Failed > 0 {
+			spans = append(spans, map[string]any{"t": fmt.Sprintf(" · %d failed", b.Failed), "s": "warning"})
+		}
+		tail := tern.Node{Kind: tern.KindText, Props: map[string]any{"spans": spans, "wrap": "none"}}
+		frac := float64(b.Done) / float64(total)
+		rows = append(rows, ompHudProgressRow(b.ID, b.Intent, tail, &frac, true))
+	}
+	return tern.Node{
+		Kind:     tern.KindCol,
+		Props:    map[string]any{"key": "judge", "role": "omp.hud.judge"},
+		Children: rows,
+	}
+}
+
+// ompDownloadsHudNode builds `col[omp.hud.downloads]` for dock slot `progressHud`
+// (upstream: progress-hud.ts:315-350).
+func (s *session) ompDownloadsHudNode() tern.Node {
+	rows := make([]tern.Element, 0, len(s.progressHud.Downloads))
+	for _, d := range s.progressHud.Downloads {
+		switch d.State {
+		case "failed":
+			errText := strings.TrimSpace(d.Error)
+			if errText == "" {
+				errText = "unknown error"
+			}
+			tail := tern.Node{
+				Kind:  tern.KindText,
+				Props: map[string]any{"spans": []any{map[string]any{"t": "failed: " + oneLineTrim(errText, 80), "s": "warning"}}, "wrap": "none"},
+			}
+			rows = append(rows, ompHudProgressRow(d.ID, d.Label, tail, nil, false))
+		case "done":
+			tail := tern.Node{
+				Kind:  tern.KindText,
+				Props: map[string]any{"spans": []any{map[string]any{"t": "ready", "s": "success"}}, "wrap": "none"},
+			}
+			rows = append(rows, ompHudProgressRow(d.ID, d.Label, tail, nil, false))
+		default:
+			if d.Total > 0 {
+				label := d.Label
+				if d.Detail != "" {
+					label += " · " + d.Detail
+				}
+				var progressText string
+				if d.Unit == "steps" {
+					progressText = fmt.Sprintf("%d/%d", d.Loaded, d.Total)
+				} else {
+					progressText = ompFormatBytes(d.Loaded) + " / " + ompFormatBytes(d.Total)
+				}
+				tail := tern.Node{
+					Kind:  tern.KindText,
+					Props: map[string]any{"spans": []any{map[string]any{"t": progressText, "s": "strong"}}, "wrap": "none"},
+				}
+				frac := float64(d.Loaded) / float64(d.Total)
+				rows = append(rows, ompHudProgressRow(d.ID, label, tail, &frac, true))
+			} else {
+				var step string
+				switch {
+				case d.Loaded > 0 && d.Unit == "steps":
+					step = fmt.Sprintf("%d", d.Loaded)
+				case d.Loaded > 0:
+					step = ompFormatBytes(d.Loaded)
+				case d.Detail != "":
+					step = d.Detail
+				case d.Unit == "steps":
+					step = "working…"
+				default:
+					step = "downloading…"
+				}
+				tail := tern.Node{
+					Kind:  tern.KindText,
+					Props: map[string]any{"spans": []any{map[string]any{"t": step}}, "wrap": "none"},
+				}
+				rows = append(rows, ompHudProgressRow(d.ID, d.Label, tail, nil, false))
+			}
+		}
+	}
+	return tern.Node{
+		Kind:     tern.KindCol,
+		Props:    map[string]any{"key": "downloads", "role": "omp.hud.downloads"},
+		Children: rows,
+	}
+}
+
+// ompCompactionHudNode builds `col[omp.hud.compaction]` for dock slot `progressHud`
+// (upstream: progress-hud.ts:140-150).
+func (s *session) ompCompactionHudNode() tern.Node {
+	c := s.progressHud.Compaction
+	if !c.Active {
+		s.compactionHudCached = false
+		return tern.Node{
+			Kind:  tern.KindCol,
+			Props: map[string]any{"key": "compaction", "role": "omp.hud.compaction"},
+		}
+	}
+	label := c.Label
+	if label == "" {
+		label = "Compacting context in the background"
+	}
+	if s.compactionHudCached && s.compactionHudStartedAtMs == c.StartedAtMs && s.compactionHudLabel == label {
+		return s.compactionHudNode
+	}
+	age := int64(0)
+	if c.StartedAtMs > 0 {
+		if d := s.now().UnixMilli() - c.StartedAtMs; d > 0 {
+			age = d
+		}
+	}
+	clock := tern.Node{
+		Kind:  tern.KindElapsed,
+		Props: map[string]any{"age": age, "format": string(ui.ElapsedShort)},
+	}
+	node := tern.Node{
+		Kind:     tern.KindCol,
+		Props:    map[string]any{"key": "compaction", "role": "omp.hud.compaction"},
+		Children: []tern.Element{ompHudProgressRow("run", label, clock, nil, true)},
+	}
+	s.compactionHudCached = true
+	s.compactionHudStartedAtMs = c.StartedAtMs
+	s.compactionHudLabel = label
+	s.compactionHudNode = node
+	return node
+}
+
+func ompFormatBytes(n int64) string {
+	if n < 0 {
+		n = 0
+	}
+	const (
+		kb = 1024
+		mb = 1024 * kb
+		gb = 1024 * mb
+	)
+	switch {
+	case n < kb:
+		return fmt.Sprintf("%dB", n)
+	case n < mb:
+		return fmt.Sprintf("%.1fKB", float64(n)/float64(kb))
+	case n < gb:
+		return fmt.Sprintf("%.1fMB", float64(n)/float64(mb))
+	default:
+		return fmt.Sprintf("%.1fGB", float64(n)/float64(gb))
+	}
 }
 
 func (s *session) ompAgentHubLayerNode() (tern.Node, bool) {
@@ -1838,7 +2207,14 @@ func ompFormatHubCost(cost float64) string {
 	if math.IsNaN(cost) || math.IsInf(cost, 0) || cost <= 0 {
 		return "$0.00"
 	}
-	return "$" + toFixed(cost, 2)
+	switch {
+	case cost < 0.01:
+		return "$" + toFixed(cost, 4)
+	case cost < 1:
+		return "$" + toFixed(cost, 3)
+	default:
+		return "$" + toFixed(cost, 2)
+	}
 }
 
 func ompFormatHubDuration(ms int64) string {

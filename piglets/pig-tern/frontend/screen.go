@@ -210,7 +210,7 @@ func (s *session) transcriptClick(action *tern.Action) {
 	if action.SF != surfaceID {
 		return
 	}
-	if s.ompRoles && s.ompErrorAction(action) {
+	if s.ompRoles && s.ompTranscriptAction(action) {
 		return
 	}
 	if action.Act != "click" {

@@ -174,6 +174,9 @@ func Register(e *sdk.Extension) {
 	})
 
 	e.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		if isTopLevelSession(ctx) {
+			surface.ClearTurnUsage()
+		}
 		if st := beginChromeSession(ctx); st != nil {
 			st.installChrome(ctx)
 		}
@@ -230,7 +233,7 @@ func Register(e *sdk.Extension) {
 	e.OnEvent(sdk.EventAgentEnd, func(ctx sdk.Context, _ map[string]any) (any, error) {
 		st := chromeSession(ctx)
 		if st != nil {
-			st.endTurn()
+			st.endTurn(ctx)
 		}
 		if ctx.HasUI() {
 			ctx.ClearWorkingMessage()
