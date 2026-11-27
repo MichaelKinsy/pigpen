@@ -1,0 +1,1 @@
+{"name": "pig_demo", "description": "PiG demo agent", "version": "v1", "capabilities": {"streaming": true}, "defaultInputModes": ["text"], "defaultOutputModes": ["text"], "skills": []}

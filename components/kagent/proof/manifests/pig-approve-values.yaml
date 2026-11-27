@@ -1,0 +1,17 @@
+# Values for the PiG agent that runs the `[approve]` task: the same mock MCP server bound with requireApproval. It reuses the Harness
+# `pig` and the ModelConfig created by the pig-basket release, so install that one first:
+#   cd components/kagent/harness
+#   ./pig-kagent.sh install -n kagent -r pig-approve -f ../proof/manifests/pig-approve-values.yaml --set image="$IMAGE"
+fullnameOverride: pig-approve
+harness:
+  create: false
+  name: pig
+agentTemplate:
+  description: PiG harness (approval)
+  modelConfig: mock-openai-pig
+mcpServers:
+- name: mock-mcp-pig-approval
+  url: http://kagent-mock.kagent.svc.cluster.local:8081/mcp
+  description: hermetic mock MCP server (requireApproval)
+  protocol: STREAMABLE_HTTP
+  requireApproval: true

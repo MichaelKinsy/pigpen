@@ -1,0 +1,23 @@
+# Values for the PiG agent that runs the `[basket]` task (shell tool call, MCP tool call, answer). Install the first release; it also
+# creates the shared Harness `pig`:
+#   cd components/kagent/harness
+#   ./pig-kagent.sh install -n kagent -r pig-basket -f ../proof/manifests/pig-basket-values.yaml --set image="$IMAGE"
+# $IMAGE is the digest-pinned PiG harness image (see ../../harness/docs/kind.md, section 4).
+fullnameOverride: pig-basket
+harness:
+  name: pig
+agentTemplate:
+  description: PiG harness (basket)
+modelConfig:
+  create: true
+  name: mock-openai-pig
+  provider: OpenAI
+  model: mock-model
+  baseUrl: http://kagent-mock.kagent.svc.cluster.local:8080/v1
+  apiKeySecret: mock-key
+  apiKeySecretKey: key
+mcpServers:
+- name: mock-mcp-pig
+  url: http://kagent-mock.kagent.svc.cluster.local:8081/mcp
+  description: hermetic mock MCP server (no approval)
+  protocol: STREAMABLE_HTTP

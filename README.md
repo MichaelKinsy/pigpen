@@ -30,12 +30,12 @@ rules. The first port made with the workflow is
 scripted scenarios give identical traces for the original under Pi 1.0.x and the Go port
 under PiG 0.4, and 26 of 26 mutations are caught. Nothing here is a published release.
 
-**Target: PiG 0.5.3** (Pi 1.4.0; `pig --version` prints `0.5.3+1.4.0`). The pin is the published release `v0.5.3`
-(commit `526c86df885e`; `scripts/pig-requirement.json`, `PIG_COMMIT` in the workflows, re-pinned with
-`node scripts/pin-pig-release.mjs 0.5.3`), and `scripts/pig-requirement.json` makes every script and test refuse a pig of another
+**Target: PiG 0.7.0** (Pi 1.5.0; `pig --version` prints `0.7.0+1.5.0`). The pin is the published release `v0.7.0`
+(commit `beb56447c476`; `scripts/pig-requirement.json`, `PIG_COMMIT` in the workflows, re-pinned with
+`node scripts/pin-pig-release.mjs 0.7.0`), and `scripts/pig-requirement.json` makes every script and test refuse a pig of another
 minor version. Every workflow takes its Go toolchain from that commit's `.go-version` (1.27.3). Every Go module requires
-`github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3`, the version PiG's own go.mod pins (a Piglet build refuses a member that
-requires a newer one), and builds with the SDK of the pinned PiG source (`PIG_SDK_DIR` for the module tests). The SDK has tool
+`github.com/MichaelKinsy/PiG/extensions/sdk` at a version no newer than the pin (a Piglet build refuses a member that
+requires a newer one; the kagent Piglet's policy extension needs v0.7.0), and builds with the SDK of the pinned PiG source (`PIG_SDK_DIR` for the module tests). The SDK has tool
 renderers (`pi.registerToolRenderer`), so the tests that need them run (build tag `pigsdk_tool_renderer`, set automatically for an
 SDK that has them). `npm run govulncheck` scans every Go module for vulnerabilities its code can reach (CI runs it on every run).
 Where a note names PiG 0.5 behavior, it is the target; a note that names an earlier PiG says so.

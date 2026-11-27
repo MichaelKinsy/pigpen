@@ -1,0 +1,12 @@
+{{- if .Values.harness.create }}Harness/{{ include "pig.harnessName" . }} installed in {{ .Release.Namespace }}.{{ else }}Harness/{{ include "pig.harnessName" . }} is not managed by this release; the Agent runs on it.{{ end }}
+Readiness is reported on the Agent, not on the Harness:
+  kubectl get agents.api.kagent.dev {{ include "pig.name" . }} -n {{ .Release.Namespace }} -o jsonpath='{range .status.conditions[*]}{.type}={.status} {.reason}{"\n"}{end}'
+{{- if not .Values.egress.destinations }}
+
+No extra egress is granted: the Actor reaches only its model, MCP servers and telemetry endpoint.
+Tools such as git or package managers need an origin list in egress.destinations.
+{{- end }}
+{{- if not .Values.agent.create }}
+
+agent.create is false: your Agent must reference template "{{ include "pig.name" . }}" and harness "{{ include "pig.harnessName" . }}"{{ if .Values.egress.destinations }} and egressPolicyRefs "{{ include "pig.name" . }}-egress"{{ end }}.
+{{- end }}

@@ -1,0 +1,35 @@
+apiVersion: api.kagent.dev/v1alpha3
+kind: AgentTemplate
+metadata:
+  name: {{ include "pig.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pig.labels" . | nindent 4 }}
+  annotations:
+    # The image this release was built for; pig-kagent.sh compares it with an existing Harness.
+    pig.dev/harness-image: {{ .Values.image | quote }}
+spec:
+  {{- with include "pig.modelConfigName" . }}
+  modelConfig:
+    name: {{ . | quote }}
+  {{- end }}
+  description: {{ .Values.agentTemplate.description | quote }}
+  {{- if .Values.agentTemplate.systemPrompt }}
+  systemPrompt: {{ .Values.agentTemplate.systemPrompt | quote }}
+  {{- end }}
+  {{- if .Values.mcpServers }}
+  tools:
+    {{- range .Values.mcpServers }}
+    - mcp:
+        server:
+          kind: RemoteMCPServer
+          name: {{ .name | quote }}
+        {{- with .tools }}
+        tools:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- if .requireApproval }}
+        requireApproval: true
+        {{- end }}
+    {{- end }}
+  {{- end }}

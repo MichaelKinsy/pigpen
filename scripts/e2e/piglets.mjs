@@ -142,15 +142,16 @@ const games = [
  * The porting Skill (pig-extension-porter, and pig-porter, which extends it): found in the command list, then run. The
  * faux model only answers a prompt that carries `reply with exactly:`; a bare `/skill:` line fails the turn and the failure
  * echoes the whole Skill (over 500 lines) into a screen of 40 rows, so a marker inside the Skill, such as its `**L1**`
- * rule, is never on the screen. The end of the expansion always is: `</skill>` follows the complete Skill text, and the
- * faux answer to the instruction after it shows the turn completed.
+ * rule, is never on the screen. PiG 0.7 shows the expansion collapsed, as `[skill] <name> (ctrl+o to expand)`; that row, and
+ * the faux answer to the instruction after it, show the Skill was expanded and the turn completed.
  */
 const porterSkill = [{
   run: async (t) => {
     t.type('/skill:pigpen-pi-ex');
-    await t.waitFor(/→ skill:pigpen-pi-extension-port\s+Port a Pi TypeScript extension to a Go PiG extension/);
+    // PiG 0.7 puts the source tag of the Skill, `[t]`, between its name and its description.
+    await t.waitFor(/→ skill:pigpen-pi-extension-port\s+(?:\[\w+\]\s+)?Port a Pi TypeScript extension to a Go PiG extension/);
     await t.say(`tension-port ${FAUX_TURN}`);
-    await t.waitFor('</skill>');
+    await t.waitFor(/\[skill\] pigpen-pi-extension-port/);
     await t.until('the faux answer `done`', (screen) => screen.split('\n').some((line) => line.trim() === 'done'));
     assert.doesNotMatch(t.screen(), /unhandled request/, 'the Skill prompt reached the faux model as an unhandled request');
   },
@@ -224,6 +225,9 @@ export const piglets = {
       { key: ['Down', 'Enter'], expect: 'still off; nothing is sent' },
     ],
   },
+  // The Piglet fuses only the kagent policy extension, which is inert without a policy file: the shared start, faux turn and clean /quit are its scenario.
+  // What the policy does with a real policy is the extension's own Go tests, run against a fused Binary.
+  kagent: { steps: [] },
   'pig-essentials': {
     steps: [
       { say: '/tasks', expect: 'View all tasks (0)' },
@@ -243,6 +247,20 @@ export const piglets = {
     ],
   },
   'pig-porter': { steps: porterSkill },
+  'pig-rex': {
+    steps: [
+      {
+        run: async (t) => {
+          t.type('/skill:pigpen-re');
+          await t.waitFor(/→ skill:pigpen-rex\s+(?:\[\w+\]\s+)?Use the Rex terminal multiplexer CLI from PiG/);
+          t.key('Escape');
+          await t.waitGone(/Use the Rex terminal multiplexer CLI from PiG/);
+          t.key('C-u');
+          await t.waitGone(/^\/skill:pigpen-re/m);
+        },
+      },
+    ],
+  },
   'pig-tern': {
     // CI has no Tern. TERM_PROGRAM=tern and the multiplexer tmux puts between them are what the member sees in Tern's own
     // pane inside tmux, and PIG_TUI_NATIVE=0 is the user's switch: either way the member declines and PiG draws its own

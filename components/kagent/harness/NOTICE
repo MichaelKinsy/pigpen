@@ -1,0 +1,11 @@
+pig-kagent harness
+Copyright 2026 Michael Kinsy
+
+This directory (the kagent-facing adapter, the container image recipe, the Helm chart and the installer) is licensed under
+the Apache License, Version 2.0 (LICENSE). The policy extension in policy/ is licensed under the MIT License (policy/LICENSE).
+
+This is an independent work. It follows the published kagent harness contract and is not affiliated with or endorsed by the
+kagent project. kagent is built by its authors (Apache-2.0, https://github.com/kagent-dev/kagent) and the adapter imports
+kagent's published Go packages. PiG, the Go port of Pi (https://github.com/earendil-works/pi) by Mario Zechner and
+contributors, is built from source at a pinned release into the image; its licences are in /usr/share/licenses/pig.
+The image also contains Debian packages, the Go toolchain, GitHub CLI, ripgrep, fd and jq under their own licences.

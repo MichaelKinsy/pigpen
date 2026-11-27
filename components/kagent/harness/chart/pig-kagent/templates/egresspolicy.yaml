@@ -1,0 +1,12 @@
+{{- if .Values.egress.destinations }}
+apiVersion: api.kagent.dev/v1alpha3
+kind: EgressPolicy
+metadata:
+  name: {{ include "pig.name" . }}-egress
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pig.labels" . | nindent 4 }}
+spec:
+  destinations:
+    {{- toYaml .Values.egress.destinations | nindent 4 }}
+{{- end }}

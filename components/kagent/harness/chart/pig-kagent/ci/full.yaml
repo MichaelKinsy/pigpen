@@ -1,0 +1,46 @@
+fullnameOverride: pig-full
+image: registry.example.com/pig/pig-kagent@sha256:2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881
+args: []
+runtime:
+  logLevel: debug
+  tools: [read, bash, edit, write, grep, find, ls]
+  bin: /usr/local/bin/pig
+  contextWindow: 200000
+  maxTokens: 16384
+  passEnv: [GOFLAGS, GOPROXY]
+env:
+  GOFLAGS: -mod=readonly
+  GOPROXY: https://proxy.golang.org
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.observability.svc.cluster.local:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+substrate:
+  workerPoolRef: kagent-default
+  snapshotLocation: s3://ate-snapshots/pig/
+agentTemplate:
+  description: PiG coding agent for repository work
+  systemPrompt: "You are PiG."
+egress:
+  destinations:
+    - origin: https://github.com
+    - origin: https://*.githubusercontent.com
+    - origin: https://api.github.com
+      authentication:
+        header: Authorization
+        prefix: "Bearer "
+        secretKeyRef: {name: github-token, key: token}
+modelConfig:
+  create: true
+  provider: OpenAI
+  model: gpt-example
+  baseUrl: http://mock-llm.pig-proof.svc.cluster.local:8080/v1
+  apiFormat: responses
+  apiKeySecret: mock-llm-key
+  apiKeySecretKey: key
+mcpServers:
+  - name: github
+    url: https://api.githubcopilot.com/mcp/
+    description: GitHub MCP
+    requireApproval: true
+    tools: [get_issue, list_issues]
+    headersFrom:
+      - {name: Authorization, valueFrom: {type: Secret, name: github-mcp, key: Authorization}}

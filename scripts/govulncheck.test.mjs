@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { GOVULNCHECK_VERSION, allGoModules, classify, judge, moduleProblems, parseMessages } from './govulncheck.mjs';
+import { GOVULNCHECK_VERSION, acceptedProblems, allGoModules, classify, judge, loadAccepted, moduleProblems, parseMessages, staleRecords } from './govulncheck.mjs';
 import { goModules, root } from './go-modules.mjs';
 
 const script = fileURLToPath(new URL('./govulncheck.mjs', import.meta.url));
@@ -37,6 +37,59 @@ describe('govulncheck gate', () => {
     assert.equal(judge('/m', { code: 0, stdout: stream(config, osv('GO-1'), called('GO-1')), stderr: '' }).status, 'called');
     assert.equal(judge('/m', { code: 0, stdout: stream(config, osv('GO-2'), imported('GO-2')), stderr: '' }).status, 'ok');
     assert.equal(judge('/m', { code: 0, stdout: stream(config), stderr: '' }).status, 'ok');
+  });
+
+  describe('recorded exceptions', () => {
+    const ollama = (id, extra = {}) => ({ finding: { osv: id, trace: [{ module: 'github.com/ollama/ollama', version: 'v0.40.13', package: 'github.com/ollama/ollama/api', function: 'init', ...extra }] } });
+    const adapter = join(root, 'components/kagent/harness/adapter');
+    const record = { directory: 'components/kagent/harness/adapter', module: 'github.com/ollama/ollama', version: 'v0.40.13', ids: ['GO-2025-0001', 'GO-2025-0002'], reason: 'the reason is written down here in full, with the evidence', traces: ['m.main calls p.init'] };
+    const run = (dir, ...objects) => judge(dir, { code: 0, stdout: stream(config, osv('GO-2025-0001'), ...objects), stderr: '' }, [record]);
+
+    it('excuses an init-only finding of the recorded module, version, id and directory, and says so', () => {
+      const verdict = run(adapter, ollama('GO-2025-0001'));
+      assert.equal(verdict.status, 'ok');
+      assert.deepEqual(verdict.excused.map((v) => v.id), ['GO-2025-0001']);
+    });
+    it('does not excuse a call into the module, another version, another id, another module, another directory or a finding with a fix', () => {
+      assert.equal(run(adapter, ollama('GO-2025-0001'), ollama('GO-2025-0001', { function: 'Generate' })).status, 'called');
+      assert.equal(run(adapter, ollama('GO-2025-0001', { version: 'v0.40.15' })).status, 'called');
+      assert.equal(run(adapter, ollama('GO-2025-0009')).status, 'called');
+      assert.equal(run(join(root, 'components/kagent/harness'), ollama('GO-2025-0001')).status, 'called');
+      assert.equal(run(adapter, ollama('GO-2025-0001', { module: 'github.com/other/ollama' })).status, 'called');
+      const fixed = ollama('GO-2025-0001');
+      fixed.finding.fixed_version = 'v0.41.0';
+      assert.equal(run(adapter, fixed).status, 'called');
+    });
+    it('keeps the reachable findings of a module that also has an excused one', () => {
+      const verdict = run(adapter, ollama('GO-2025-0001'), called('GO-2025-0003'));
+      assert.equal(verdict.status, 'called');
+      assert.deepEqual(verdict.called.map((v) => v.id), ['GO-2025-0003']);
+      assert.deepEqual(verdict.excused.map((v) => v.id), ['GO-2025-0001']);
+    });
+    it('does not excuse an id that govulncheck reports from two modules', () => {
+      const twice = ollama('GO-2025-0001');
+      const other = ollama('GO-2025-0001', { module: 'github.com/other/ollama', package: 'github.com/other/ollama/api' });
+      assert.equal(run(adapter, twice, other).status, 'called');
+    });
+    it('reports a record the runs do not bear out, and says whether the id was reported', () => {
+      const A = 'GO-2025-0001', B = 'GO-2025-0002';
+      assert.deepEqual(staleRecords([record], [run(adapter, ollama(A), ollama(B))]), []);
+      assert.deepEqual(staleRecords([record], [run(adapter, ollama(A))]), [`${B} in ${record.directory} was not reported by this run; remove it from the record`]);
+      // The version changed: the run reports both ids, and neither is excused.
+      const moved = staleRecords([record], [run(adapter, ollama(A, { version: 'v0.40.15' }), ollama(B, { version: 'v0.40.15' }))]);
+      assert.equal(moved.length, 2);
+      assert.match(moved[0], /is reported but not excused by its record/);
+      assert.doesNotMatch(moved[0], /was not reported/);
+      // One scan excusing an id is enough, and a scan that failed says nothing, even if a stray `excused` came with it.
+      assert.deepEqual(staleRecords([record], [run(adapter, ollama(A)), run(adapter, ollama(B))]), []);
+      const failed = { directory: adapter, status: 'failed', detail: 'x', excused: [{ id: A }, { id: B }], called: [] };
+      assert.equal(staleRecords([record], [failed]).length, 2);
+    });
+    it('refuses a record that is vague, and the repository record is complete and names a module that exists', () => {
+      assert.deepEqual(acceptedProblems([record]), []);
+      assert.equal(acceptedProblems([{ ...record, version: 'latest' }, { ...record, ids: [] }, { ...record, reason: 'ok' }, { ...record, traces: [] }, { ...record, directory: 'components/nope' }]).length, 5);
+      assert.deepEqual(acceptedProblems(loadAccepted()), []);
+    });
   });
 
   it('treats a module that did not load as a failure, not as a pass', () => {
