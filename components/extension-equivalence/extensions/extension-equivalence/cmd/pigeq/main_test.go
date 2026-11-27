@@ -152,12 +152,14 @@ func TestEnvWithoutARootMakesAPrivateOne(t *testing.T) {
 
 func TestEnvRejectsAPiOfAnotherVersion(t *testing.T) {
 	bin := t.TempDir()
-	mk := func(name, out string) string {
+	mk := func(name, script string) string {
 		p := filepath.Join(bin, name)
-		_ = os.WriteFile(p, []byte("#!/bin/sh\necho '"+out+"'\n"), 0o755)
+		_ = os.WriteFile(p, []byte("#!/bin/sh\n"+script+"\n"), 0o755)
 		return p
 	}
-	code, _, errs := pigeq("env", "--root", t.TempDir(), "--pig", mk("pig", "0.3.0+0.87.1"), "--pi", mk("pi", "0.84.0"))
+	// The pig answers as PiG 0.8.0 does: `version` names the Pi it follows, `--version` prints that Pi's version alone.
+	pig := mk("pig", "if [ \"$1\" = version ]; then echo 'pig: 0.8.0'; echo 'upstream pi: 0.87.1'; exit 0; fi\necho 0.87.1")
+	code, _, errs := pigeq("env", "--root", t.TempDir(), "--pig", pig, "--pi", mk("pi", "echo 0.84.0"))
 	if code != 2 || !strings.Contains(errs, "0.87.1") {
 		t.Errorf("code %d err %q", code, errs)
 	}

@@ -1,0 +1,22 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# PiG with Rex multiplexer session context and Skill. Inert outside Rex.
+name: pig-rex
+description: "PiG for the Rex terminal multiplexer: injects session and pane context at startup and bundles the pigpen-rex Skill."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+packages:
+  rex: local:../../components/rex
+extensions:
+  - name: rex
+    origins: [package:rex]
+    tools: []
+skills:
+  - name: pigpen-rex
+    origins: [package:rex]
+# The extension adds no tools of its own, so the user's own extensions and
+# skills stay available beside it.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

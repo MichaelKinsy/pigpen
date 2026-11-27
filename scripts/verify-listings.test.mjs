@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { parsePigVersion, requirePig } from './pig-bin.mjs';
+import { PIG_VERSION_ARGS, parsePigVersion, requirePig } from './pig-bin.mjs';
 import { verifyListing } from './verify-listings.mjs';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
@@ -36,7 +36,7 @@ test('verify-listings on a fixture Package', { skip: !pig && 'set PIG_BIN', time
   const second = git(scratch, work, 'rev-parse', 'HEAD');
   git(scratch, scratch, 'clone', '-q', '--bare', work, bare);
   writeFileSync(join(scratch, 'gitconfig'), `[url "file://${bare}"]\n\tinsteadOf = ${fixtureListing.repository}.git\n[protocol "file"]\n\tallow = always\n`);
-  const [major, minor, patch] = parsePigVersion(execFileSync(pig, ['--version'], { encoding: 'utf8', env: { ...process.env, PIG_OFFLINE: '1' } }));
+  const [major, minor, patch] = parsePigVersion(execFileSync(pig, PIG_VERSION_ARGS, { encoding: 'utf8', env: { ...process.env, PIG_OFFLINE: '1' } }));
   const listing = (changes = {}) => ({ ...structuredClone(fixtureListing), commit: second, verified: { ...fixtureListing.verified, pigVersion: `${major}.${minor}.${patch}` }, ...changes });
   const verify = (changes) => verifyListing(listing(changes), { pig, extraEnv: { GIT_CONFIG_GLOBAL: join(scratch, 'gitconfig'), GIT_CONFIG_SYSTEM: '/dev/null' } });
   const failedStep = (result) => result.steps.find((step) => !step.ok);
@@ -134,7 +134,7 @@ test('verify-listings on a fixture Piglet', { skip: !(pig && process.env.PIG_SOU
   git(scratch, work, 'commit', '-q', '-m', 'one');
   git(scratch, scratch, 'clone', '-q', '--bare', work, bare);
   writeFileSync(join(scratch, 'gitconfig'), `[url "file://${bare}"]\n\tinsteadOf = ${fixtureListing.repository}.git\n[protocol "file"]\n\tallow = always\n`);
-  const [major, minor, patch] = parsePigVersion(execFileSync(pig, ['--version'], { encoding: 'utf8', env: { ...process.env, PIG_OFFLINE: '1' } }));
+  const [major, minor, patch] = parsePigVersion(execFileSync(pig, PIG_VERSION_ARGS, { encoding: 'utf8', env: { ...process.env, PIG_OFFLINE: '1' } }));
   const piglet = { ...structuredClone(fixtureListing), id: 'example-piglet', kind: 'piglet', name: 'listing-fixture-lean', subdirectory: 'piglets/lean', commit: git(scratch, work, 'rev-parse', 'HEAD'), verified: { ...fixtureListing.verified, pigVersion: `${major}.${minor}.${patch}` } };
   delete piglet.version;
   delete piglet.resources;
