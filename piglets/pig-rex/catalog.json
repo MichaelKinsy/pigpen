@@ -1,0 +1,12 @@
+{
+  "featured": false,
+  "updatedAt": "2026-11-26",
+  "languages": ["go"],
+  "notes": [
+    "Optional: the extension and Skill live in the standalone Package components/rex, which works on its own in plain PiG without this Piglet.",
+    "The rex Go extension is completely inert unless REX_BLOCK is set (non-empty) and rex is on PATH. On session_start it runs `rex whoami --autostart=false --json` once with a 2 s deadline and injects one system-prompt context line.",
+    "No tools and no status/resume hooks are registered: PiG already ships OSC 7501 program status and OSC 7577 program resume for Rex.",
+    "The pigpen-rex Skill directs the agent to run `rex skill show` rather than copying Rex's own guide, so instructions stay matched to the installed Rex version.",
+    "The manifest lists five build targets, but only linux/amd64 has been built and validated; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest only, so no platform is a support claim."
+  ]
+}
