@@ -96,14 +96,25 @@ func rejectPromptCommand() string {
 //
 // upstream: packages/coding-agent/src/exec/non-interactive-env.ts:145, tools/bash.ts:1119
 func buildCommandEnv(sessionID, sessionFile, toolCallID string, forPTY bool) []string {
+	return buildCommandEnvWithDirenv(sessionID, sessionFile, toolCallID, forPTY, nil)
+}
+
+func buildCommandEnvWithDirenv(sessionID, sessionFile, toolCallID string, forPTY bool, direnvDiff *DirenvExportDiff) []string {
 	base := os.Environ()
-	envMap := make(map[string]string, len(base)+len(nonInteractiveEnv)+16)
-	order := make([]string, 0, len(base)+len(nonInteractiveEnv)+16)
+	extraCap := len(nonInteractiveEnv) + 16
+	if direnvDiff != nil {
+		extraCap += len(direnvDiff.Set)
+	}
+	envMap := make(map[string]string, len(base)+extraCap)
+	order := make([]string, 0, len(base)+extraCap)
 	set := func(k, v string) {
 		if _, exists := envMap[k]; !exists {
 			order = append(order, k)
 		}
 		envMap[k] = v
+	}
+	unset := func(k string) {
+		delete(envMap, k)
 	}
 	for _, kv := range base {
 		k, v, ok := strings.Cut(kv, "=")
@@ -152,6 +163,16 @@ func buildCommandEnv(sessionID, sessionFile, toolCallID string, forPTY bool) []s
 		}
 	}
 
+	// Apply direnv export diff (set/unset) before session identity so session IDs still win.
+	if direnvDiff != nil {
+		for _, k := range direnvDiff.Unset {
+			unset(k)
+		}
+		for k, v := range direnvDiff.Set {
+			set(k, v)
+		}
+	}
+
 	// Session identity always wins over inherited values (even when empty).
 	set("PI_SESSION_ID", sessionID)
 	set("PI_SESSION_FILE", sessionFile)
@@ -159,7 +180,11 @@ func buildCommandEnv(sessionID, sessionFile, toolCallID string, forPTY bool) []s
 
 	out := make([]string, 0, len(order))
 	for _, k := range order {
-		out = append(out, k+"="+envMap[k])
+		v, ok := envMap[k]
+		if !ok {
+			continue
+		}
+		out = append(out, k+"="+v)
 	}
 	return out
 }

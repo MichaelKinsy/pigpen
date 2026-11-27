@@ -58,9 +58,9 @@ Upstream: `packages/tui/src/tools/read.ts:790-873`, `fetch.ts:153-218`, `proc-re
   - On error: `omp.tool.error` (`*kit.Text`).
   - On success: `omp.tool.cfg.listing` (`*kit.Lines`): raw YAML settings listing.
 
-### `write` (file, figure, `agent://`, `proc://`, `cfg://`)
+### `write` (file, figure, `out://`, `agent://`, `proc://`, `cfg://`)
 
-Upstream: `packages/tui/src/tools/write.ts:117-154, 751-807`, `proc-render.ts:360-450`, `cfg-render.ts:107-143`.
+Upstream: `packages/tui/src/tools/write.ts:117-154, 751-807`, `packages/tui/src/chat/reply-write.ts:82-127`, `proc-render.ts:360-450`, `cfg-render.ts:107-143`.
 
 - **File write CallView (`omp.tool.write.call`, `*kit.Container`)**
   - `omp.tool.write.figure` (`*kit.Markdown`, optional, `write.ts:142-146`): fenced `svg`/`mermaid`/`obj`/`ply`/`wrl`/`vrml`/`x3dv`/`stl`/`gltf`/`usda`/`usd` block (mermaid omitted until `argsComplete`).
@@ -88,6 +88,9 @@ Upstream: `packages/tui/src/tools/write.ts:117-154, 751-807`, `proc-render.ts:36
   - On error: `omp.tool.error` (`*kit.Text`).
   - `omp.tool.cfg.change` (`*kit.Text`): `<previous> → <value>` (or `→ <value>` while pending).
   - `omp.tool.notice` (`*kit.Text`, optional when `details.cfg.effective` is set): `still <effective>: a higher-precedence layer overrides the saved value`.
+- **`out://` mid-turn reply write (`omp.assistant`, `*kit.Container`, `chat/reply-write.ts:82-127`)**
+  - `omp.assistant.md` (`*kit.Markdown`, when content non-empty): raw Markdown reply prose.
+  - `omp.tool.error` (`*kit.Text`, optional on error): refusal/error text appended beneath any prose.
 
 ### `edit` / `apply_patch`
 

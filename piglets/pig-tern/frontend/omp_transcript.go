@@ -867,3 +867,347 @@ func (s *session) ompWelcomeNode(id string, lines []string) tern.WireNode {
 		},
 	}
 }
+
+// ompReadGroupMinRun is the minimum number of consecutive compact filesystem
+// `omp.tool.read` cards coalesced into a grouped ReadToolGroupComponent node
+// (`Read <N> files` with `row[omp.tool.file]` children). Runs of 1 or 2 remain
+// individual inline `omp.tool.read` nodes so single-read and paired-read flows
+// keep their exact standalone shape.
+// upstream: packages/tui/src/chat/read-tool-group.ts:800-916
+const ompReadGroupMinRun = 3
+
+// isOmpCompactFilesystemRead reports whether node is a compact filesystem
+// `read` tool card eligible for ReadToolGroupComponent coalescing:
+//   - ToolCard with Name == "read", no Diff, no Images
+//   - filesystem/non-internal-URL target (matches readArgsCollapseIntoGroup)
+//   - no non-empty ResultView body (empty `omp.tool.read` container is fine)
+func (s *session) isOmpCompactFilesystemRead(node fe.Node) (fe.ToolCard, bool) {
+	tool, ok := node.(fe.ToolCard)
+	if !ok || tool.Name != "read" || tool.Diff != nil || len(tool.Images) > 0 {
+		return fe.ToolCard{}, false
+	}
+	raw := strings.TrimSpace(firstStringArg(tool.Arguments, "path", "file_path"))
+	if raw == "" || strings.Contains(raw, "://") {
+		return fe.ToolCard{}, false
+	}
+	hasView := validView(tool.ResultView, tool.Result) && len(tool.Result) > 0
+	emptyReadView := tool.ResultView != nil &&
+		tool.ResultView.Root.ID == "omp.tool.read" && len(tool.ResultView.Root.Children) == 0
+	if hasView && !emptyReadView {
+		return fe.ToolCard{}, false
+	}
+	return tool, true
+}
+
+// ompReadStatusRank mirrors READ_STATUS_RANK in read-tool-group.ts:219-224.
+func ompReadStatusRank(st fe.ToolStatus) int {
+	switch st {
+	case fe.ToolError:
+		return 3
+	case fe.ToolCancelled:
+		return 2
+	case fe.ToolPending, fe.ToolRunning:
+		return 1
+	default:
+		return 0
+	}
+}
+
+func ompReadGroupStatus(tools []fe.ToolCard) string {
+	rank := 0
+	for _, t := range tools {
+		if r := ompReadStatusRank(t.Status); r > rank {
+			rank = r
+		}
+	}
+	switch rank {
+	case 3:
+		return "error"
+	case 2:
+		return "cancelled"
+	case 1:
+		return "running"
+	default:
+		return "done"
+	}
+}
+
+func ompReadErrorText(tool fe.ToolCard) string {
+	raw := tool.Output
+	if raw == "" {
+		resultLines, _ := stripOmpHeadResultLines(tool.ResultView, tool.Result)
+		if rendered := linesText(resultLines); !blank(rendered) {
+			raw = rendered
+		}
+	}
+	full := strings.TrimSpace(stripANSI(raw))
+	full = strings.TrimPrefix(full, "Error: ")
+	if full == "" {
+		return "Read failed"
+	}
+	return full
+}
+
+// ompReadGroupNode builds omp's grouped `tool[omp.tool.read]` node for a run of
+// consecutive compact filesystem reads (`target: "<N> files"`, `targetKind: "text"`,
+// `frame: "inline"`, `collapsible: false`, with one `row[omp.tool.file]` child per
+// read entry; upstream: packages/tui/src/chat/read-tool-group.ts:826-906).
+func (s *session) ompReadGroupNode(leaderID string, tools []fe.ToolCard) tern.WireNode {
+	status := ompReadGroupStatus(tools)
+	props := map[string]any{
+		"role":        "omp.tool.read",
+		"name":        "read",
+		"title":       "Read",
+		"target":      fmt.Sprintf("%d files", len(tools)),
+		"targetKind":  "text",
+		"status":      status,
+		"frame":       "inline",
+		"collapsible": false,
+	}
+	if status == "error" {
+		props["tone"] = "error"
+	}
+	rows := make([]tern.WireNode, 0, len(tools))
+	for i, tool := range tools {
+		rowID := fmt.Sprintf("%s.r%d", leaderID, i)
+		rows = append(rows, s.ompReadGroupFileRow(rowID, tool))
+	}
+	return tern.WireNode{
+		ID: leaderID,
+		K:  tern.KindTool,
+		P:  props,
+		C:  rows,
+	}
+}
+
+// ompReadGroupFileRow mirrors ReadToolGroupComponent.#nativeFileRow + fileRow
+// (packages/tui/src/chat/read-tool-group.ts:884-906, tools/native-view.ts:73-105).
+func (s *session) ompReadGroupFileRow(rowID string, tool fe.ToolCard) tern.WireNode {
+	raw := strings.TrimSpace(firstStringArg(tool.Arguments, "path", "file_path"))
+	base, sel := splitOmpReadPath(raw)
+	if sel == "" {
+		if rangeStr := formatOffsetLimit(tool.Arguments); rangeStr != "" && base != "" {
+			sel = rangeStr
+		}
+	}
+	displayBase := base
+	if displayBase == "" {
+		displayBase = raw
+	}
+	var tone string
+	switch tool.Status {
+	case fe.ToolError:
+		tone = "error"
+	case fe.ToolPending, fe.ToolRunning:
+		tone = "pending"
+	}
+	iconName := "file"
+	if strings.HasSuffix(displayBase, "/") {
+		iconName = "folder"
+	}
+	if tool.Status == fe.ToolError {
+		iconName = "x-circle"
+	}
+	iconProps := map[string]any{"name": iconName}
+	if tone != "" {
+		iconProps["tone"] = tone
+	}
+	href := ""
+	if tool.Status != fe.ToolError && base != "" {
+		href = s.ompFileHref(base)
+	}
+	spans := ompFileRowSpans(displayBase, href)
+	if sel != "" {
+		spans = append(spans, map[string]any{"t": ":" + sel, "s": "muted"})
+	}
+	title := displayBase
+	var errFirst string
+	if tool.Status == fe.ToolError {
+		fullErr := ompReadErrorText(tool)
+		title = fullErr
+		errFirst, _, _ = strings.Cut(fullErr, "\n")
+		errFirst = strings.TrimSpace(errFirst)
+	}
+	children := []tern.WireNode{
+		{ID: rowID + ".icon", K: tern.KindIcon, P: iconProps},
+		{
+			ID: rowID + ".path",
+			K:  tern.KindText,
+			P: map[string]any{
+				"lines":    1,
+				"truncate": "middle",
+				"shrink":   1,
+				"title":    title,
+				"spans":    spans,
+			},
+		},
+	}
+	if errFirst != "" {
+		children = append(children, tern.WireNode{
+			ID: rowID + ".detail",
+			K:  tern.KindText,
+			P: map[string]any{
+				"lines":    1,
+				"truncate": "end",
+				"shrink":   1,
+				"spans":    []any{map[string]any{"t": "— " + errFirst, "s": "error"}},
+			},
+		})
+	}
+	rowProps := map[string]any{"role": "omp.tool.file"}
+	if tone != "" {
+		rowProps["tone"] = tone
+	}
+	return tern.WireNode{
+		ID: rowID,
+		K:  tern.KindRow,
+		P:  rowProps,
+		C:  children,
+	}
+}
+
+// syncOmpReadGroups reconciles all runs of >= ompReadGroupMinRun consecutive
+// compact filesystem `omp.tool.read` entries in s.order. When a run reaches
+// ompReadGroupMinRun, the first live entry hosts the grouped `tool[omp.tool.read]`
+// node (`target: "<N> files"`) and trailing run members are collapsed to hidden
+// placeholders so every PiG node keeps a stable TSP ID in `main`. If a run
+// shrinks below ompReadGroupMinRun, each surviving entry is restored to its
+// standalone inline `omp.tool.read` node.
+func (s *session) syncOmpReadGroups() {
+	if !s.ompRoles || len(s.order) == 0 {
+		return
+	}
+	type readRun struct {
+		leaderIdx int
+		indices   []int
+		entries   []*mainEntry
+		tools     []fe.ToolCard
+	}
+
+	// Identify all consecutive runs of live compact filesystem read cards.
+	var runs []readRun
+	for i := 0; i < len(s.order); {
+		pigID := strings.TrimPrefix(s.order[i], "n.")
+		e := s.sent[pigID]
+		if e == nil || e.gone {
+			i++
+			continue
+		}
+		tool, ok := s.isOmpCompactFilesystemRead(e.node)
+		if !ok {
+			i++
+			continue
+		}
+		run := readRun{
+			leaderIdx: i,
+			indices:   []int{i},
+			entries:   []*mainEntry{e},
+			tools:     []fe.ToolCard{tool},
+		}
+		j := i + 1
+		for j < len(s.order) {
+			npig := strings.TrimPrefix(s.order[j], "n.")
+			ne := s.sent[npig]
+			if ne == nil || ne.gone {
+				break
+			}
+			ntool, nok := s.isOmpCompactFilesystemRead(ne.node)
+			if !nok {
+				break
+			}
+			run.indices = append(run.indices, j)
+			run.entries = append(run.entries, ne)
+			run.tools = append(run.tools, ntool)
+			j++
+		}
+		if len(run.entries) >= ompReadGroupMinRun {
+			runs = append(runs, run)
+		}
+		i = j
+	}
+
+	desiredHost := make(map[string]string, len(runs)*3)
+	runByLeader := make(map[string]readRun, len(runs))
+	for _, run := range runs {
+		leaderID := run.entries[0].id
+		runByLeader[leaderID] = run
+		for _, member := range run.entries {
+			desiredHost[member.id] = leaderID
+		}
+	}
+
+	// 1. Restore any entry that was previously in a group but is no longer
+	//    grouped (e.g. a run shrank below ompReadGroupMinRun after Remove or split).
+	for idx, tspID := range s.order {
+		e := s.sent[strings.TrimPrefix(tspID, "n.")]
+		if e == nil || e.gone || e.readGroupHostID == "" {
+			continue
+		}
+		if desiredHost[e.id] == "" {
+			e.readGroupHostID = ""
+			e.readGroupMembers = nil
+			e.readGroupLastWire = nil
+			e.settled = false
+			before := s.liveFrom(idx + 1)
+			s.queue(tern.OpDel(e.id), tern.OpAdd("main", before, s.mainNodeFor(e, e.node)))
+			s.settle(e, idx)
+		}
+	}
+
+	// 2. Apply each active group run: update leader with grouped node and hide followers.
+	for _, run := range runs {
+		leader := run.entries[0]
+		wire := s.ompReadGroupNode(leader.id, run.tools)
+		memberIDs := make([]string, len(run.entries))
+		for k, m := range run.entries {
+			memberIDs[k] = m.id
+		}
+		if leader.readGroupHostID == leader.id && leader.readGroupLastWire != nil {
+			if ops, ok := patchNode(*leader.readGroupLastWire, wire); ok {
+				if len(ops) > 0 {
+					s.queue(ops...)
+					leader.settled = false
+				}
+			} else {
+				before := s.liveFrom(run.leaderIdx + 1)
+				s.queue(tern.OpDel(leader.id), tern.OpAdd("main", before, wire))
+				leader.settled = false
+			}
+		} else {
+			before := s.liveFrom(run.leaderIdx + 1)
+			s.queue(tern.OpDel(leader.id), tern.OpAdd("main", before, wire))
+			leader.settled = false
+		}
+		wireCopy := wire
+		leader.readGroupHostID = leader.id
+		leader.readGroupMembers = memberIDs
+		leader.readGroupLastWire = &wireCopy
+		allFinal := true
+		for _, m := range run.entries {
+			if !final(m.node, false) {
+				allFinal = false
+				break
+			}
+		}
+		if allFinal && !leader.settled {
+			leader.settled = true
+			s.queue(tern.OpSettle(leader.id))
+		}
+
+		for k := 1; k < len(run.entries); k++ {
+			follower := run.entries[k]
+			fIdx := run.indices[k]
+			if follower.readGroupHostID == leader.id {
+				continue
+			}
+			follower.readGroupHostID = leader.id
+			follower.readGroupMembers = nil
+			follower.readGroupLastWire = nil
+			follower.settled = false
+			before := s.liveFrom(fIdx + 1)
+			hidden := tern.WireNode{ID: follower.id, K: tern.KindSpacer, P: map[string]any{"hidden": true}}
+			s.queue(tern.OpDel(follower.id), tern.OpAdd("main", before, hidden), tern.OpSettle(follower.id))
+			follower.settled = true
+		}
+	}
+}

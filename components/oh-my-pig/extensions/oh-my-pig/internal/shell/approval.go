@@ -442,24 +442,556 @@ func findApprovalPatternRule(command string, rules []BashApprovalPatternRule, al
 	return nil
 }
 
+// literalShellCommandSegment mirrors omp's LiteralShellCommandSegment (`tools/shell-tokenize.ts:112`).
+type literalShellCommandSegment struct {
+	text string
+	argv []string
+}
+
+// andChainSegment mirrors omp's AndChainSegment (`tools/shell-tokenize.ts:120`).
+type andChainSegment struct {
+	text              string
+	literal           *literalShellCommandSegment
+	mutatesShellState bool
+}
+
+// shellStatefulCommands ports omp's SHELL_STATEFUL_COMMANDS (`tools/shell-tokenize.ts:128-224`).
+var shellStatefulCommands = map[string]bool{
+	"!": true, ":": true, ".": true, "test": true, "[": true, "[[": true,
+	"-": true, "autoload": true, "bindkey": true, "bye": true, "chdir": true,
+	"disable": true, "emulate": true, "functions": true, "limit": true,
+	"print": true, "rehash": true, "repeat": true, "sched": true, "setopt": true,
+	"unfunction": true, "unhash": true, "unlimit": true, "unsetopt": true,
+	"vared": true, "zle": true, "zmodload": true, "zparseopts": true, "zstyle": true,
+	"alias": true, "bg": true, "break": true, "builtin": true, "case": true,
+	"cd": true, "command": true, "coproc": true, "continue": true, "declare": true,
+	"dirs": true, "disown": true, "do": true, "done": true, "elif": true,
+	"else": true, "enable": true, "esac": true, "eval": true, "exec": true,
+	"exit": true, "export": true, "fc": true, "fg": true, "fi": true,
+	"for": true, "function": true, "getopts": true, "hash": true, "history": true,
+	"if": true, "in": true, "jobs": true, "let": true, "logout": true,
+	"mapfile": true, "local": true, "popd": true, "printf": true, "pushd": true,
+	"readonly": true, "read": true, "readarray": true, "return": true, "select": true,
+	"set": true, "shift": true, "shopt": true, "source": true, "suspend": true,
+	"then": true, "time": true, "times": true, "trap": true, "typeset": true,
+	"ulimit": true, "umask": true, "unalias": true, "unset": true, "until": true,
+	"wait": true, "while": true,
+}
+
+// shellInterpreterCommands ports omp's SHELL_INTERPRETER_COMMANDS (`tools/shell-tokenize.ts:226-241`).
+var shellInterpreterCommands = map[string]bool{
+	"ash": true, "bash": true, "busybox": true, "csh": true, "dash": true,
+	"env": true, "nocorrect": true, "noglob": true, "fish": true, "ksh": true,
+	"sh": true, "sudo": true, "tcsh": true, "zsh": true,
+}
+
+var (
+	shellAssignmentRE        = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*(?:\[[^\]]*\])?\+?=`)
+	shellAssignmentNameRE    = regexp.MustCompile(`^([A-Za-z_][A-Za-z0-9_]*)\+?=`)
+	shellReinterpretOptionRE = regexp.MustCompile(`^(?:-[^-]*[ce]|--(?:command|eval)(?:=.*)?)$`)
+	shellRedirWordRE         = regexp.MustCompile(`^[0-9]*[<>]+$`)
+	shellRedirPrefixRE       = regexp.MustCompile(`^[0-9]*[<>]`)
+)
+
+func hasApprovalShellControlChar(text string) bool {
+	for i := range len(text) {
+		if isApprovalShellControlChar(text[i]) {
+			return true
+		}
+	}
+	return false
+}
+
+// extractLiteralAndChainSegments ports omp's `extractLiteralAndChainSegments`
+// (`tools/shell-tokenize.ts:346-480`): parses two or more literal argv commands
+// joined solely by `&&`, rejecting expansions, globs, redirections, comments,
+// standalone/subscripted assignments, control flow, shell interpreters, and
+// stateful shell builtins.
+func extractLiteralAndChainSegments(command string) []literalShellCommandSegment {
+	for i := range len(command) {
+		c := command[i]
+		if (c < 0x20 && c != '\t') || c == 0x7f {
+			return nil
+		}
+	}
+	var segments []literalShellCommandSegment
+	var argv []string
+	var rawTokens []string
+	var token strings.Builder
+	tokenStart := -1
+	var quote byte
+	segmentStart := 0
+
+	startToken := func(index int) {
+		if tokenStart < 0 {
+			tokenStart = index
+		}
+	}
+	pushToken := func(end int) {
+		if tokenStart < 0 {
+			return
+		}
+		argv = append(argv, token.String())
+		rawTokens = append(rawTokens, command[tokenStart:end])
+		token.Reset()
+		tokenStart = -1
+	}
+	pushSegment := func(end int) bool {
+		pushToken(end)
+		if len(argv) == 0 {
+			return false
+		}
+		cmdIdx := 0
+		for cmdIdx < len(rawTokens) && shellAssignmentNameRE.MatchString(rawTokens[cmdIdx]) {
+			cmdIdx++
+		}
+		if cmdIdx >= len(argv) {
+			return false
+		}
+		executable := argv[cmdIdx]
+		if executable == "" {
+			return false
+		}
+		slashIdx := max(strings.LastIndexByte(executable, '/'), strings.LastIndexByte(executable, '\\'))
+		cmdName := executable[slashIdx+1:]
+		cmdArgs := argv[cmdIdx+1:]
+		for _, arg := range argv[cmdIdx:] {
+			if shellAssignmentRE.MatchString(arg) {
+				return false
+			}
+		}
+		hasReinterpretOpt := false
+		hasControlArg := false
+		for _, arg := range cmdArgs {
+			if shellReinterpretOptionRE.MatchString(arg) {
+				hasReinterpretOpt = true
+			}
+			if hasApprovalShellControlChar(arg) {
+				hasControlArg = true
+			}
+		}
+		if (hasReinterpretOpt && hasControlArg) || shellStatefulCommands[cmdName] || shellInterpreterCommands[cmdName] {
+			return false
+		}
+		segments = append(segments, literalShellCommandSegment{
+			text: strings.TrimSpace(command[segmentStart:end]),
+			argv: argv,
+		})
+		argv = nil
+		rawTokens = nil
+		return true
+	}
+
+	for i := 0; i < len(command); i++ {
+		ch := command[i]
+		if quote == '\'' {
+			if ch == '\'' {
+				quote = 0
+			} else {
+				token.WriteByte(ch)
+			}
+			continue
+		}
+		if quote == '"' {
+			if ch == '"' {
+				quote = 0
+				continue
+			}
+			if ch == '$' || ch == '`' || ch == '\n' || ch == '\r' {
+				return nil
+			}
+			if ch == '\\' {
+				if i+1 >= len(command) {
+					return nil
+				}
+				next := command[i+1]
+				if next == '\n' || next == '\r' {
+					return nil
+				}
+				if next == '"' || next == '\\' || next == '$' || next == '`' {
+					token.WriteByte(next)
+					i++
+				} else {
+					token.WriteByte(ch)
+				}
+				continue
+			}
+			token.WriteByte(ch)
+			continue
+		}
+		if ch == '\'' || ch == '"' {
+			quote = ch
+			startToken(i)
+			continue
+		}
+		if ch == '\\' {
+			if i+1 >= len(command) {
+				return nil
+			}
+			next := command[i+1]
+			if next == '\n' || next == '\r' {
+				return nil
+			}
+			startToken(i)
+			token.WriteByte(next)
+			i++
+			continue
+		}
+		if ch == ' ' || ch == '\t' {
+			pushToken(i)
+			continue
+		}
+		if ch == '&' && i+1 < len(command) && command[i+1] == '&' {
+			if !pushSegment(i) {
+				return nil
+			}
+			i++
+			segmentStart = i + 1
+			continue
+		}
+		switch ch {
+		case '\n', '\r', '&', '|', ';', '<', '>', '`', '$', '(', ')', '*', '?', '[', ']', '{', '}', '~':
+			return nil
+		case '#':
+			if tokenStart < 0 {
+				return nil
+			}
+		}
+		if ch < 0x20 || ch == 0x7f {
+			return nil
+		}
+		startToken(i)
+		token.WriteByte(ch)
+	}
+
+	if quote != 0 || !pushSegment(len(command)) || len(segments) < 2 {
+		return nil
+	}
+	return segments
+}
+
+func parseLiteralShellCommandSegment(segmentText string) *literalShellCommandSegment {
+	pair := extractLiteralAndChainSegments(segmentText + " && true")
+	if len(pair) == 0 {
+		return nil
+	}
+	seg := pair[0]
+	return &seg
+}
+
+func segmentMutatesShellState(segmentText string, literal *literalShellCommandSegment) bool {
+	if literal != nil {
+		return false
+	}
+	if strings.ContainsAny(segmentText, "$`(){}[]\n\r") {
+		return true
+	}
+	segments := tokenizeShellSegments(segmentText)
+	if len(segments) == 0 {
+		return true
+	}
+	for _, words := range segments {
+		idx := 0
+		for idx < len(words) {
+			w := words[idx]
+			if shellAssignmentRE.MatchString(w) {
+				if strings.ContainsRune(w, '[') {
+					return true
+				}
+				idx++
+			} else if shellRedirWordRE.MatchString(w) {
+				idx += 2
+			} else if shellRedirPrefixRE.MatchString(w) {
+				idx++
+			} else {
+				break
+			}
+		}
+		if idx >= len(words) {
+			return true
+		}
+		executable := words[idx]
+		slashIdx := max(strings.LastIndexByte(executable, '/'), strings.LastIndexByte(executable, '\\'))
+		cmdName := executable[slashIdx+1:]
+		cmdArgs := words[idx+1:]
+		hasReinterpretOpt := false
+		hasControlArg := false
+		for _, arg := range cmdArgs {
+			if shellReinterpretOptionRE.MatchString(arg) {
+				hasReinterpretOpt = true
+			}
+			if hasApprovalShellControlChar(arg) {
+				hasControlArg = true
+			}
+		}
+		if shellStatefulCommands[cmdName] || shellInterpreterCommands[cmdName] || (hasReinterpretOpt && hasControlArg) {
+			return true
+		}
+	}
+	return false
+}
+
+// extractAndChainSegments ports omp's `extractAndChainSegments`
+// (`tools/shell-tokenize.ts:534-679`) for compound approval detail formatting.
+func extractAndChainSegments(command string) []andChainSegment {
+	for i := range len(command) {
+		c := command[i]
+		if (c < 0x20 && c != '\t') || c == 0x7f {
+			return nil
+		}
+	}
+	var rawSegments []string
+	var quote byte
+	parenDepth := 0
+	inBacktick := false
+	inDoubleBracket := false
+	braceDepth := 0
+	atWordStart := true
+	segmentStart := 0
+
+	for i := 0; i < len(command); i++ {
+		ch := command[i]
+		if quote == '\'' {
+			if ch == '\'' {
+				quote = 0
+			}
+			continue
+		}
+		if quote == '"' {
+			if ch == '\\' {
+				if i+1 >= len(command) {
+					return nil
+				}
+				i++
+				continue
+			}
+			if ch == '"' {
+				quote = 0
+			}
+			continue
+		}
+		if ch == '\\' {
+			if i+1 >= len(command) {
+				return nil
+			}
+			i++
+			atWordStart = false
+			continue
+		}
+		if ch == '`' {
+			inBacktick = !inBacktick
+			atWordStart = false
+			continue
+		}
+		if inBacktick {
+			continue
+		}
+		if ch == '\'' || ch == '"' {
+			quote = ch
+			atWordStart = false
+			continue
+		}
+		if ch == '#' && atWordStart {
+			break
+		}
+		if !inDoubleBracket && atWordStart && ch == '[' && i+2 < len(command) && command[i+1] == '[' && (command[i+2] == ' ' || command[i+2] == '\t') {
+			inDoubleBracket = true
+			i++
+			atWordStart = false
+			continue
+		}
+		if inDoubleBracket && atWordStart && ch == ']' && i+1 < len(command) && command[i+1] == ']' {
+			var after byte
+			if i+2 < len(command) {
+				after = command[i+2]
+			}
+			if after == 0 || after == ' ' || after == '\t' || after == ';' || after == '&' || after == '|' || after == ')' {
+				inDoubleBracket = false
+				i++
+				atWordStart = false
+				continue
+			}
+		}
+		if ch == '$' && i+1 < len(command) && command[i+1] == '{' {
+			braceDepth++
+			i++
+			atWordStart = false
+			continue
+		}
+		if ch == '{' && atWordStart && i+1 < len(command) && (command[i+1] == ' ' || command[i+1] == '\t') {
+			braceDepth++
+			continue
+		}
+		if ch == '}' && braceDepth > 0 {
+			braceDepth--
+			atWordStart = false
+			continue
+		}
+		if ch == '(' {
+			parenDepth++
+			atWordStart = true
+			continue
+		}
+		if ch == ')' {
+			if parenDepth == 0 {
+				return nil
+			}
+			parenDepth--
+			atWordStart = false
+			continue
+		}
+		if parenDepth > 0 || inDoubleBracket || braceDepth > 0 {
+			atWordStart = ch == ' ' || ch == '\t' || ch == '&' || ch == '|' || ch == '(' || ch == ')'
+			continue
+		}
+		if ch == ';' {
+			return nil
+		}
+		if ch == '|' && i+1 < len(command) && command[i+1] == '|' {
+			return nil
+		}
+		if ch == '&' {
+			var prev, next byte
+			if i > 0 {
+				prev = command[i-1]
+			}
+			if i+1 < len(command) {
+				next = command[i+1]
+			}
+			if prev == '>' || prev == '<' || next == '>' {
+				atWordStart = false
+				continue
+			}
+			if next == '&' && (i+2 >= len(command) || command[i+2] != '&') {
+				seg := strings.TrimSpace(command[segmentStart:i])
+				if seg == "" {
+					return nil
+				}
+				rawSegments = append(rawSegments, seg)
+				i++
+				segmentStart = i + 1
+				atWordStart = true
+				continue
+			}
+			return nil
+		}
+		atWordStart = ch == ' ' || ch == '\t'
+	}
+
+	if quote != 0 || inBacktick || parenDepth != 0 || inDoubleBracket || braceDepth != 0 {
+		return nil
+	}
+	tail := strings.TrimSpace(command[segmentStart:])
+	if tail == "" {
+		return nil
+	}
+	rawSegments = append(rawSegments, tail)
+	if len(rawSegments) < 2 {
+		return nil
+	}
+	out := make([]andChainSegment, len(rawSegments))
+	for i, text := range rawSegments {
+		lit := parseLiteralShellCommandSegment(text)
+		out[i] = andChainSegment{
+			text:              text,
+			literal:           lit,
+			mutatesShellState: segmentMutatesShellState(text, lit),
+		}
+	}
+	return out
+}
+
+func commandSegmentMatchesApprovalPattern(command, pattern string) bool {
+	if commandMatchesApprovalPattern(command, pattern) {
+		return true
+	}
+	for _, seg := range bashCommandSegments(command) {
+		if commandMatchesApprovalPattern(seg, pattern) {
+			return true
+		}
+	}
+	return false
+}
+
+type bashPatternDecision struct {
+	kind string // "deny" | "prompt" | "allow" | "unmatched"
+	rule *BashApprovalPatternRule
+}
+
+// resolveBashPatternDecision ports omp's `resolveBashPatternDecision` (`tools/bash.ts:417-450`).
+func resolveBashPatternDecision(
+	command string,
+	compoundSegments []literalShellCommandSegment,
+	patternRules []BashApprovalPatternRule,
+	allowedEnv []string,
+) bashPatternDecision {
+	if len(compoundSegments) > 0 {
+		var promptRule *BashApprovalPatternRule
+		for i := range patternRules {
+			rule := &patternRules[i]
+			if rule.Approval == "allow" {
+				continue
+			}
+			if commandMatchesApprovalPattern(command, rule.Match) {
+				matchedSeg := false
+				for _, seg := range compoundSegments {
+					if commandSegmentMatchesApprovalPattern(seg.text, rule.Match) {
+						matchedSeg = true
+						break
+					}
+				}
+				if !matchedSeg {
+					if rule.Approval == "deny" {
+						return bashPatternDecision{kind: "deny", rule: rule}
+					}
+					if promptRule == nil {
+						promptRule = rule
+					}
+				}
+			}
+		}
+		hasUnmatchedSegment := false
+		for _, seg := range compoundSegments {
+			segRule := findApprovalPatternRule(seg.text, patternRules, allowedEnv)
+			if segRule != nil && segRule.Approval == "deny" {
+				return bashPatternDecision{kind: "deny", rule: segRule}
+			}
+			if segRule != nil && segRule.Approval == "prompt" && promptRule == nil {
+				promptRule = segRule
+			}
+			if segRule == nil {
+				hasUnmatchedSegment = true
+			}
+		}
+		if promptRule != nil {
+			return bashPatternDecision{kind: "prompt", rule: promptRule}
+		}
+		if hasUnmatchedSegment {
+			return bashPatternDecision{kind: "unmatched"}
+		}
+		return bashPatternDecision{kind: "allow"}
+	}
+
+	rule := findApprovalPatternRule(command, patternRules, allowedEnv)
+	if rule != nil {
+		switch rule.Approval {
+		case "deny":
+			return bashPatternDecision{kind: "deny", rule: rule}
+		case "prompt":
+			return bashPatternDecision{kind: "prompt", rule: rule}
+		case "allow":
+			return bashPatternDecision{kind: "allow", rule: rule}
+		}
+	}
+	return bashPatternDecision{kind: "unmatched"}
+}
+
 // evaluateBashApproval mirrors BashTool.approval (tools/bash.ts:834-894) for a single view.
 func evaluateBashApproval(command string, rules []BashApprovalPatternRule, allowedEnv []string) approvalVerdict {
 	return evaluateBashApprovalViews(command, rules, allowedEnv, rules, allowedEnv)
 }
 
-// evaluateBashApprovalViews evaluates two-view bash pattern policy:
-//   - authority view (operator layers only): authorityRules + authorityAllowedEnv
-//   - session view (including project layers): sessionRules + sessionAllowedEnv
-//
-// Integrator binding two-view rule: never looser than omp, and a project layer
-// can never loosen what operator layers alone would decide:
-//   - deny from either view wins (authority checked first)
-//   - prompt from either view wins next (authority checked first)
-//   - critical bash patterns still override
-//   - allow counts ONLY when BOTH the authority view AND the session view allow
-//     (so operator `allow npm test*` + `allowedEnvVars: [CI]` with project
-//     `allowedEnvVars: [LD_PRELOAD]` prompts on `CI=1 npm test` as omp does,
-//     and project-only `allow` never loosens operator policy).
+// evaluateBashApprovalViews evaluates two-view bash pattern policy without compound splitting.
 func evaluateBashApprovalViews(
 	command string,
 	authorityRules []BashApprovalPatternRule,
@@ -467,25 +999,58 @@ func evaluateBashApprovalViews(
 	sessionRules []BashApprovalPatternRule,
 	sessionAllowedEnv []string,
 ) approvalVerdict {
-	sessionRule := findApprovalPatternRule(command, sessionRules, sessionAllowedEnv)
-	authorityRule := findApprovalPatternRule(command, authorityRules, authorityAllowedEnv)
+	return evaluateBashApprovalViewsWithCompound(command, false, authorityRules, authorityAllowedEnv, sessionRules, sessionAllowedEnv)
+}
 
-	if authorityRule != nil && authorityRule.Approval == "deny" {
-		return approvalVerdict{Kind: "deny", Reason: fmt.Sprintf("Blocked by bash pattern: %s", authorityRule.Match)}
+// evaluateBashApprovalViewsWithCompound evaluates two-view bash pattern policy:
+//   - authority view (operator layers only): authorityRules + authorityAllowedEnv
+//   - session view (including project layers): sessionRules + sessionAllowedEnv
+//   - allowCompound: when true, splits literal `&&` chains per segment (`tools/bash.ts:847-893`).
+//
+// Integrator binding two-view rule: never looser than omp, and a project layer
+// can never loosen what operator layers alone would decide:
+//   - deny from either view wins (authority checked first)
+//   - prompt from either view wins next (authority checked first)
+//   - critical bash patterns still override (checked on both full command and each segment's literal argv)
+//   - allow counts ONLY when BOTH the authority view AND the session view allow.
+func evaluateBashApprovalViewsWithCompound(
+	command string,
+	allowCompound bool,
+	authorityRules []BashApprovalPatternRule,
+	authorityAllowedEnv []string,
+	sessionRules []BashApprovalPatternRule,
+	sessionAllowedEnv []string,
+) approvalVerdict {
+	var compoundSegments []literalShellCommandSegment
+	if allowCompound {
+		compoundSegments = extractLiteralAndChainSegments(command)
 	}
-	if sessionRule != nil && sessionRule.Approval == "deny" {
-		return approvalVerdict{Kind: "deny", Reason: fmt.Sprintf("Blocked by bash pattern: %s", sessionRule.Match)}
+	sessionDec := resolveBashPatternDecision(command, compoundSegments, sessionRules, sessionAllowedEnv)
+	authorityDec := resolveBashPatternDecision(command, compoundSegments, authorityRules, authorityAllowedEnv)
+
+	if authorityDec.kind == "deny" && authorityDec.rule != nil {
+		return approvalVerdict{Kind: "deny", Reason: fmt.Sprintf("Blocked by bash pattern: %s", authorityDec.rule.Match)}
 	}
-	if authorityRule != nil && authorityRule.Approval == "prompt" {
-		return approvalVerdict{Kind: "prompt", Reason: fmt.Sprintf("Prompt required by bash pattern: %s", authorityRule.Match)}
+	if sessionDec.kind == "deny" && sessionDec.rule != nil {
+		return approvalVerdict{Kind: "deny", Reason: fmt.Sprintf("Blocked by bash pattern: %s", sessionDec.rule.Match)}
 	}
-	if sessionRule != nil && sessionRule.Approval == "prompt" {
-		return approvalVerdict{Kind: "prompt", Reason: fmt.Sprintf("Prompt required by bash pattern: %s", sessionRule.Match)}
+	if authorityDec.kind == "prompt" && authorityDec.rule != nil {
+		return approvalVerdict{Kind: "prompt", Reason: fmt.Sprintf("Prompt required by bash pattern: %s", authorityDec.rule.Match)}
 	}
-	if isCriticalBashCommand(command) {
+	if sessionDec.kind == "prompt" && sessionDec.rule != nil {
+		return approvalVerdict{Kind: "prompt", Reason: fmt.Sprintf("Prompt required by bash pattern: %s", sessionDec.rule.Match)}
+	}
+	criticalCommand := isCriticalBashCommand(command)
+	if len(compoundSegments) == 0 && criticalCommand {
 		return approvalVerdict{Kind: "critical", Reason: "Critical pattern detected"}
 	}
-	if authorityRule != nil && authorityRule.Approval == "allow" && sessionRule != nil && sessionRule.Approval == "allow" {
+	for _, seg := range compoundSegments {
+		literalCmd := strings.Join(seg.argv, " ")
+		if criticalCommand || isCriticalBashCommand(literalCmd) {
+			return approvalVerdict{Kind: "critical", Reason: "Critical pattern detected"}
+		}
+	}
+	if authorityDec.kind == "allow" && sessionDec.kind == "allow" {
 		return approvalVerdict{Kind: "allow"}
 	}
 	return approvalVerdict{Kind: "exec"}
@@ -767,7 +1332,17 @@ func EvaluateBashToolDecision(ctx sdk.Context, input map[string]any) approval.To
 	authorityAllowedEnv := parseStringList(readOp(ctx, "bash.allowedEnvVars"))
 	sessionRules := parseBashPatternRules(readSess(ctx, "bash.patterns"))
 	sessionAllowedEnv := parseStringList(readSess(ctx, "bash.allowedEnvVars"))
-	verdict := evaluateBashApprovalViews(command, authorityRules, authorityAllowedEnv, sessionRules, sessionAllowedEnv)
+	// Two-view tightening for bash.allowCompoundCommands: enabling compound
+	// evaluation can loosen approval from exec->allow on `&&` chains, so BOTH
+	// operator authority AND session view must enable it (a project layer can
+	// disable what the operator enabled, never enable what the operator left off).
+	opAllowCompound, _ := readOp(ctx, "bash.allowCompoundCommands").(bool)
+	sessAllowCompound := opAllowCompound
+	if v, ok := readSess(ctx, "bash.allowCompoundCommands").(bool); ok {
+		sessAllowCompound = v
+	}
+	allowCompound := opAllowCompound && sessAllowCompound
+	verdict := evaluateBashApprovalViewsWithCompound(command, allowCompound, authorityRules, authorityAllowedEnv, sessionRules, sessionAllowedEnv)
 	if verdict.Kind == "exec" && command != "" && isToolCommandLine(command, toolCmdSet) {
 		// Each mounted tool command passes its own approval when executed
 		// via ctx.ExecuteTool; the outer bash line itself only reads
@@ -940,6 +1515,102 @@ func verdictToToolDecision(verdict approvalVerdict) approval.ToolDecision {
 	default:
 		return approval.ToolDecision{Tier: approval.TierExec}
 	}
+}
+
+// formatCompoundApprovalDetails ports omp's `BashTool.#formatCompoundApprovalDetails`
+// (`tools/bash.ts:924-992`) so approval prompts on `&&` chains show per-segment coverage
+// when `bash.allowCompoundCommands` is enabled.
+func formatCompoundApprovalDetails(
+	command string,
+	authorityRules []BashApprovalPatternRule,
+	authorityAllowedEnv []string,
+	sessionRules []BashApprovalPatternRule,
+	sessionAllowedEnv []string,
+) []string {
+	segments := extractAndChainSegments(command)
+	if len(segments) == 0 {
+		return nil
+	}
+	// Whole-chain restrictions apply to the complete chain rather than individual segments.
+	for _, rules := range [][]BashApprovalPatternRule{authorityRules, sessionRules} {
+		for i := range rules {
+			rule := &rules[i]
+			if rule.Approval == "allow" || !commandMatchesApprovalPattern(command, rule.Match) {
+				continue
+			}
+			matchedSeg := false
+			for _, seg := range segments {
+				if commandSegmentMatchesApprovalPattern(seg.text, rule.Match) {
+					matchedSeg = true
+					break
+				}
+			}
+			if !matchedSeg {
+				return nil
+			}
+		}
+	}
+
+	segmentCritical := make([]bool, len(segments))
+	anySegCritical := false
+	for i, seg := range segments {
+		crit := isCriticalBashCommand(seg.text)
+		if !crit && seg.literal != nil {
+			crit = isCriticalBashCommand(strings.Join(seg.literal.argv, " "))
+		}
+		segmentCritical[i] = crit
+		if crit {
+			anySegCritical = true
+		}
+	}
+	if command != "" && isCriticalBashCommand(command) && !anySegCritical {
+		return nil
+	}
+
+	chainUntainted := true
+	rows := make([]string, 0, len(segments)+1)
+	rows = append(rows, "Command:")
+	for i, seg := range segments {
+		isCrit := segmentCritical[i]
+		segRule := findApprovalPatternRule(seg.text, sessionRules, sessionAllowedEnv)
+		authRule := findApprovalPatternRule(seg.text, authorityRules, authorityAllowedEnv)
+		var promptRule *BashApprovalPatternRule
+		if authRule != nil && authRule.Approval == "prompt" {
+			promptRule = authRule
+		} else if segRule != nil && segRule.Approval == "prompt" {
+			promptRule = segRule
+		}
+		covered := chainUntainted &&
+			seg.literal != nil &&
+			!isCrit &&
+			promptRule == nil &&
+			(authRule == nil || authRule.Approval != "deny") &&
+			authRule != nil && authRule.Approval == "allow" &&
+			segRule != nil && segRule.Approval == "allow"
+		if seg.mutatesShellState {
+			chainUntainted = false
+		}
+		if covered {
+			rows = append(rows, fmt.Sprintf("  ✓ %s (allowed: %s)", truncateForApprovalPrompt(seg.text), segRule.Match))
+		} else {
+			reason := "requires approval"
+			if promptRule != nil {
+				reason = "prompt: " + promptRule.Match
+			} else if isCrit {
+				reason = "critical pattern"
+			}
+			rows = append(rows, fmt.Sprintf("  ? %s (%s)", truncateForApprovalPrompt(seg.text), reason))
+		}
+	}
+	return rows
+}
+
+func truncateForApprovalPrompt(s string) string {
+	const maxLen = 120
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen-1] + "…"
 }
 
 func init() {

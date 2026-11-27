@@ -38,17 +38,24 @@ const (
 	grepMaxOutputBytes       = 50 * 1024
 )
 
-type grepMatch struct {
-	key        string // absolute path or normalized internal URL
-	relPath    string // display path (cwd-relative or internal URL)
-	hostPath   string // backing host file path ("" for pure virtual/immutable)
-	immutable  bool
+type grepContextLine struct {
 	lineNumber int
 	line       string
 	truncated  bool
-	column     int // 1-based rune column when line was truncated
 }
 
+type grepMatch struct {
+	key           string // absolute path or normalized internal URL
+	relPath       string // display path (cwd-relative or internal URL)
+	hostPath      string // backing host file path ("" for pure virtual/immutable)
+	immutable     bool
+	lineNumber    int
+	line          string
+	truncated     bool
+	column        int // 1-based rune column when line was truncated
+	contextBefore []grepContextLine
+	contextAfter  []grepContextLine
+}
 type grepPathSpec struct {
 	original               string
 	clean                  string
@@ -326,6 +333,22 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 			return nil, fmt.Errorf("Skip must be a non-negative number")
 		}
 		skip = int(math.Floor(v))
+	}
+
+	// Context lines: optional explicit params override configured grep.contextBefore /
+	// grep.contextAfter settings (default 0 preserves exact oracle output).
+	// upstream: packages/coding-agent/src/tools/grep.ts:652-655,741-743
+	contextBefore := grepContextSetting(urlCtx.SDK, "grep.contextBefore")
+	contextAfter := grepContextSetting(urlCtx.SDK, "grep.contextAfter")
+	if rawCtx, ok := grepContextParam(params, "context"); ok {
+		contextBefore = rawCtx
+		contextAfter = rawCtx
+	}
+	if rawBefore, ok := grepContextParam(params, "contextBefore", "context_before", "before"); ok {
+		contextBefore = rawBefore
+	}
+	if rawAfter, ok := grepContextParam(params, "contextAfter", "context_after", "after"); ok {
+		contextAfter = rawAfter
 	}
 
 	multiline := isMultilinePattern(pattern)
@@ -743,7 +766,7 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 					}
 					return nil, bgCtx.Err()
 				}
-				fm, isBin := searchCandidate(cand, re, multiline, rangesByKey[cand.key], fetchCap, &scratch)
+				fm, isBin := searchCandidateWithContext(cand, re, multiline, rangesByKey[cand.key], fetchCap, contextBefore, contextAfter, &scratch)
 				outcomes[i] = candOutcome{matches: fm, isBinary: isBin}
 			}
 		} else {
@@ -763,7 +786,7 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 							return
 						}
 						cand := chunk[i]
-						fm, isBin := searchCandidate(cand, re, multiline, rangesByKey[cand.key], fetchCap, &scratch)
+						fm, isBin := searchCandidateWithContext(cand, re, multiline, rangesByKey[cand.key], fetchCap, contextBefore, contextAfter, &scratch)
 						outcomes[i] = candOutcome{matches: fm, isBinary: isBin}
 					}
 				}()
@@ -1013,6 +1036,16 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 			if w := len(strconv.Itoa(lastNum)); w > lineNumWidth {
 				lineNumWidth = w
 			}
+			for _, c := range m.contextBefore {
+				if w := len(strconv.Itoa(c.lineNumber)); w > lineNumWidth {
+					lineNumWidth = w
+				}
+			}
+			for _, c := range m.contextAfter {
+				if w := len(strconv.Itoa(c.lineNumber)); w > lineNumWidth {
+					lineNumWidth = w
+				}
+			}
 		}
 		gutterPad := strings.Repeat(" ", lineNumWidth+1)
 
@@ -1020,7 +1053,47 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 		var displayOut []string
 		var rowLines []int
 		lastLine := 0
+		pushLine := func(lineNum int, rowText string, isMatch bool, recordSeen bool) {
+			if lastLine > 0 && lineNum <= lastLine {
+				// Overlapping context/match line already emitted; skip duplicate context.
+				if !isMatch {
+					return
+				}
+			}
+			cleanRow := sanitizeText(rowText)
+			if lastLine > 0 && lineNum > lastLine+1 {
+				modelOut = append(modelOut, "...")
+				displayOut = append(displayOut, gutterPad+"│...")
+				rowLines = append(rowLines, 0)
+			}
+			marker := " "
+			if isMatch {
+				marker = "*"
+			}
+			if useHash {
+				modelOut = append(modelOut, fmt.Sprintf("%s%d:%s", marker, lineNum, cleanRow))
+			} else {
+				modelOut = append(modelOut, fmt.Sprintf("%s%d|%s", marker, lineNum, cleanRow))
+			}
+			displayOut = append(displayOut, formatCodeFrameLine(marker, lineNum, cleanRow, lineNumWidth))
+			if recordSeen {
+				rowLines = append(rowLines, lineNum)
+			} else {
+				rowLines = append(rowLines, 0)
+			}
+			lastLine = lineNum
+		}
 		for _, m := range g.list {
+			ranges := rangesByKey[m.key]
+			for _, c := range m.contextBefore {
+				if len(ranges) > 0 && !lineInRanges(c.lineNumber, ranges) {
+					continue
+				}
+				if c.truncated {
+					linesTruncated = true
+				}
+				pushLine(c.lineNumber, c.line, false, !c.truncated)
+			}
 			rows := strings.Split(m.line, "\n")
 			if m.truncated {
 				linesTruncated = true
@@ -1028,35 +1101,22 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 					rows[0] = fmt.Sprintf("%s [col %d]", rows[0], m.column)
 				}
 			}
-			ranges := rangesByKey[m.key]
 			for rIdx, rowText := range rows {
 				lineNum := m.lineNumber + rIdx
 				if len(ranges) > 0 && !lineInRanges(lineNum, ranges) {
 					continue
 				}
-				cleanRow := sanitizeText(rowText)
-				if lastLine > 0 && lineNum > lastLine+1 {
-					modelOut = append(modelOut, "...")
-					displayOut = append(displayOut, gutterPad+"│...")
-					rowLines = append(rowLines, 0)
+				seen := !m.truncated || (rIdx > 0 && rIdx < len(rows)-1)
+				pushLine(lineNum, rowText, rIdx == 0, seen)
+			}
+			for _, c := range m.contextAfter {
+				if len(ranges) > 0 && !lineInRanges(c.lineNumber, ranges) {
+					continue
 				}
-				isMatch := rIdx == 0
-				marker := " "
-				if isMatch {
-					marker = "*"
+				if c.truncated {
+					linesTruncated = true
 				}
-				if useHash {
-					modelOut = append(modelOut, fmt.Sprintf("%s%d:%s", marker, lineNum, cleanRow))
-				} else {
-					modelOut = append(modelOut, fmt.Sprintf("%s%d|%s", marker, lineNum, cleanRow))
-				}
-				displayOut = append(displayOut, formatCodeFrameLine(marker, lineNum, cleanRow, lineNumWidth))
-				if !m.truncated || (rIdx > 0 && rIdx < len(rows)-1) {
-					rowLines = append(rowLines, lineNum)
-				} else {
-					rowLines = append(rowLines, 0)
-				}
-				lastLine = lineNum
+				pushLine(c.lineNumber, c.line, false, !c.truncated)
 			}
 		}
 		if snapPath != "" && tag != "" {
@@ -1388,7 +1448,22 @@ func probeGitignoredMatch(
 	return ""
 }
 
+func grepContextParam(params map[string]any, keys ...string) (int, bool) {
+	for _, k := range keys {
+		if raw, exists := params[k]; exists && raw != nil {
+			if v, ok := floatFromAny(raw); ok && v >= 0 {
+				return int(math.Floor(v)), true
+			}
+		}
+	}
+	return 0, false
+}
+
 func searchCandidate(cand grepCandidate, re *regexp.Regexp, multiline bool, ranges []lineRange, maxMatches int, scratch *[]byte) ([]grepMatch, bool) {
+	return searchCandidateWithContext(cand, re, multiline, ranges, maxMatches, 0, 0, scratch)
+}
+
+func searchCandidateWithContext(cand grepCandidate, re *regexp.Regexp, multiline bool, ranges []lineRange, maxMatches, contextBefore, contextAfter int, scratch *[]byte) ([]grepMatch, bool) {
 	var data []byte
 	if cand.content != nil {
 		data = cand.content
@@ -1505,6 +1580,9 @@ func searchCandidate(cand grepCandidate, re *regexp.Regexp, multiline bool, rang
 				break
 			}
 		}
+		if contextBefore > 0 || contextAfter > 0 {
+			attachGrepContext(data, matches, ranges, contextBefore, contextAfter)
+		}
 		return matches, false
 	}
 
@@ -1557,7 +1635,116 @@ func searchCandidate(cand grepCandidate, re *regexp.Regexp, multiline bool, rang
 			break
 		}
 	}
+	if len(matches) > 0 && (contextBefore > 0 || contextAfter > 0) {
+		attachGrepContext(data, matches, ranges, contextBefore, contextAfter)
+	}
 	return matches, false
+}
+
+// attachGrepContext populates contextBefore / contextAfter on each match from data,
+// deduplicating overlapping context lines across adjacent matches and respecting
+// active line-range filters (upstream: packages/coding-agent/src/tools/grep.ts:1038-1044).
+func attachGrepContext(data []byte, matches []grepMatch, ranges []lineRange, contextBefore, contextAfter int) {
+	if len(matches) == 0 || (contextBefore <= 0 && contextAfter <= 0) {
+		return
+	}
+	allLines := splitDataLines(data)
+	totalLines := len(allLines)
+	if totalLines == 0 {
+		return
+	}
+	if contextBefore > totalLines {
+		contextBefore = totalLines
+	}
+	if contextAfter > totalLines {
+		contextAfter = totalLines
+	}
+	matchLineSet := make(map[int]struct{}, len(matches))
+	for _, m := range matches {
+		span := strings.Count(m.line, "\n") + 1
+		for off := range span {
+			matchLineSet[m.lineNumber+off] = struct{}{}
+		}
+	}
+	hint := min(totalLines, len(matches)*(contextBefore+contextAfter+1))
+	emitted := make(map[int]struct{}, hint)
+	for i := range matches {
+		m := &matches[i]
+		span := strings.Count(m.line, "\n") + 1
+		if contextBefore > 0 {
+			start := max(1, m.lineNumber-contextBefore)
+			for ln := start; ln < m.lineNumber; ln++ {
+				if _, isM := matchLineSet[ln]; isM {
+					continue
+				}
+				if _, seen := emitted[ln]; seen {
+					continue
+				}
+				if len(ranges) > 0 && !lineInRanges(ln, ranges) {
+					continue
+				}
+				emitted[ln] = struct{}{}
+				rendered, trunc := truncateContextLine(allLines[ln-1], grepDefaultMaxColumn)
+				m.contextBefore = append(m.contextBefore, grepContextLine{
+					lineNumber: ln,
+					line:       rendered,
+					truncated:  trunc,
+				})
+			}
+		}
+		if contextAfter > 0 {
+			lastMatchLine := m.lineNumber + span - 1
+			end := min(totalLines, lastMatchLine+contextAfter)
+			for ln := lastMatchLine + 1; ln <= end; ln++ {
+				if _, isM := matchLineSet[ln]; isM {
+					continue
+				}
+				if _, seen := emitted[ln]; seen {
+					continue
+				}
+				if len(ranges) > 0 && !lineInRanges(ln, ranges) {
+					continue
+				}
+				emitted[ln] = struct{}{}
+				rendered, trunc := truncateContextLine(allLines[ln-1], grepDefaultMaxColumn)
+				m.contextAfter = append(m.contextAfter, grepContextLine{
+					lineNumber: ln,
+					line:       rendered,
+					truncated:  trunc,
+				})
+			}
+		}
+	}
+}
+
+func splitDataLines(data []byte) []string {
+	var lines []string
+	pos := 0
+	for pos < len(data) {
+		nl := bytes.IndexByte(data[pos:], '\n')
+		var lineBytes []byte
+		if nl == -1 {
+			lineBytes = data[pos:]
+			pos = len(data)
+		} else {
+			lineBytes = data[pos : pos+nl]
+			pos += nl + 1
+		}
+		if len(lineBytes) > 0 && lineBytes[len(lineBytes)-1] == '\r' {
+			lineBytes = lineBytes[:len(lineBytes)-1]
+		}
+		lines = append(lines, strings.TrimRight(string(lineBytes), " \t\r"))
+	}
+	return lines
+}
+
+func truncateContextLine(line string, maxBytes int) (string, bool) {
+	if maxBytes <= 0 || len(line) <= maxBytes {
+		return line, false
+	}
+	cut := max(0, maxBytes-3)
+	cut = floorRuneBoundary(line, cut)
+	return line[:cut] + "...", true
 }
 
 // windowMatchedLine mirrors crates/xfs/src/grep/render.rs:42-75.

@@ -376,6 +376,8 @@ func nativeWriteCall(_ sdk.Context, args map[string]any, rc sdk.ToolRenderContex
 
 	if scheme, rest, isURL := nvSplitURLScheme(rawPath); isURL {
 		switch scheme {
+		case "out":
+			return nvDescribeOutWrite(sc, content, nil, false), nil
 		case "agent":
 			return nvDescribeAgentWrite(sc, rest, content, nil, nil, false), nil
 		case "proc":
@@ -385,7 +387,6 @@ func nativeWriteCall(_ sdk.Context, args map[string]any, rc sdk.ToolRenderContex
 			return nvDescribeCfgWrite(sc, rawPath, content, nil, nil, false), nil
 		}
 	}
-
 	var children []kit.Node
 	if fig := nvWriteFigure(sc, rawPath, content, false, rc.ArgsComplete); fig != nil {
 		children = append(children, fig)
@@ -403,6 +404,9 @@ func nativeWriteResult(_ sdk.Context, res sdk.ToolRenderResult, opts sdk.ToolRen
 	content := nvStr(rc.Args, "content")
 	scheme, rest, isURL := nvSplitURLScheme(rawPath)
 
+	if isURL && scheme == "out" {
+		return nvDescribeOutWrite(sc, content, &res, rc.IsError), nil
+	}
 	if (isURL && scheme == "agent") || nvMap(details, "message") != nil {
 		return nvDescribeAgentWrite(sc, rest, content, &res, nvMap(details, "message"), rc.IsError), nil
 	}
@@ -413,7 +417,6 @@ func nativeWriteResult(_ sdk.Context, res sdk.ToolRenderResult, opts sdk.ToolRen
 	if (isURL && scheme == "cfg") || nvMap(details, "cfg") != nil {
 		return nvDescribeCfgWrite(sc, rawPath, content, &res, nvMap(details, "cfg"), rc.IsError), nil
 	}
-
 	if rc.IsError {
 		return sc.container(sc.claim("omp.tool.write"), nvErrorNode(sc, sc.claim("omp.tool.error"), nvResultText(res))), nil
 	}
@@ -910,6 +913,26 @@ func nvDescribeCfgWrite(sc *nvScope, rawURL, content string, res *sdk.ToolRender
 		))
 	}
 	return sc.container(sc.claim(rootRole), children...)
+}
+
+// nvDescribeOutWrite renders a `write` targeting `out://` as mid-turn assistant
+// prose (`omp.assistant` container with an `omp.assistant.md` Markdown node and
+// an optional trailing `omp.tool.error` on refusal/failure) instead of a file
+// write card.
+// upstream: packages/tui/src/chat/reply-write.ts:82-127,
+//
+//	packages/coding-agent/src/internal-urls/out-protocol.ts
+func nvDescribeOutWrite(sc *nvScope, content string, res *sdk.ToolRenderResult, isError bool) kit.Node {
+	var children []kit.Node
+	if mdText := nvSanitize(content); strings.TrimSpace(mdText) != "" {
+		children = append(children, sc.md(sc.claim("omp.assistant.md"), mdText))
+	}
+	if isError && res != nil {
+		if errText := strings.TrimSpace(nvResultText(*res)); errText != "" {
+			children = append(children, nvErrorNode(sc, sc.claim("omp.tool.error"), errText))
+		}
+	}
+	return sc.container(sc.claim("omp.assistant"), children...)
 }
 
 // nvReadDisplayFilePath is unused externally; keep filepath import used on all platforms.

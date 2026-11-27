@@ -480,6 +480,8 @@ func termWriteCall(ctx sdk.Context, args map[string]any, _ sdk.ToolRenderContext
 
 	if scheme, rest, ok := splitURLScheme(rawPath); ok {
 		switch scheme {
+		case "out":
+			return termOutReplyWrite(p, content, nil, false, width), nil
 		case "proc":
 			id, action := parseProcWriteTarget(rest)
 			return termProcWrite(p, id, action, content, nil, nil, false, false, width), nil
@@ -489,7 +491,6 @@ func termWriteCall(ctx sdk.Context, args map[string]any, _ sdk.ToolRenderContext
 			return termAgentWrite(p, rest, content, nil, nil, false, false, width), nil
 		}
 	}
-
 	filePath := shortenPath(sanitizeDisplayText(rawPath))
 	icon := p.fg("muted", langIcon(rawPath))
 	styledPath := p.fg("accent", filePath)
@@ -528,6 +529,8 @@ func termWriteResult(ctx sdk.Context, res sdk.ToolRenderResult, opts sdk.ToolRen
 
 	if scheme, rest, ok := splitURLScheme(rawPath); ok {
 		switch scheme {
+		case "out":
+			return termOutReplyWrite(p, content, &res, rc.IsError, width), nil
 		case "proc":
 			id, action := parseProcWriteTarget(rest)
 			return termProcWrite(p, id, action, content, &res, details, rc.IsError, opts.Expanded, width), nil
@@ -537,7 +540,6 @@ func termWriteResult(ctx sdk.Context, res sdk.ToolRenderResult, opts sdk.ToolRen
 			return termAgentWrite(p, rest, content, &res, details, rc.IsError, opts.Expanded, width), nil
 		}
 	}
-
 	filePath := shortenPath(sanitizeDisplayText(rawPath))
 	icon := p.fg("muted", langIcon(rawPath))
 	styledPath := p.fg("accent", filePath)
@@ -1587,4 +1589,31 @@ func receiptColor(outcome string) string {
 	default:
 		return "success"
 	}
+}
+
+// termOutReplyWrite renders a `write` targeting `out://` as mid-turn assistant
+// prose (unframed styled Markdown lines) rather than a file-write tool card,
+// matching omp's ReplyWriteComponent (packages/tui/src/chat/reply-write.ts:82-127).
+func termOutReplyWrite(p palette, content string, res *sdk.ToolRenderResult, isErr bool, width int) kit.Node {
+	if width <= 0 {
+		width = 80
+	}
+	var rows []string
+	if strings.TrimSpace(content) != "" {
+		for _, raw := range sanitizeDisplayLines(content) {
+			rows = append(rows, wrapAnsi(p.styleMarkdownLine(raw), width)...)
+		}
+	}
+	if isErr && res != nil {
+		errText := strings.TrimSpace(resultText(*res))
+		if errText != "" {
+			if len(rows) > 0 {
+				rows = append(rows, "")
+			}
+			for _, line := range strings.Split(p.formatErrorDetail(errText), "\n") {
+				rows = append(rows, wrapAnsi(line, width)...)
+			}
+		}
+	}
+	return termLinesNode(rows, width)
 }

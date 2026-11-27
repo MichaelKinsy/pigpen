@@ -41,18 +41,18 @@ Template branch defaults:
 
 | Setting key | Default | Honoured | Notes |
 |---|---|---|---|
-| `plan.enabled` | `true` | default | Always enabled; no settings store wired yet |
+| `plan.enabled` | `true` | yes | Enforced in `/plan` via `modes.Setting` |
 | `plan.defaultOnStartup` | `false` | default | Not auto-entered on startup |
-| `plan.autosave` | `false` | no | Manual Save in plan review dialog works; auto-save not wired to settings |
-| `plan.autosaveDir` | `""` | no | Manual Save prompts for path |
-| `goal.enabled` | `true` | default | Always enabled |
+| `plan.autosave` | `false` | yes | Auto-saves approved plans via `AutosaveApprovedPlan` (`plan-mode/plan-autosave.ts`) on all approval paths |
+| `plan.autosaveDir` | `""` | yes | Resolved with `~`, absolute, or cwd-relative path; empty defaults to `<cwd>/.omp/plans` |
+| `goal.enabled` | `true` | yes | Enforced in `/goal`, `/guided-goal`, and `goal` tool `create`/`resume` via `modes.Setting` |
 | `goal.statusInFooter` | `true` | yes | Status bar shows `GOAL used/budget` |
 | `goal.continuationModes` | `["interactive"]` | default | Auto-continue active via `agent_before_settle` |
 | `loop.mode` | `"prompt"` | default | Only `prompt` mode implemented (`compact`/`reset` omitted — `NewSession` is command-only in PiG) |
-| `loop.conditionTimeoutMs` | `30000` | default | 30s timeout passed to `ExecWithOptions` |
+| `loop.conditionTimeoutMs` | `30000` | yes | Read via `modes.Setting` (default 30s; `0` waits indefinitely) |
 | `btw.inject` | `false` | default | `btw-user.md` rendered with `inject=false` |
-| `magicKeywords.enabled` | `true` | default | All 5 magic keywords enabled by default |
-| `magicKeywords.<id>` | `true` | default | Individual toggles supported in `MagicKeywordSettings` |
+| `magicKeywords.enabled` | `true` | yes | Read via `modes.Setting` in `onInput` (`resolveMagicKeywordSettings`) |
+| `magicKeywords.<id>` | `true` | yes | Per-keyword toggles (`ultrathink`, `chillax`, `orchestrate`, `workflow`, `jevify`) read via `modes.Setting` |
 
 ## Feature-level omissions and deviations inside ported modes/commands (not ported / differs)
 
@@ -64,7 +64,6 @@ Plan mode is enforced only where a tool resolves a write target (as omp's `enfor
 | Plan-role model switch & restore + tier slider in plan review | `plan-mode/model-transition.ts`, `interactive-mode.ts:5978-6060` | Depends on omp's role-model settings (`modelRoles.plan`) not wired to PiG |
 | Plan-mode convergence forced wire `tool_choice: "required"` | `agent-session.ts:13791` | PiG SDK has no API to set wire `tool_choice` for a boundary continuation (3-reminder cap `PLAN_MODE_REMINDER_MAX = 3` is ported) |
 | "Approve and execute" directly from `propose` (`agent_end`) | `interactive-mode.ts:7128-7135` | PiG restricts `ctx.NewSession` to command contexts (`command_only_calls.go:8-21`); `agent_end` dialog offers compact/keep + points to `/plan-review`, where "Approve and execute" works via `withSession` + `copyLocalArtifacts` |
-| `plan.autosave` automatic save on approval | `plan-mode/plan-autosave.ts` | Settings store not wired; manual Save in plan review dialog works |
 | Plan external `$EDITOR` editing and inline section annotations | `interactive-mode.ts:7011-7069` | Subprocess extensions cannot suspend PiG's terminal for `$EDITOR`; PiG's `Select`/`Input`/`Editor` dialogs are used |
 | Goal `todo_context` injection | `agent-session.ts:8954-8959`, `goal-todo-context.md` | Requires cross-area read of `internal/todo` phases (integrator wiring) |
 | `loop.mode` `compact` and `reset` actions | `interactive-mode.ts:3710-3714` | `ctx.NewSession` is refused outside command contexts (`agent_end` cannot reset session) |

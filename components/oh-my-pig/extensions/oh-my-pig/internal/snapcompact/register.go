@@ -69,6 +69,9 @@ type sessionState struct {
 	cachedKey     string // summary + timestamp key
 	cachedArchive *Archive
 	cacheLoaded   bool
+
+	shake   shakeState
+	midTurn midTurnState
 }
 
 type manager struct {
@@ -163,10 +166,12 @@ func (m *manager) getCachedArchive(sid, key string) (*Archive, bool) {
 }
 
 // Register attaches snapcompact's lifecycle hooks onto ext:
-//   - EventInput: intercepts `/compact [mode] [focus]` for omp's mode subcommands
+//   - Command `/shake` + EventInput: `/compact [mode] [focus]` and `/shake [elide|images|thinking|all]`
 //   - EventSessionBeforeCompact: runs local bitmap-frame snapcompact by default on vision models
-//   - EventSessionCompact / EventSessionTree / EventSessionStart: keeps archive cache fresh
-//   - EventContext: re-attaches snapcompact image frames (or text fallback on text-only models)
+//   - EventSessionCompact / EventSessionCompactFailed / EventSessionTree / EventSessionStart: cache & overflow state
+//   - EventContext: re-attaches snapcompact image frames and applies `/shake` / superseded-read pruning
+//   - EventTurnEnd: commits durable `/shake` context_edit drafts and runs mid-turn compaction when over threshold
+//   - EventAgentBeforeSettle: promotes to a larger-context model on context overflow when enabled
 func Register(ext *sdk.Extension) {
 	registerWithManager(ext, defaultManager)
 }
@@ -175,12 +180,16 @@ func registerWithManager(ext *sdk.Extension, m *manager) {
 	lifecycle.OnEnd("snapcompact", func(sid string) {
 		m.release(sid)
 	})
+	m.registerShake(ext)
 	ext.OnEvent(sdk.EventInput, m.onInput)
 	ext.OnEvent(sdk.EventSessionBeforeCompact, m.onSessionBeforeCompact)
 	ext.OnEvent(sdk.EventSessionCompact, m.onSessionCompact)
+	ext.OnEvent(sdk.EventSessionCompactFailed, m.onSessionCompactFailed)
 	ext.OnEvent(sdk.EventSessionTree, m.onSessionTree)
 	ext.OnSessionStart(m.onSessionStart)
 	ext.OnEvent(sdk.EventContext, m.onContext)
+	ext.OnEvent(sdk.EventTurnEnd, m.onTurnEnd)
+	ext.OnEvent(sdk.EventAgentBeforeSettle, m.onAgentBeforeSettle)
 }
 
 func sessionIDFor(ctx sdk.Context) string {
@@ -198,6 +207,9 @@ func sessionIDFor(ctx sdk.Context) string {
 func (m *manager) onInput(ctx sdk.Context, data map[string]any) (any, error) {
 	text, _ := data["text"].(string)
 	trimmed := strings.TrimSpace(text)
+	if handled, resp := m.handleShakeInput(ctx, trimmed); handled {
+		return resp, nil
+	}
 	if !strings.HasPrefix(trimmed, "/compact ") {
 		return map[string]any{"action": "continue"}, nil
 	}
@@ -253,13 +265,30 @@ func (m *manager) onInput(ctx sdk.Context, data map[string]any) (any, error) {
 }
 
 func (m *manager) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error) {
-	m.clearCache(sessionIDFor(ctx))
+	sid := sessionIDFor(ctx)
+	m.clearCache(sid)
+	m.resetTransientState(sid)
 	return nil, nil
 }
 
 func (m *manager) onSessionTree(ctx sdk.Context, _ map[string]any) (any, error) {
-	m.clearCache(sessionIDFor(ctx))
+	sid := sessionIDFor(ctx)
+	m.clearCache(sid)
+	m.resetTransientState(sid)
 	return nil, nil
+}
+
+func (m *manager) resetTransientState(sid string) {
+	if sid == "" {
+		return
+	}
+	m.mu.Lock()
+	if st, ok := m.sessions[sid]; ok {
+		st.shake.pendingEdits = nil
+		st.shake.pendingOrder = nil
+		st.midTurn = midTurnState{}
+	}
+	m.mu.Unlock()
 }
 
 func (m *manager) onSessionCompact(ctx sdk.Context, data map[string]any) (any, error) {
@@ -267,6 +296,14 @@ func (m *manager) onSessionCompact(ctx sdk.Context, data map[string]any) (any, e
 	if sid == "" {
 		return nil, nil
 	}
+	m.mu.Lock()
+	if st, ok := m.sessions[sid]; ok {
+		st.midTurn.lastMidTurnFirstKept = ""
+		st.midTurn.overflowPending = false
+		st.midTurn.overflowReason = ""
+		st.midTurn.overflowMessageEntryID = ""
+	}
+	m.mu.Unlock()
 	entry, _ := data["compactionEntry"].(map[string]any)
 	if entry == nil {
 		m.clearCache(sid)
@@ -558,6 +595,8 @@ func (m *manager) onContext(ctx sdk.Context, data map[string]any) (any, error) {
 		return nil, nil
 	}
 
+	protectedSummaryIdx := -1
+
 	// Fast path: most turns have no compactionSummary message at all.
 	summaryIdx := -1
 	var summaryMsg map[string]any
@@ -572,57 +611,53 @@ func (m *manager) onContext(ctx sdk.Context, data map[string]any) (any, error) {
 			break
 		}
 	}
-	if summaryIdx < 0 {
-		return nil, nil
-	}
+	if summaryIdx >= 0 {
+		summaryText := strField(summaryMsg, "summary")
+		if isSnapcompactSummary(summaryText) {
+			if archive := m.resolveArchiveForSummary(ctx, summaryText); archive != nil {
+				target := resolveActiveModel(ctx)
+				includeThink := ReaderIncludesThinking(target)
+				vision := target.ID == "" || target.SupportsImages()
 
-	summaryText := strField(summaryMsg, "summary")
-	if !isSnapcompactSummary(summaryText) {
-		return nil, nil
-	}
+				var blocks []any
+				if !vision || (!includeThink && ArchiveIncludesThinking(summaryText, *archive)) {
+					// Text-only fallback (non-vision reader or Claude reading a thinking-bearing archive).
+					renderedSummary, plainHistory := ViewWithoutFrames(summaryText, *archive, includeThink)
+					fullText := renderedSummary
+					if plainHistory != "" {
+						if fullText != "" && !strings.HasSuffix(fullText, "\n") {
+							fullText += "\n"
+						}
+						fullText += plainHistory
+					}
+					blocks = []any{
+						map[string]any{"type": "text", "text": fullText},
+					}
+				} else {
+					histBlocks := HistoryBlocks(*archive, FrameDataBytesBudget(target))
+					blocks = make([]any, 0, 1+len(histBlocks))
+					blocks = append(blocks, map[string]any{"type": "text", "text": summaryText})
+					for _, hb := range histBlocks {
+						blocks = append(blocks, hb.ToMap())
+					}
+				}
 
-	archive := m.resolveArchiveForSummary(ctx, summaryText)
-	if archive == nil {
-		return nil, nil
-	}
-
-	target := resolveActiveModel(ctx)
-	includeThink := ReaderIncludesThinking(target)
-	vision := target.ID == "" || target.SupportsImages()
-
-	var blocks []any
-	if !vision || (!includeThink && ArchiveIncludesThinking(summaryText, *archive)) {
-		// Text-only fallback (non-vision reader or Claude reading a thinking-bearing archive).
-		renderedSummary, plainHistory := ViewWithoutFrames(summaryText, *archive, includeThink)
-		fullText := renderedSummary
-		if plainHistory != "" {
-			if fullText != "" && !strings.HasSuffix(fullText, "\n") {
-				fullText += "\n"
+				// Replace the compactionSummary map in-place with a user message carrying the
+				// multimodal content array so PiG's ConvertToLLM forwards all image frames intact
+				// and list identity (and positional system messages) are preserved.
+				ts := summaryMsg["timestamp"]
+				clear(summaryMsg)
+				summaryMsg["role"] = "user"
+				summaryMsg["content"] = blocks
+				if ts != nil {
+					summaryMsg["timestamp"] = ts
+				}
+				protectedSummaryIdx = summaryIdx
 			}
-			fullText += plainHistory
-		}
-		blocks = []any{
-			map[string]any{"type": "text", "text": fullText},
-		}
-	} else {
-		histBlocks := HistoryBlocks(*archive, FrameDataBytesBudget(target))
-		blocks = make([]any, 0, 1+len(histBlocks))
-		blocks = append(blocks, map[string]any{"type": "text", "text": summaryText})
-		for _, hb := range histBlocks {
-			blocks = append(blocks, hb.ToMap())
 		}
 	}
 
-	// Replace the compactionSummary map in-place with a user message carrying the
-	// multimodal content array so PiG's ConvertToLLM forwards all image frames intact
-	// and list identity (and positional system messages) are preserved.
-	ts := summaryMsg["timestamp"]
-	clear(summaryMsg)
-	summaryMsg["role"] = "user"
-	summaryMsg["content"] = blocks
-	if ts != nil {
-		summaryMsg["timestamp"] = ts
-	}
+	m.applyShakeOnContext(ctx, messages, protectedSummaryIdx)
 	return nil, nil
 }
 

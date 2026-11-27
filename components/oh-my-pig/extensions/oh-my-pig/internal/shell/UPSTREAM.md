@@ -85,7 +85,7 @@ Port of omp's `bash` tool and `proc://` internal URL protocol (https://github.co
 | `tools.approvalMode` | `"yolo"` | Yes via `Setting` (`yolo`, `write`, `always-ask`, `always-ask-cached` + 3-choice `Approve bash for this session` grant keyed by strict session ID and `bash\x00<tier>`) |
 | `tools.approval` (`tools.approval.bash`) | `{}` | Yes via `Setting` (`allow` / `deny` / `prompt` user policy for `bash`) |
 | `bash.patterns` / `bash.allowedEnvVars` | `[]` / `[]` | Yes via two-view `Setting` (operator authority) + `SessionSetting` (session view) + `EventToolCall` veto (`deny` / `prompt` / `allow` + `CRITICAL_BASH_PATTERNS`) |
-| `bash.allowCompoundCommands` | `false` | No (see Not ported) |
+| `bash.allowCompoundCommands` | `false` | Yes — ports `extractLiteralAndChainSegments`, `resolveBashPatternDecision`, and `formatCompoundApprovalDetails` (`tools/shell-tokenize.ts:346-679`, `tools/bash.ts:417-450,847-893,924-992`) with two-view operator+session tightening (both views must enable compound splitting; deny/prompt/critical always win) |
 | `bash.autoBackground.enabled` | `true` | Yes (`Setting` / `Config.AutoBackgroundEnabled`) |
 | `bash.autoBackground.thresholdMs` | `60000` | Yes (`Setting` / `Config.AutoBackgroundThreshold`) |
 | `async.enabled` | `true` | Yes (`Setting` / `Config.AsyncEnabled`) |
@@ -98,7 +98,7 @@ Port of omp's `bash` tool and `proc://` internal URL protocol (https://github.co
 | `tools.outputMaxColumns` | `768` (bytes/line; `0` disables) | Yes (`Setting` / `Config.MaxColumns`) |
 | `bashInterceptor.enabled` | `false` | Yes (`Setting` + `SessionSetting` / `Config.InterceptorEnabled`; evaluated in `EvaluateBashToolDecision` before any prompt and in `Execute`) |
 | `bashInterceptor.patterns` | 10 rules | Yes — all 10 upstream `DEFAULT_BASH_INTERCEPTOR_RULES` ported (the 4 JS lookaround rules implemented as exact JS-regex-equivalent Go matchers, differentially verified on 200,000 generated lines with 0 differences), plus user-rule `flags` (`i`/`m`/`s`) and once-per-session warning when a user pattern cannot compile under Go RE2 (see Not ported) |
-| `bash.direnv` / `bash.direnvLoadTimeoutMs` | `"auto"` / `10000` | No (see Not ported) |
+| `bash.direnv` / `bash.direnvLoadTimeoutMs` | `"auto"` / `30000` | Yes — ports `exec/direnv.ts:1-391` and `exec/bash-executor.ts:232-297,770-780` in `direnv.go` (`.envrc` ancestor walk-up + stat/watch cache, `direnv export json` with caller-timeout clamp, `unset -v` command prefix + env overlay, graceful fallback on missing binary/blocked/denied/timeout) |
 | `bash.gitGuard` | `false` | No (see Not ported) |
 | `shellMinimizer.*` | enabled | No (see Not ported) |
 | `display.shellVisualization` | `true` | No (see Not ported) |
@@ -123,9 +123,9 @@ Port of omp's `bash` tool and `proc://` internal URL protocol (https://github.co
 | Internal URL virtual filesystem (`skill://`, `local://`, `proc://` inside shell redirections/globs/cwd) | `internal-urls/url-filesystem.ts` | Depends on embedded shell VFS hooks; `proc://` itself works via the `internal/urls` router (`read`/`write`). |
 | Persistent shell traps, open FDs, read-only vars, shell-internal `jobs` table, and `FORK_JOBS_NOTICE` | `exec/bash-executor.ts`, `tools/bash.ts:621` | Snapshot-file persistence preserves new/changed variables, functions, aliases, `shopt`, and `set -o` options (including `set -e` and `pipefail`) and merges overlapping deltas, but cannot serialize open FDs, traps, read-only variables, or live shell-internal job tables. |
 | ACP client-bridge terminal routing | `tools/bash.ts:2215-2495` | PiG SDK has no ACP `createTerminal` bridge API. |
-| `direnv` / `.envrc` preflight loading | `exec/direnv.ts`, `exec/bash-executor.ts` | Requires `direnv` subprocess preflight + `bash.direnv` settings integration not wired in this area. |
+| `direnv` / `.envrc` preflight loading | `exec/direnv.ts`, `exec/bash-executor.ts` | **Ported** (`direnv.go`, `bash.go`, `env.go`): stat-cached `.envrc` walk-up + `direnv export json` with process-group timeout/cancel isolation; gated on operator `bash.direnv` (session tighten-only) and PiG `ctx.IsProjectTrusted()` (fail-closed in untrusted projects). |
 | `bash.gitGuard`, `git worktree add` rewrite, `apply_patch` shell shim, `gh` cache invalidation | `crates/shell/src/git/`, `tools/bash-{worktree-rewrite,apply-patch}.ts`, `tools/gh-cache-invalidation.ts` | Depend on embedded `git` builtin layer, omp's `worktree-clone` CLI, Codex `apply_patch` tool, and GitHub cache subsystem. |
-| Compound `&&` per-segment allow (`bash.allowCompoundCommands`) | `tools/bash.ts:847-850,924-992` | `CRITICAL_BASH_PATTERNS` and two-view operator+session `bash.patterns` + `bash.allowedEnvVars` (`deny`/`prompt`/`allow`, including compound `deny`/`prompt`) are enforced via `EventToolCall` + `Context.Select`; per-segment `&&` allow (`bash.allowCompoundCommands`) is not ported. |
+| Compound `&&` per-segment allow (`bash.allowCompoundCommands`) | `tools/bash.ts:847-850,924-992` | **Ported** (`approval.go`): safe literal `&&` chain splitting under two-view operator+session tightening (both views must allow; deny/prompt/critical always dominate). |
 | Terminal graphics (Kitty/Sixel) extraction & image links in results | `utils/terminal-graphics.ts`, `utils/image-temp.ts` | No raw ANSI image decoder or image temp store in `internal/shell`. |
 | Steering-signal early backgrounding & service readiness steer interrupt | `tools/bash.ts:2140-2173`, `launch/services.ts:406-424` | PiG SDK `sdk.Context` does not expose a separate `steeringSignal` channel distinct from `ctx.Done()`. |
 | Process exit kill-on-drop on ungraceful SIGKILL / print-mode SIGINT without `session_shutdown` | `exec/bash-executor.ts:436-441` | Go extensions cannot run cleanup after SIGKILL; `lifecycle.OnEnd` + `OnSessionShutdown` reap all jobs, services, and `&` process groups concurrently on normal/interactive shutdown and child-session close. |

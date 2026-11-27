@@ -514,7 +514,7 @@ func (m *manager) onInput(ctx sdk.Context, data map[string]any) (any, error) {
 	// `chillax`: lower pinned thinking level on models supporting per-message effort.
 	// `ultrathink`: notice-only here because PiG has no `auto` thinking mode
 	// (upstream model-controls.ts:671-675 never mutates a pinned level for ultrathink).
-	kwSettings := DefaultMagicKeywordSettings()
+	kwSettings := resolveMagicKeywordSettings(ctx)
 	if mi, err := ctx.GetModelInfo(); err == nil && mi != nil && mi.Reasoning {
 		if regModel, err := ctx.ModelRegistry().Find(mi.Provider, mi.ID); err == nil && regModel != nil {
 			curLevel, _ := ctx.GetThinkingLevel()

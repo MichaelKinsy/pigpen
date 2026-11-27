@@ -844,10 +844,13 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 	}
 
 	resolvedSel := parsed.ResolveTail(totalLines)
+	cfgDefaultLimit := effectiveReadDefaultLimit(ctx)
+	cfgMaxColumns := effectiveOutputMaxColumns(ctx)
+	cfgSpillThreshold := effectiveSpillThreshold(ctx)
 	if resolvedSel.IsMultiRange() {
 		maxCol := 0
 		if !rawMode {
-			maxCol = readMaxColumns
+			maxCol = cfgMaxColumns
 		}
 		text, displayedLines, dispContent, colCut := renderMultiRange(allLines, resolvedSel, displayPath, header, hasTrailingNL, shouldAddHashLines, maxCol)
 		if shouldAddHashLines {
@@ -946,16 +949,16 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 	}
 
 	startIdx := requestedStart - leadingCtx
-	effectiveLimit := readDefaultLimit
+	effectiveLimit := cfgDefaultLimit
 	if hasLimit {
 		effectiveLimit = limit
 	}
 	maxLinesToCollect := min(effectiveLimit+leadingCtx+trailingCtx, DefaultMaxLines)
-	maxBytesForRead := computeReadByteBudget(startIdx, maxLinesToCollect, shouldAddHashLines, unspilledPages)
+	maxBytesForRead := computeReadByteBudgetWithThreshold(startIdx, maxLinesToCollect, shouldAddHashLines, unspilledPages, cfgSpillThreshold)
 
 	maxCol := 0
 	if !rawMode {
-		maxCol = readMaxColumns
+		maxCol = cfgMaxColumns
 	}
 
 	// Collect lines within line and byte budgets (charging capped width when maxCol > 0).
@@ -1071,7 +1074,7 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 				"lineNumbers": []any{1},
 			}
 			out := header + "\n1:"
-			if len(out) <= DefaultSpillThreshold {
+			if len(out) <= cfgSpillThreshold {
 				setMetaPagedSource(details)
 			}
 			return sdk.ToolResult{Content: out, Details: details}, nil
@@ -1317,18 +1320,24 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 		details["suffixResolution"] = suffixRes.toMap()
 		out = prependSuffixResolutionNotice(out, suffixRes)
 	}
-	if unspilledPages || len(out) <= DefaultSpillThreshold {
+	if unspilledPages || len(out) <= cfgSpillThreshold {
 		setMetaPagedSource(details)
 	}
 	return sdk.ToolResult{Content: out, Details: details}, nil
 }
 
 func computeReadByteBudget(startIdx, maxLines int, hasPrefixes, unspilledPages bool) int {
+	return computeReadByteBudgetWithThreshold(startIdx, maxLines, hasPrefixes, unspilledPages, DefaultSpillThreshold)
+}
+
+func computeReadByteBudgetWithThreshold(startIdx, maxLines int, hasPrefixes, unspilledPages bool, threshold int) int {
 	scaled := max(DefaultMaxBytes, maxLines*512)
 	if unspilledPages {
 		return scaled
 	}
-	threshold := DefaultSpillThreshold
+	if threshold <= 0 {
+		threshold = DefaultSpillThreshold
+	}
 	prefixWidth := 0
 	if hasPrefixes {
 		prefixWidth = len(strconv.Itoa(startIdx+maxLines)) + 1
@@ -1368,8 +1377,11 @@ func readLargeFileStreaming(
 		parsed = parsed.ResolveTail(plan.totalLines)
 	}
 
+	cfgDefaultLimit := effectiveReadDefaultLimit(ctx)
+	cfgMaxColumns := effectiveOutputMaxColumns(ctx)
+	cfgSpillThreshold := effectiveSpillThreshold(ctx)
 	offset := 1
-	limit := readDefaultLimit
+	limit := cfgDefaultLimit
 	hasLimit := false
 	if parsed.Kind == SelectorLines && len(parsed.Ranges) == 1 {
 		r := parsed.Ranges[0]
@@ -1390,10 +1402,10 @@ func readLargeFileStreaming(
 	}
 	startIdx := requestedStart - leadingCtx
 	maxLines := min(limit+leadingCtx+trailingCtx, DefaultMaxLines)
-	maxBytes := computeReadByteBudget(startIdx, maxLines, shouldAddHashLines, unspilledPages)
+	maxBytes := computeReadByteBudgetWithThreshold(startIdx, maxLines, shouldAddHashLines, unspilledPages, cfgSpillThreshold)
 	maxCol := 0
 	if !rawMode {
-		maxCol = readMaxColumns
+		maxCol = cfgMaxColumns
 	}
 
 	f, err := os.Open(absPath)
@@ -1694,7 +1706,7 @@ func readLargeFileStreaming(
 		}
 		setMetaTruncation(details, truncMeta)
 	}
-	if unspilledPages || len(out) <= DefaultSpillThreshold {
+	if unspilledPages || len(out) <= cfgSpillThreshold {
 		setMetaPagedSource(details)
 	}
 	return sdk.ToolResult{Content: out, Details: details}, nil

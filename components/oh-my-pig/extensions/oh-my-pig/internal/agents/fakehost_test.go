@@ -43,16 +43,18 @@ func (c *fakeChildState) triggerAbort() {
 }
 
 type fakeHostOptions struct {
-	Cwd           string
-	SessionID     string
-	SessionFile   string
-	NoSessionFile bool
-	Mode          string
-	HasUI         bool
-	IsIdle        bool
-	ActiveModel   map[string]any
-	OnChild       fakeChildScript
-	Models        []map[string]any
+	Cwd            string
+	SessionID      string
+	SessionFile    string
+	NoSessionFile  bool
+	Mode           string
+	HasUI          bool
+	IsIdle         bool
+	ActiveModel    map[string]any
+	OnChild        fakeChildScript
+	Models         []map[string]any
+	SessionEntries []json.RawMessage
+	LeafID         string
 }
 
 type fakeHost struct {
@@ -357,6 +359,21 @@ func (h *fakeHost) answerCall(f fakeWireFrame) {
 			result = h.opts.Cwd
 		default:
 			result = nil
+		}
+	case "watchSessionLog":
+		cursor := 0
+		if c, ok := args["cursor"].(float64); ok {
+			cursor = int(c)
+		}
+		entries := []json.RawMessage{}
+		if cursor >= 0 && cursor < len(h.opts.SessionEntries) {
+			entries = h.opts.SessionEntries[cursor:]
+		}
+		result = map[string]any{
+			"entries":    entries,
+			"entryCount": len(h.opts.SessionEntries),
+			"hasMore":    false,
+			"leafId":     h.opts.LeafID,
 		}
 	case "getModel":
 		prov, _ := args["provider"].(string)

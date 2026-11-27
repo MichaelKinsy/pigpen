@@ -637,7 +637,7 @@ func (k *jsKernel) exec(
 		return kernelResult{}, errors.New("JS kernel is not running")
 	}
 
-	outBuf := newBoundedOutputBuffer(DefaultOutputMaxBytes)
+	outBuf := newSpillableOutputBuffer(DefaultOutputMaxBytes, WriteSpill != nil)
 	var displays []DisplayOutput
 	var dispMu sync.Mutex
 
@@ -751,8 +751,13 @@ func (k *jsKernel) exec(
 	dispCopy := append([]DisplayOutput(nil), displays...)
 	dispMu.Unlock()
 
+	fullOut := ""
+	if truncMeta != nil && WriteSpill != nil {
+		fullOut = outBuf.FullText()
+	}
 	return kernelResult{
 		Output:         outStr,
+		FullOutput:     fullOut,
 		Truncation:     truncMeta,
 		ExitCode:       exitCode,
 		Cancelled:      cancelled,

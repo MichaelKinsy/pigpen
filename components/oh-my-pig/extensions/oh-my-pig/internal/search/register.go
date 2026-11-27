@@ -151,6 +151,18 @@ func findHitThresholdSetting(ctx sdk.Context) float64 {
 	return findDefaultThreshold
 }
 
+const maxGrepContextSetting = 10000
+
+func grepContextSetting(ctx sdk.Context, key string) int {
+	if v, ok := floatFromAny(readSetting(ctx, key)); ok && v > 0 {
+		if v >= maxGrepContextSetting {
+			return maxGrepContextSetting
+		}
+		return int(v)
+	}
+	return 0
+}
+
 // Register registers omp's search tools (grep, glob, find) on the extension.
 // `find` registers with DefaultActive: false (matching omp's `find.enabled: "auto"`
 // default when no native judge is present). On `session_start` / `model_select`,

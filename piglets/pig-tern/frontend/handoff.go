@@ -156,6 +156,9 @@ func (s *session) redrawAll() {
 			continue
 		}
 		e.settled = false
+		e.readGroupHostID = ""
+		e.readGroupMembers = nil
+		e.readGroupLastWire = nil
 		wire := s.mainNodeFor(e, e.node)
 		if e.hasWelcomeSpacers {
 			sp0 := tern.WireNode{ID: e.id + ".sp0", K: tern.KindSpacer, P: map[string]any{"size": "sm"}}
@@ -168,6 +171,9 @@ func (s *session) redrawAll() {
 	}
 	for i, id := range s.order {
 		s.settle(s.sent[strings.TrimPrefix(id, "n.")], i)
+	}
+	if s.ompRoles {
+		s.syncOmpReadGroups()
 	}
 	if s.sessionNode {
 		s.sessionNode = false

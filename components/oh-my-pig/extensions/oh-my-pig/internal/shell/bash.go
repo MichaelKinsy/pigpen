@@ -903,6 +903,30 @@ func (t *BashTool) Execute(ctx sdk.Context, params map[string]any) (any, error) 
 		}
 	}()
 
+	// Load repo direnv diff (when bash.direnv != "off") before spawning a shell,
+	// clamping the load timeout to any positive command deadline.
+	// upstream: packages/coding-agent/src/exec/bash-executor.ts:267-297,770-780
+	direnvSetting := resolveDirenvSetting(readSetting(ctx, "bash.direnv"))
+	if resolveDirenvSetting(readSessionSetting(ctx, "bash.direnv")) == "off" || (hasHostCtx && !shellProjectTrusted(ctx)) {
+		direnvSetting = "off"
+	}
+	direnvTimeoutMs := readSettingFloat(ctx, "bash.direnvLoadTimeoutMs", float64(DefaultDirenvTimeoutMs))
+	direnvLoadTimeout := resolveDirenvLoadTimeout(direnvTimeoutMs, timeoutDur)
+	direnvCtx := context.Background()
+	if hasHostCtx && ctx.Done() != nil {
+		var cancelDirenv context.CancelFunc
+		direnvCtx, cancelDirenv = context.WithCancel(context.Background())
+		go func() {
+			select {
+			case <-ctx.Done():
+				cancelDirenv()
+			case <-direnvCtx.Done():
+			}
+		}()
+		defer cancelDirenv()
+	}
+	runCommand, direnvDiff := applyDirenvPreflight(direnvCtx, command, commandCwd, direnvSetting, direnvLoadTimeout)
+
 	// Named service mode (upstream: bash.ts:1977).
 	if in.Name != "" {
 		usePTY := true
@@ -915,7 +939,7 @@ func (t *BashTool) Execute(ctx sdk.Context, params map[string]any) (any, error) 
 			sessionFile:     sessionFile,
 			toolCallID:      toolCallID,
 			name:            in.Name,
-			command:         command,
+			command:         runCommand,
 			cwd:             commandCwd,
 			pty:             usePTY,
 			ready:           in.Ready,
@@ -928,6 +952,7 @@ func (t *BashTool) Execute(ctx sdk.Context, params map[string]any) (any, error) 
 			headBytes:       headBytes,
 			tailBytes:       tailBytes,
 			maxColumns:      maxColumns,
+			direnvDiff:      direnvDiff,
 		})
 		if svcErr != nil {
 			return nil, svcErr
@@ -944,7 +969,8 @@ func (t *BashTool) Execute(ctx sdk.Context, params map[string]any) (any, error) 
 	// Explicit async mode (or `notify` without `name`, upstream: bash.ts:2052).
 	if asyncRequested {
 		job, _, regErr := t.startManagedJob(ctx, managedJobParams{
-			command:             command,
+			command:             runCommand,
+			displayCommand:      command,
 			commandCwd:          commandCwd,
 			sessionKey:          sessionKey,
 			sessionFile:         sessionFile,
@@ -963,6 +989,7 @@ func (t *BashTool) Execute(ctx sdk.Context, params map[string]any) (any, error) 
 			headBytes:           headBytes,
 			tailBytes:           tailBytes,
 			maxColumns:          maxColumns,
+			direnvDiff:          direnvDiff,
 		})
 		if regErr != nil {
 			return nil, sdk.NewToolError(regErr.Error())
@@ -985,7 +1012,8 @@ func (t *BashTool) Execute(ctx sdk.Context, params map[string]any) (any, error) 
 		startBackgrounded := waitBudget == 0
 
 		job, completionCh, regErr := t.startManagedJob(ctx, managedJobParams{
-			command:             command,
+			command:             runCommand,
+			displayCommand:      command,
 			commandCwd:          commandCwd,
 			sessionKey:          sessionKey,
 			sessionFile:         sessionFile,
@@ -1003,6 +1031,7 @@ func (t *BashTool) Execute(ctx sdk.Context, params map[string]any) (any, error) 
 			headBytes:           headBytes,
 			tailBytes:           tailBytes,
 			maxColumns:          maxColumns,
+			direnvDiff:          direnvDiff,
 		})
 		if regErr != nil {
 			return nil, sdk.NewToolError(regErr.Error())
@@ -1076,9 +1105,9 @@ func (t *BashTool) Execute(ctx sdk.Context, params map[string]any) (any, error) 
 
 	start := t.now()
 	res, execErr := executeCommand(runCtx, ExecOptions{
-		Command:        command,
+		Command:        runCommand,
 		Cwd:            commandCwd,
-		Env:            buildCommandEnv(sessionKey, sessionFile, toolCallID, false),
+		Env:            buildCommandEnvWithDirenv(sessionKey, sessionFile, toolCallID, false, direnvDiff),
 		Timeout:        timeoutVal,
 		SpillThreshold: spillThreshold,
 		HeadBytes:      headBytes,
@@ -1127,6 +1156,7 @@ func (t *BashTool) Execute(ctx sdk.Context, params map[string]any) (any, error) 
 
 type managedJobParams struct {
 	command             string
+	displayCommand      string
 	commandCwd          string
 	sessionKey          string
 	sessionFile         string
@@ -1145,6 +1175,7 @@ type managedJobParams struct {
 	headBytes           int
 	tailBytes           int
 	maxColumns          int
+	direnvDiff          *DirenvExportDiff
 }
 type managedJobSettlement struct {
 	result sdk.ToolResult
@@ -1160,7 +1191,11 @@ func formatAsyncJobLabel(command string) string {
 }
 
 func (t *BashTool) startManagedJob(ctx sdk.Context, p managedJobParams) (*managedJob, <-chan managedJobSettlement, error) {
-	label := formatAsyncJobLabel(p.command)
+	displayCmd := p.displayCommand
+	if displayCmd == "" {
+		displayCmd = p.command
+	}
+	label := formatAsyncJobLabel(displayCmd)
 	completionCh := make(chan managedJobSettlement, 1)
 	notices := append([]string(nil), p.notices...)
 
@@ -1172,7 +1207,7 @@ func (t *BashTool) startManagedJob(ctx sdk.Context, p managedJobParams) (*manage
 	var zero sdk.Context
 	hasHostCtx := ctx != zero
 
-	job, err := t.runtime.Jobs.register(p.sessionKey, "bash", label, p.command, p.commandCwd, p.intent, p.foreground, func(
+	job, err := t.runtime.Jobs.register(p.sessionKey, "bash", label, displayCmd, p.commandCwd, p.intent, p.foreground, func(
 		runCtx context.Context,
 		jobID string,
 		reportProgress func(string),
@@ -1215,7 +1250,7 @@ func (t *BashTool) startManagedJob(ctx sdk.Context, p managedJobParams) (*manage
 				_ = jobs.DeliverNotify(p.sessionKey, []jobs.NotifyReport{{
 					ID:      jobID,
 					Type:    "bash",
-					Command: p.command,
+					Command: displayCmd,
 					Pattern: p.notify.Source,
 					Lines:   batch.Lines,
 					Omitted: batch.Omitted,
@@ -1230,7 +1265,7 @@ func (t *BashTool) startManagedJob(ctx sdk.Context, p managedJobParams) (*manage
 		res, execErr := executeCommand(runCtx, ExecOptions{
 			Command:        p.command,
 			Cwd:            p.commandCwd,
-			Env:            buildCommandEnv(p.sessionKey, p.sessionFile, p.toolCallID, false),
+			Env:            buildCommandEnvWithDirenv(p.sessionKey, p.sessionFile, p.toolCallID, false, p.direnvDiff),
 			Timeout:        timeoutVal,
 			SpillThreshold: p.spillThreshold,
 			HeadBytes:      p.headBytes,
@@ -1294,7 +1329,7 @@ func (t *BashTool) startManagedJob(ctx sdk.Context, p managedJobParams) (*manage
 			completionCh <- managedJobSettlement{err: buildErr}
 			return "", buildErr
 		}
-		toolRes = stampToolCommands(ctx, p.command, toolRes)
+		toolRes = stampToolCommands(ctx, displayCmd, toolRes)
 		if det, ok := toolRes.Details.(map[string]any); ok {
 			setDetails(det)
 		}
@@ -1515,6 +1550,7 @@ type serviceExecParams struct {
 	headBytes       int
 	tailBytes       int
 	maxColumns      int
+	direnvDiff      *DirenvExportDiff
 }
 
 // executeService starts a named long-lived service (replacing any existing
@@ -1699,7 +1735,7 @@ func (t *BashTool) executeService(ctx sdk.Context, p serviceExecParams) (any, er
 		cmd.Stderr = pw
 		defer func() { _ = inR.Close() }()
 	}
-	cmd.Env = buildCommandEnv(p.sessionKey, p.sessionFile, p.toolCallID, usedPTY)
+	cmd.Env = buildCommandEnvWithDirenv(p.sessionKey, p.sessionFile, p.toolCallID, usedPTY, p.direnvDiff)
 
 	if startErr := cmd.Start(); startErr != nil {
 		_ = reader.Close()
@@ -2126,4 +2162,19 @@ func sessionKeyFromContext(ctx sdk.Context) string {
 		}
 	}
 	return "default"
+}
+
+// shellProjectTrusted checks ctx.IsProjectTrusted fail-closed (matches lsp/debug trust gating).
+func shellProjectTrusted(ctx sdk.Context) (trusted bool) {
+	var zero sdk.Context
+	if ctx == zero {
+		return false
+	}
+	defer func() {
+		if recover() != nil {
+			trusted = false
+		}
+	}()
+	ok, err := ctx.IsProjectTrusted()
+	return err == nil && ok
 }

@@ -299,6 +299,9 @@ func (m *manager) handleGoalTool(ctx sdk.Context, params map[string]any) (any, e
 
 	switch op {
 	case "create":
+		if !isGoalEnabledSetting(ctx) {
+			return nil, sdk.NewToolError("Goal mode is disabled in settings (goal.enabled).")
+		}
 		obj, _ := params["objective"].(string)
 		obj = strings.TrimSpace(obj)
 		if obj == "" {
@@ -330,6 +333,9 @@ func (m *manager) handleGoalTool(ctx sdk.Context, params map[string]any) (any, e
 		return buildGoalToolResult(op, g, false), nil
 
 	case "resume":
+		if !isGoalEnabledSetting(ctx) {
+			return nil, sdk.NewToolError("Goal mode is disabled in settings (goal.enabled).")
+		}
 		g, err := m.goalResume(ctx, sid)
 		if err != nil {
 			return nil, sdk.NewToolError(err.Error())
@@ -829,6 +835,10 @@ func (m *manager) handleGoalCommand(ctx sdk.Context, args string) error {
 		notifyWarn(ctx, "Exit vibe mode first.")
 		return nil
 	}
+	if !isGoalEnabledSetting(ctx) {
+		notifyWarn(ctx, "Goal mode is disabled. Enable it in settings (goal.enabled).")
+		return nil
+	}
 	m.mu.Lock()
 	st := m.stateLocked(sid)
 	if st.planEnabled || st.planPaused {
@@ -1121,6 +1131,10 @@ func (m *manager) handleGuidedGoalCommand(ctx sdk.Context, args string) error {
 	}
 	if VibeActive != nil && VibeActive(ctx) {
 		notifyWarn(ctx, "Exit vibe mode first.")
+		return nil
+	}
+	if !isGoalEnabledSetting(ctx) {
+		notifyWarn(ctx, "Goal mode is disabled. Enable it in settings (goal.enabled).")
 		return nil
 	}
 	m.mu.Lock()

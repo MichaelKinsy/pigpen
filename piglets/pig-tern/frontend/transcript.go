@@ -49,6 +49,17 @@ type mainEntry struct {
 	// hasWelcomeSpacers reports that ompWelcomeNode emitted sibling spacer
 	// nodes (`<id>.sp0` before, `<id>.sp1` after) in main flanking card[omp.welcome].
 	hasWelcomeSpacers bool
+	// readGroupHostID is non-empty when this compact filesystem read card is
+	// coalesced into a ReadToolGroupComponent hosted at readGroupHostID
+	// (either its own id as the group leader, or the leader's id as a hidden
+	// follower).
+	readGroupHostID string
+	// readGroupMembers holds the current grouped TSP member IDs when this entry
+	// is the leader of a coalesced 3+ read group (length >= 3).
+	readGroupMembers []string
+	// readGroupLastWire caches the last emitted WireNode for a coalesced group
+	// leader so incremental updates diff cleanly without re-sending unchanged ops.
+	readGroupLastWire *tern.WireNode
 }
 
 // textRef is the boxed TSP id that streamed assistant text patches: the
@@ -74,6 +85,9 @@ func (s *session) convertMain(op fe.Op) {
 				} else {
 					s.queue(tern.OpDel(e.id))
 				}
+			}
+			if s.ompRoles {
+				s.syncOmpReadGroups()
 			}
 		}
 	case fe.Insert:
@@ -104,6 +118,9 @@ func (s *session) convertMain(op fe.Op) {
 				s.settle(above, op.Index-1)
 			}
 		}
+		if s.ompRoles {
+			s.syncOmpReadGroups()
+		}
 	default:
 		e := s.sent[op.ID]
 		if e == nil {
@@ -115,6 +132,10 @@ func (s *session) convertMain(op fe.Op) {
 			s.recordMainTiming(e, prev, op.Node)
 		}
 		if e.gone {
+			return
+		}
+		if s.ompRoles && e.readGroupHostID != "" {
+			s.syncOmpReadGroups()
 			return
 		}
 		queued := s.queued
@@ -131,6 +152,13 @@ func (s *session) convertMain(op fe.Op) {
 			e.settled = false
 		}
 		s.settle(e, op.Index)
+		if s.ompRoles {
+			_, nextTool := op.Node.(fe.ToolCard)
+			_, prevTool := prev.(fe.ToolCard)
+			if nextTool || prevTool {
+				s.syncOmpReadGroups()
+			}
+		}
 	}
 }
 

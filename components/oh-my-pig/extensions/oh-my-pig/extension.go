@@ -28,6 +28,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/modes"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prediction"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prompt"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/providerwire"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ratchet"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/search"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/settings"
@@ -77,6 +78,7 @@ var registrars = []func(*sdk.Extension){
 	intent.RegisterLifecycle,
 	prediction.Register,
 	snapcompact.Register,
+	providerwire.Register,
 }
 
 // Extension returns the oh-my-pig extension.

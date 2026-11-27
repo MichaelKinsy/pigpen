@@ -682,7 +682,30 @@ func (h *HistoryURLHandler) preferredDir(c urls.Context) string {
 	return ""
 }
 
+func historyCurrentRoute(u urls.URL) (route string, err error) {
+	if !strings.EqualFold(u.Host, "current") {
+		return "", nil
+	}
+	if u.Path == "" || u.Path == "/" {
+		if u.RawQuery != "" || strings.Contains(u.RawHref, "#") {
+			return "", errors.New("Invalid history://current route; use exactly history://current/full (selectors may follow it)")
+		}
+		return "bare", nil
+	}
+	if u.Path != "/full" || u.RawQuery != "" || strings.Contains(u.RawHref, "#") {
+		return "", errors.New("Invalid history://current route; use exactly history://current/full (selectors may follow it)")
+	}
+	return "full", nil
+}
+
 func (h *HistoryURLHandler) Locate(c urls.Context, u urls.URL, _ urls.LocateOptions) (string, bool, error) {
+	route, err := historyCurrentRoute(u)
+	if err != nil {
+		return "", false, err
+	}
+	if route == "full" {
+		return "", false, nil
+	}
 	agentID := u.Host
 	if agentID == "" {
 		return "", false, nil
@@ -703,6 +726,9 @@ func (h *HistoryURLHandler) Locate(c urls.Context, u urls.URL, _ urls.LocateOpti
 			return "", false, nil
 		}
 	}
+	if route == "bare" {
+		return "", false, nil
+	}
 	disk := scanSessionFiles(reg.ArtifactsDirsForSession(sessScope, h.preferredDir(c)))
 	if p, ok := matchDiskSession(disk, agentID); ok {
 		return p, true, nil
@@ -710,7 +736,36 @@ func (h *HistoryURLHandler) Locate(c urls.Context, u urls.URL, _ urls.LocateOpti
 	return "", false, nil
 }
 
+func (h *HistoryURLHandler) resolveCurrentFull(c urls.Context, u urls.URL) (*urls.Resource, error) {
+	var zero sdk.Context
+	if c.SDK == zero {
+		return nil, errors.New("history://current/full requires a bound live session branch")
+	}
+	entries, ok, err := activeBranchRawEntries(c.SDK)
+	if err != nil {
+		return nil, fmt.Errorf("history://current/full requires a bound live session branch: %w", err)
+	}
+	if !ok {
+		return nil, errors.New("history://current/full requires a bound live session branch")
+	}
+	content := FormatCurrentBranchFullHistory(entries)
+	return &urls.Resource{
+		URL:         u.Href,
+		Content:     content,
+		ContentType: "text/markdown",
+		Notes:       []string{"Source: caller-bound live session branch (full, uncompacted)"},
+	}, nil
+}
+
 func (h *HistoryURLHandler) Resolve(c urls.Context, u urls.URL) (*urls.Resource, error) {
+	route, err := historyCurrentRoute(u)
+	if err != nil {
+		return nil, err
+	}
+	if route == "full" {
+		return h.resolveCurrentFull(c, u)
+	}
+
 	reg := h.registry()
 	sessScope, _ := callerTopSession(reg, c)
 	prefDir := h.preferredDir(c)
@@ -726,6 +781,9 @@ func (h *HistoryURLHandler) Resolve(c urls.Context, u urls.URL) (*urls.Resource,
 	}
 
 	ref, ok := reg.LookupInSession(sessScope, agentID)
+	if !ok && route == "bare" {
+		return h.resolveCurrentFull(c, u)
+	}
 	if !ok {
 		disk := scanSessionFiles(reg.ArtifactsDirsForSession(sessScope, prefDir))
 		if idMatch, filePath, found := findDiskSession(disk, agentID); found {
@@ -752,7 +810,6 @@ func (h *HistoryURLHandler) Resolve(c urls.Context, u urls.URL) (*urls.Resource,
 		}
 		return nil, fmt.Errorf("Unknown agent: %s\nKnown agents: %s\nList all with history://", agentID, knownStr)
 	}
-
 	msgs, source := ref.SnapshotMessages()
 	ref.mu.Lock()
 	status := ref.Status
@@ -1090,4 +1147,440 @@ func oneLineMax(s string, maxChars int) string {
 		return string(runes[:maxChars-1]) + "…"
 	}
 	return flat
+}
+
+// activeBranchRawEntries collects every persisted session entry on the caller's
+// active branch in root-to-leaf order (including pre-compaction entries), never
+// leaking abandoned sibling branches.
+// Intersects ctx.GetEntries() with ctx.GetBranch() IDs so full JSON blocks
+// (thinking, toolCall arguments, compaction markers, reset boundaries, etc.)
+// survive intact; falls back to synthesizing entries from BranchEntry when
+// GetEntries() returns no raw match for an ID.
+func activeBranchRawEntries(ctx sdk.Context) ([]map[string]any, bool, error) {
+	branch, err := ctx.GetBranch()
+	if err != nil {
+		return nil, false, err
+	}
+	if len(branch) == 0 {
+		return []map[string]any{}, true, nil
+	}
+	wanted := make(map[string]bool, len(branch))
+	for _, be := range branch {
+		if be.ID != "" {
+			wanted[be.ID] = true
+		}
+	}
+	rawEntries, _ := ctx.GetEntries()
+	byID := make(map[string]map[string]any, len(wanted))
+	for _, raw := range rawEntries {
+		var hdr struct {
+			ID string `json:"id"`
+		}
+		if json.Unmarshal(raw, &hdr) != nil || !wanted[hdr.ID] {
+			continue
+		}
+		var entry map[string]any
+		if json.Unmarshal(raw, &entry) == nil {
+			byID[hdr.ID] = entry
+		}
+	}
+	ordered := make([]map[string]any, 0, len(branch))
+	for _, be := range branch {
+		if be.ID != "" {
+			if raw, ok := byID[be.ID]; ok {
+				ordered = append(ordered, raw)
+				continue
+			}
+		}
+		ordered = append(ordered, branchEntryToRawMap(be))
+	}
+	return ordered, true, nil
+}
+
+func branchEntryToRawMap(be sdk.BranchEntry) map[string]any {
+	entryType := be.Type
+	if entryType == "" {
+		entryType = "message"
+	}
+	m := map[string]any{
+		"id":   be.ID,
+		"type": entryType,
+	}
+	switch entryType {
+	case "compaction":
+		m["summary"] = be.Content
+		if be.FirstKeptEntryID != "" {
+			m["firstKeptEntryId"] = be.FirstKeptEntryID
+		}
+	case "branch_summary":
+		m["summary"] = be.Content
+	case "message":
+		msg := map[string]any{"role": be.Role}
+		switch be.Role {
+		case "assistant":
+			var blocks []any
+			if be.Thinking != "" {
+				blocks = append(blocks, map[string]any{"type": "thinking", "thinking": be.Thinking})
+			}
+			if be.Content != "" {
+				blocks = append(blocks, map[string]any{"type": "text", "text": be.Content})
+			}
+			for _, tc := range be.ToolCalls {
+				var argVal any = tc.Args
+				if tc.Args != "" {
+					var decoded any
+					if json.Unmarshal([]byte(tc.Args), &decoded) == nil {
+						argVal = decoded
+					}
+				}
+				blocks = append(blocks, map[string]any{
+					"type":      "toolCall",
+					"id":        tc.ID,
+					"name":      tc.Name,
+					"arguments": argVal,
+				})
+			}
+			msg["content"] = blocks
+		case "toolResult":
+			msg["toolName"] = be.ToolName
+			msg["toolCallId"] = be.ToolCallID
+			msg["isError"] = be.IsError
+			msg["content"] = be.Content
+		default:
+			msg["content"] = be.Content
+		}
+		m["message"] = msg
+	default:
+		if be.Content != "" {
+			m["content"] = be.Content
+		}
+	}
+	return m
+}
+
+// FormatCurrentBranchFullHistory renders every persisted entry on the caller's
+// live branch without the compaction filters that shape model context.
+// upstream: packages/coding-agent/src/internal-urls/history-protocol.ts:114-305
+func FormatCurrentBranchFullHistory(entries []map[string]any) string {
+	lines := []string{
+		"# Current branch — full history",
+		"",
+		"Source: caller-bound live session branch. Context-window boundaries are retained below; this view never uses a registry or on-disk fallback.",
+		"",
+	}
+	for _, entry := range entries {
+		renderRawBranchEntry(&lines, entry)
+		lines = append(lines, "")
+	}
+	return strings.TrimSpace(strings.Join(lines, "\n")) + "\n"
+}
+
+func historyJSONFence(text string) string {
+	longest := 0
+	cur := 0
+	for i := range len(text) {
+		if text[i] == '`' {
+			cur++
+			if cur > longest {
+				longest = cur
+			}
+		} else {
+			cur = 0
+		}
+	}
+	fence := strings.Repeat("`", max(3, longest+1))
+	return fence + "json\n" + text + "\n" + fence
+}
+
+func marshalPrettyJSON(v any) string {
+	if v == nil {
+		return "null"
+	}
+	b, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return "null"
+	}
+	return string(b)
+}
+
+func appendHistoryTextContent(lines *[]string, content any) {
+	switch c := content.(type) {
+	case string:
+		*lines = append(*lines, c)
+	case []any:
+		for _, raw := range c {
+			block, ok := raw.(map[string]any)
+			if !ok {
+				continue
+			}
+			bType, _ := block["type"].(string)
+			switch bType {
+			case "text":
+				if t, ok := block["text"].(string); ok {
+					*lines = append(*lines, t)
+				}
+			case "image":
+				*lines = append(*lines, "[image]")
+			}
+		}
+	}
+}
+
+func renderRawBranchEntry(lines *[]string, entry map[string]any) {
+	id, _ := entry["id"].(string)
+	entryType, _ := entry["type"].(string)
+	parentID := "root"
+	if p, ok := entry["parentId"].(string); ok && p != "" {
+		parentID = p
+	}
+	timestamp := formatAnyScalar(entry["timestamp"])
+	*lines = append(*lines,
+		fmt.Sprintf("## Entry %s · %s", id, entryType),
+		"",
+		fmt.Sprintf("Parent: %s", parentID),
+		fmt.Sprintf("Timestamp: %s", timestamp),
+		"",
+	)
+	switch entryType {
+	case "message":
+		if msg, ok := entry["message"].(map[string]any); ok {
+			appendRawBranchMessage(lines, msg)
+			return
+		}
+	case "compaction":
+		firstKept, _ := entry["firstKeptEntryId"].(string)
+		tokensBefore := formatAnyScalar(entry["tokensBefore"])
+		summary, _ := entry["summary"].(string)
+		*lines = append(*lines,
+			"> Context window boundary: compaction",
+			"",
+			fmt.Sprintf("First kept entry: %s", firstKept),
+			fmt.Sprintf("Tokens before: %s", tokensBefore),
+			"",
+			summary,
+		)
+		return
+	case "reset_boundary":
+		*lines = append(*lines, "> Context window boundary: reset")
+		return
+	case "branch_summary":
+		fromID, _ := entry["fromId"].(string)
+		summary, _ := entry["summary"].(string)
+		*lines = append(*lines, fmt.Sprintf("From entry: %s", fromID), "", summary)
+		return
+	}
+	*lines = append(*lines, historyJSONFence(marshalPrettyJSON(entry)))
+}
+
+func appendRawBranchMessage(lines *[]string, msg map[string]any) {
+	role, _ := msg["role"].(string)
+	switch role {
+	case "user", "developer":
+		*lines = append(*lines, "### "+role)
+		appendHistoryTextContent(lines, msg["content"])
+	case "assistant":
+		*lines = append(*lines, "### assistant")
+		switch content := msg["content"].(type) {
+		case string:
+			*lines = append(*lines, content)
+		case []any:
+			for _, raw := range content {
+				block, ok := raw.(map[string]any)
+				if !ok {
+					continue
+				}
+				bType, _ := block["type"].(string)
+				switch bType {
+				case "text":
+					if t, ok := block["text"].(string); ok {
+						*lines = append(*lines, t)
+					}
+				case "thinking":
+					thinking, _ := block["thinking"].(string)
+					*lines = append(*lines, "<thinking>", thinking, "</thinking>")
+				case "toolCall", "tool_use":
+					name, _ := block["name"].(string)
+					id, _ := block["id"].(string)
+					argVal := block["arguments"]
+					if argVal == nil {
+						argVal = block["input"]
+					}
+					*lines = append(*lines, fmt.Sprintf("#### tool call: %s (%s)", name, id))
+					*lines = append(*lines, historyJSONFence(marshalPrettyJSON(argVal)))
+				case "redactedThinking":
+					data, _ := block["data"].(string)
+					*lines = append(*lines, fmt.Sprintf("[redacted thinking: %d chars omitted]", len(data)))
+				case "anthropicServerTool":
+					srvBlock, _ := block["block"].(map[string]any)
+					srvType, _ := srvBlock["type"].(string)
+					*lines = append(*lines, fmt.Sprintf("#### server tool: %s", srvType))
+					*lines = append(*lines, historyJSONFence(marshalPrettyJSON(srvBlock)))
+				case "image":
+					mimeType, _ := block["mimeType"].(string)
+					data, _ := block["data"].(string)
+					*lines = append(*lines, fmt.Sprintf("[image: %s, %d base64 chars omitted]", mimeType, len(data)))
+				case "fallback":
+					fromModel, _ := mapString(block["from"], "model")
+					toModel, _ := mapString(block["to"], "model")
+					*lines = append(*lines, fmt.Sprintf("[provider fallback: %s to %s]", fromModel, toModel))
+				}
+			}
+		}
+	case "toolResult":
+		toolName, _ := msg["toolName"].(string)
+		toolCallID, _ := msg["toolCallId"].(string)
+		errSuffix := ""
+		if isErr, _ := msg["isError"].(bool); isErr {
+			errSuffix = " [error]"
+		}
+		*lines = append(*lines, fmt.Sprintf("### tool result: %s (%s)%s", toolName, toolCallID, errSuffix))
+		appendHistoryTextContent(lines, msg["content"])
+	case "bashExecution":
+		*lines = append(*lines,
+			"### bash execution",
+			formatBashExecutionText(msg),
+			historyJSONFence(marshalPrettyJSON(map[string]any{
+				"exitCode":   msg["exitCode"],
+				"cancelled":  boolOrFalse(msg["cancelled"]),
+				"truncated":  boolOrFalse(msg["truncated"]),
+				"meta":       msg["meta"],
+				"imageCount": sliceLen(msg["images"]),
+			})),
+		)
+	case "pythonExecution":
+		*lines = append(*lines,
+			"### python execution",
+			formatPythonExecutionText(msg),
+			historyJSONFence(marshalPrettyJSON(map[string]any{
+				"exitCode":  msg["exitCode"],
+				"cancelled": boolOrFalse(msg["cancelled"]),
+				"truncated": boolOrFalse(msg["truncated"]),
+				"meta":      msg["meta"],
+			})),
+		)
+	case "custom", "hookMessage":
+		customType, _ := msg["customType"].(string)
+		*lines = append(*lines, fmt.Sprintf("### %s (%s)", role, customType))
+		appendHistoryTextContent(lines, msg["content"])
+	case "branchSummary":
+		fromID, _ := msg["fromId"].(string)
+		summary, _ := msg["summary"].(string)
+		*lines = append(*lines, fmt.Sprintf("### branch summary (from %s)", fromID), summary)
+	case "compactionSummary":
+		tokensBefore := formatAnyScalar(msg["tokensBefore"])
+		summary, _ := msg["summary"].(string)
+		*lines = append(*lines, fmt.Sprintf("### compaction summary (%s tokens before)", tokensBefore), summary)
+	case "fileMention":
+		*lines = append(*lines, "### file mention")
+		if files, ok := msg["files"].([]any); ok {
+			for _, raw := range files {
+				f, ok := raw.(map[string]any)
+				if !ok {
+					continue
+				}
+				path, _ := f["path"].(string)
+				*lines = append(*lines, fmt.Sprintf(`<file path="%s">`, path))
+				if content, ok := f["content"].(string); ok && content != "" {
+					*lines = append(*lines, content)
+				}
+				if f["image"] != nil {
+					*lines = append(*lines, "[image]")
+				}
+				*lines = append(*lines, "</file>")
+			}
+		}
+	default:
+		*lines = append(*lines, historyJSONFence(marshalPrettyJSON(msg)))
+	}
+}
+
+func formatBashExecutionText(msg map[string]any) string {
+	cmd, _ := msg["command"].(string)
+	out, _ := msg["output"].(string)
+	var b strings.Builder
+	fmt.Fprintf(&b, "Ran `%s`\n", cmd)
+	if out != "" {
+		fmt.Fprintf(&b, "```\n%s\n```", out)
+	} else {
+		b.WriteString("(no output)")
+	}
+	if boolOrFalse(msg["cancelled"]) {
+		b.WriteString("\n\n(command cancelled)")
+	} else if code, ok := intFromAny(msg["exitCode"]); ok && code != 0 {
+		fmt.Fprintf(&b, "\n\nCommand exited with code %d", code)
+	}
+	return b.String()
+}
+
+func formatPythonExecutionText(msg map[string]any) string {
+	code, _ := msg["code"].(string)
+	out, _ := msg["output"].(string)
+	var b strings.Builder
+	fmt.Fprintf(&b, "Ran Python:\n```python\n%s\n```\n", code)
+	if out != "" {
+		fmt.Fprintf(&b, "Output:\n```\n%s\n```", out)
+	} else {
+		b.WriteString("(no output)")
+	}
+	if boolOrFalse(msg["cancelled"]) {
+		b.WriteString("\n\n(execution cancelled)")
+	} else if exitCode, ok := intFromAny(msg["exitCode"]); ok && exitCode != 0 {
+		fmt.Fprintf(&b, "\n\nExecution failed with code %d", exitCode)
+	}
+	return b.String()
+}
+
+func formatAnyScalar(v any) string {
+	switch x := v.(type) {
+	case nil:
+		return ""
+	case string:
+		return x
+	case float64:
+		if x == float64(int64(x)) {
+			return strconv.FormatInt(int64(x), 10)
+		}
+		return strconv.FormatFloat(x, 'f', -1, 64)
+	case int:
+		return strconv.Itoa(x)
+	case int64:
+		return strconv.FormatInt(x, 10)
+	default:
+		return fmt.Sprint(x)
+	}
+}
+
+func mapString(v any, key string) (string, bool) {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return "", false
+	}
+	s, ok := m[key].(string)
+	return s, ok
+}
+
+func boolOrFalse(v any) bool {
+	b, _ := v.(bool)
+	return b
+}
+
+func sliceLen(v any) int {
+	s, ok := v.([]any)
+	if !ok {
+		return 0
+	}
+	return len(s)
+}
+
+func intFromAny(v any) (int, bool) {
+	switch n := v.(type) {
+	case int:
+		return n, true
+	case int64:
+		return int(n), true
+	case float64:
+		return int(n), true
+	default:
+		return 0, false
+	}
 }

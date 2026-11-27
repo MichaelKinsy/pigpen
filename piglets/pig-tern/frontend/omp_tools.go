@@ -1360,8 +1360,59 @@ func formatOmpScalar(v any, maxLen int) string {
 	}
 }
 
+// isOmpOutReplyWrite reports whether tool is a `write` call targeting the
+// `out://` mid-turn reply channel (upstream: chat/reply-write.ts:23-35).
+func isOmpOutReplyWrite(tool fe.ToolCard) bool {
+	if tool.Name != "write" {
+		return false
+	}
+	if raw := strings.ToLower(strings.TrimSpace(firstStringArg(tool.Arguments, "path", "file_path"))); strings.HasPrefix(raw, "out://") {
+		return true
+	}
+	return tool.ResultView != nil && tool.ResultView.Root.ID == "omp.assistant"
+}
+
+// ompOutReplyNode renders a `write` to `out://` as mid-turn assistant prose
+// (`col[omp.assistant]` with an `md` child and optional `text[omp.tool.error]`
+// on failure), matching omp's ReplyWriteComponent (chat/reply-write.ts:82-127).
+func (s *session) ompOutReplyNode(id string, tool fe.ToolCard) tern.WireNode {
+	s.dropViewRules(id)
+	content, _ := tool.Arguments["content"].(string)
+	streaming := tool.Status == fe.ToolPending || tool.Status == fe.ToolRunning
+	var children []tern.WireNode
+	if strings.TrimSpace(content) != "" {
+		children = append(children, tern.WireNode{
+			ID: id + ".md",
+			K:  tern.KindMd,
+			P:  map[string]any{"text": content, "stream": streaming},
+		})
+	}
+	if tool.Status == fe.ToolError {
+		errText := strings.TrimSpace(stripANSI(tool.Output))
+		if errText == "" && len(tool.Result) > 0 {
+			errText = strings.TrimSpace(stripANSI(linesText(tool.Result)))
+		}
+		if errText != "" {
+			children = append(children, tern.WireNode{
+				ID: id + ".err",
+				K:  tern.KindText,
+				P:  map[string]any{"spans": []any{map[string]any{"t": errText, "s": "error"}}, "wrap": "word", "role": "omp.tool.error"},
+			})
+		}
+	}
+	return tern.WireNode{
+		ID: id,
+		K:  tern.KindCol,
+		P:  map[string]any{"role": "omp.assistant"},
+		C:  children,
+	}
+}
+
 // ompToolNode builds omp's data-first `tool` node (chat/tool-execution.ts:1049-1094).
 func (s *session) ompToolNode(id string, tool fe.ToolCard, startedAt, endedAt time.Time) tern.WireNode {
+	if isOmpOutReplyWrite(tool) {
+		return s.ompOutReplyNode(id, tool)
+	}
 	head := s.deriveOmpToolHead(tool)
 	frame := "card"
 	if head.inline {

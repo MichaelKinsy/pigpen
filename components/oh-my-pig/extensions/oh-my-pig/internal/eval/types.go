@@ -90,15 +90,17 @@ type LineRange struct {
 
 // TruncationMeta mirrors omp's TruncationMeta in packages/tui/src/tools/output-meta.ts:17.
 type TruncationMeta struct {
-	Direction   string     `json:"direction"`
-	TruncatedBy string     `json:"truncatedBy"`
-	TotalLines  int        `json:"totalLines"`
-	TotalBytes  int        `json:"totalBytes"`
-	OutputLines int        `json:"outputLines"`
-	OutputBytes int        `json:"outputBytes"`
-	MaxBytes    int        `json:"maxBytes,omitempty"`
-	ShownRange  *LineRange `json:"shownRange,omitempty"`
-	PartialLine bool       `json:"partialLine,omitempty"`
+	Direction           string     `json:"direction"`
+	TruncatedBy         string     `json:"truncatedBy"`
+	TotalLines          int        `json:"totalLines"`
+	TotalBytes          int        `json:"totalBytes"`
+	OutputLines         int        `json:"outputLines"`
+	OutputBytes         int        `json:"outputBytes"`
+	MaxBytes            int        `json:"maxBytes,omitempty"`
+	ShownRange          *LineRange `json:"shownRange,omitempty"`
+	ArtifactID          string     `json:"artifactId,omitempty"`
+	ArtifactElidedBytes int        `json:"artifactElidedBytes,omitempty"`
+	PartialLine         bool       `json:"partialLine,omitempty"`
 }
 
 // OutputMeta mirrors omp's OutputMeta in packages/tui/src/tools/output-meta.ts:107.
@@ -248,16 +250,23 @@ func sanitizeText(s string) string {
 // while tracking exact total bytes and total lines seen.
 // upstream: packages/tui/src/tools/streaming-output.ts (TailBuffer, OutputSink)
 type boundedOutputBuffer struct {
-	mu         sync.Mutex
-	maxBytes   int
-	keepLimit  int
-	buf        []byte
-	totalBytes int
-	totalLines int
-	endsWithNL bool
-	sawData    bool
-	truncated  bool
+	mu           sync.Mutex
+	maxBytes     int
+	keepLimit    int
+	buf          []byte
+	captureSpill bool
+	spillCap     int
+	fullBuf      []byte
+	totalBytes   int
+	totalLines   int
+	endsWithNL   bool
+	sawData      bool
+	truncated    bool
 }
+
+// defaultSpillCaptureCap bounds the in-memory full capture when WriteSpill is
+// wired (matching omp's 16 MiB artifact cap so pathological output never OOMs).
+const defaultSpillCaptureCap = 16 * 1024 * 1024
 
 func newBoundedOutputBuffer(maxBytes int) *boundedOutputBuffer {
 	if maxBytes <= 0 {
@@ -267,6 +276,15 @@ func newBoundedOutputBuffer(maxBytes int) *boundedOutputBuffer {
 		maxBytes:  maxBytes,
 		keepLimit: maxBytes * 2,
 	}
+}
+
+func newSpillableOutputBuffer(maxBytes int, captureSpill bool) *boundedOutputBuffer {
+	b := newBoundedOutputBuffer(maxBytes)
+	if captureSpill {
+		b.captureSpill = true
+		b.spillCap = defaultSpillCaptureCap
+	}
+	return b
 }
 
 func (b *boundedOutputBuffer) Append(raw string) {
@@ -283,6 +301,14 @@ func (b *boundedOutputBuffer) Append(raw string) {
 	b.totalBytes += len(s)
 	b.totalLines += strings.Count(s, "\n")
 	b.endsWithNL = s[len(s)-1] == '\n'
+	if b.captureSpill && len(b.fullBuf) < b.spillCap {
+		rem := b.spillCap - len(b.fullBuf)
+		if len(s) <= rem {
+			b.fullBuf = append(b.fullBuf, s...)
+		} else {
+			b.fullBuf = append(b.fullBuf, s[:rem]...)
+		}
+	}
 	b.buf = append(b.buf, s...)
 	if len(b.buf) > b.keepLimit {
 		b.truncated = true
@@ -309,6 +335,18 @@ func (b *boundedOutputBuffer) PrependLine(line string) {
 	b.sawData = true
 	b.totalBytes += len(s)
 	b.totalLines += strings.Count(s, "\n")
+	if b.captureSpill {
+		combined := make([]byte, 0, min(len(s)+len(b.fullBuf), b.spillCap))
+		combined = append(combined, s...)
+		if rem := b.spillCap - len(combined); rem > 0 {
+			if len(b.fullBuf) <= rem {
+				combined = append(combined, b.fullBuf...)
+			} else {
+				combined = append(combined, b.fullBuf[:rem]...)
+			}
+		}
+		b.fullBuf = combined
+	}
 	b.buf = append([]byte(s), b.buf...)
 	if len(b.buf) > b.keepLimit {
 		b.truncated = true
@@ -318,6 +356,16 @@ func (b *boundedOutputBuffer) PrependLine(line string) {
 		}
 		b.buf = b.buf[drop:]
 	}
+}
+
+// FullText returns the captured full output when captureSpill was enabled.
+func (b *boundedOutputBuffer) FullText() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if len(b.fullBuf) > 0 {
+		return string(b.fullBuf)
+	}
+	return string(b.buf)
 }
 
 // AppendLine appends raw on a new line only if the buffer is non-empty and does not
@@ -427,11 +475,62 @@ func formatBytesHuman(n int) string {
 	}
 }
 
+// formatSpillReference formats an artifact reference matching omp's
+// formatFullOutputReference (packages/tui/src/tools/output-meta.ts:174-179).
+// Accepts either a full URL (`artifact://...`, `local://...`) or a bare id.
+func formatSpillReference(artifactRef string) string {
+	ref := strings.TrimSpace(artifactRef)
+	if ref == "" {
+		return ""
+	}
+	if !strings.Contains(ref, "://") {
+		ref = "artifact://" + ref
+	}
+	return "Read " + ref + " for full output"
+}
+
+// normalizeArtifactID extracts the stored ArtifactID for TruncationMeta.
+func normalizeArtifactID(artifactRef string) string {
+	ref := strings.TrimSpace(artifactRef)
+	if ref == "" {
+		return ""
+	}
+	if rest, ok := strings.CutPrefix(ref, "local://"); ok {
+		if id, hasLog := strings.CutSuffix(rest, ".log"); hasLog && id != "" {
+			return id
+		}
+		return rest
+	}
+	if rest, ok := strings.CutPrefix(ref, "artifact://"); ok {
+		return rest
+	}
+	return ref
+}
+
 // formatTruncationNotice mirrors omp's formatOutputNotice / formatTruncationMetaNotice
-// for tail truncation without an artifact (packages/tui/src/tools/output-meta.ts:272-335).
-func formatTruncationNotice(t *TruncationMeta) string {
+// for tail truncation with an optional artifact spill link
+// (packages/tui/src/tools/output-meta.ts:272-335).
+func formatTruncationNotice(t *TruncationMeta, spillRef ...string) string {
 	if t == nil {
 		return ""
+	}
+	ref := ""
+	rawRef := ""
+	if len(spillRef) > 0 && strings.TrimSpace(spillRef[0]) != "" {
+		rawRef = strings.TrimSpace(spillRef[0])
+	} else if t.ArtifactID != "" {
+		rawRef = t.ArtifactID
+	}
+	if rawRef != "" {
+		if t.ArtifactElidedBytes > 0 {
+			dispRef := rawRef
+			if !strings.Contains(dispRef, "://") {
+				dispRef = "artifact://" + dispRef
+			}
+			ref = fmt.Sprintf("Read %s for a %s head sample (%s was not saved)", dispRef, formatBytesHuman(t.TotalBytes-t.ArtifactElidedBytes), formatBytesHuman(t.ArtifactElidedBytes))
+		} else {
+			ref = formatSpillReference(rawRef)
+		}
 	}
 	var body string
 	if t.PartialLine {
@@ -453,6 +552,9 @@ func formatTruncationNotice(t *TruncationMeta) string {
 			}
 			body += fmt.Sprintf(" (%s limit)", formatBytesHuman(mb))
 		}
+	}
+	if ref != "" {
+		body += ". " + ref
 	}
 	return "\n\n[" + body + "]"
 }

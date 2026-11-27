@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 	"unicode"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -196,6 +197,102 @@ func PlanSaveFileName(title string) string {
 		return stem + ".md"
 	}
 	return stem + "_PLAN.md"
+}
+
+// ResolvePlanAutosaveDir returns the directory where approved plans are autosaved:
+// `plan.autosaveDir` (~, absolute, or cwd-relative) or `<cwd>/.omp/plans` when unset/blank.
+// upstream: packages/coding-agent/src/plan-mode/plan-autosave.ts:30-43
+func expandPlanTilde(p string) string {
+	if p == "~" {
+		if home, err := os.UserHomeDir(); err == nil && home != "" {
+			return home
+		}
+		return p
+	}
+	if strings.HasPrefix(p, "~/") || strings.HasPrefix(p, `~\`) {
+		if home, err := os.UserHomeDir(); err == nil && home != "" {
+			return filepath.Join(home, p[2:])
+		}
+	}
+	return p
+}
+
+func ResolvePlanAutosaveDir(ctx sdk.Context, cwd string) string {
+	raw := strings.TrimSpace(readModeSettingString(ctx, "plan.autosaveDir"))
+	if raw == "" {
+		return filepath.Join(cwd, ".omp", "plans")
+	}
+	expanded := expandPlanTilde(raw)
+	if filepath.IsAbs(expanded) {
+		return filepath.Clean(expanded)
+	}
+	return filepath.Join(cwd, expanded)
+}
+
+// AutosaveApprovedPlan performs a best-effort exclusive create of an approved plan
+// into `ResolvePlanAutosaveDir(ctx, cwd)` when `plan.autosave` is enabled.
+// Returns the written path, or "" when autosave is disabled or planContent is blank.
+// upstream: packages/coding-agent/src/plan-mode/plan-autosave.ts:53-94
+func AutosaveApprovedPlan(ctx sdk.Context, cwd, title, planContent string) (string, error) {
+	if !isPlanAutosaveEnabled(ctx) || strings.TrimSpace(planContent) == "" {
+		return "", nil
+	}
+	dir := ResolvePlanAutosaveDir(ctx, cwd)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	fileName := PlanSaveFileName(title)
+	ext := filepath.Ext(fileName)
+	stem := strings.TrimSuffix(fileName, ext)
+	const maxCandidates = 1000
+	for idx := range maxCandidates {
+		name := fileName
+		if idx > 0 {
+			name = fmt.Sprintf("%s-%d%s", stem, idx, ext)
+		}
+		candidate := filepath.Join(dir, name)
+		f, err := os.OpenFile(candidate, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+		if err != nil {
+			if os.IsExist(err) {
+				continue
+			}
+			return "", err
+		}
+		_, wErr := f.WriteString(planContent)
+		cErr := f.Close()
+		if wErr != nil {
+			return "", wErr
+		}
+		if cErr != nil {
+			return "", cErr
+		}
+		return candidate, nil
+	}
+	fallback := filepath.Join(dir, fmt.Sprintf("%d-%s", time.Now().UnixMilli(), fileName))
+	f, err := os.OpenFile(fallback, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	if err != nil {
+		return "", err
+	}
+	_, wErr := f.WriteString(planContent)
+	cErr := f.Close()
+	if wErr != nil {
+		return "", wErr
+	}
+	if cErr != nil {
+		return "", cErr
+	}
+	return fallback, nil
+}
+
+func maybeAutosaveApprovedPlan(ctx sdk.Context, details PlanApprovalDetails, planContent string) {
+	saved, err := AutosaveApprovedPlan(ctx, ctx.Cwd(), details.Title, planContent)
+	if err != nil {
+		notifyWarn(ctx, fmt.Sprintf("Failed to autosave plan: %v", err))
+		return
+	}
+	if saved != "" {
+		notifyInfo(ctx, fmt.Sprintf("Saved plan to %s.", saved))
+	}
 }
 
 // ResolveApprovedPlan locates the plan file the agent wrote without renaming it.
@@ -751,6 +848,10 @@ func (m *manager) handlePlanCommand(ctx sdk.Context, args string) error {
 		m.disablePausedPlanMode(ctx, sid)
 		return nil
 	}
+	if !isPlanEnabledSetting(ctx) {
+		notifyWarn(ctx, "Plan mode is disabled. Enable it in settings (plan.enabled).")
+		return nil
+	}
 
 	m.enterPlanMode(ctx, sid, planFile)
 	if initialPrompt != "" {
@@ -1136,6 +1237,7 @@ func (m *manager) approvePlanFreshSession(ctx sdk.Context, sid string, details P
 				"mode": "none",
 				"data": map[string]any{"approvedPlanFilePath": details.PlanFilePath},
 			})
+			maybeAutosaveApprovedPlan(newCtx, details, planContent)
 			if name := HumanizePlanTitle(details.Title); name != "" {
 				if existing, err := newCtx.GetSessionName(); err == nil && (existing == nil || *existing == "") {
 					_ = newCtx.SetSessionName(name)
@@ -1219,6 +1321,7 @@ func (m *manager) approvePlanCompact(ctx sdk.Context, sid string, details PlanAp
 		"mode": "none",
 		"data": map[string]any{"approvedPlanFilePath": details.PlanFilePath},
 	})
+	maybeAutosaveApprovedPlan(ctx, details, planContent)
 
 	finish := func(compactErr error) error {
 		if isCompactionCancelledError(compactErr) {
@@ -1296,6 +1399,7 @@ func (m *manager) approvePlanKeepContext(ctx sdk.Context, sid string, details Pl
 		"mode": "none",
 		"data": map[string]any{"approvedPlanFilePath": details.PlanFilePath},
 	})
+	maybeAutosaveApprovedPlan(ctx, details, planContent)
 	if name := HumanizePlanTitle(details.Title); name != "" {
 		if existing, err := ctx.GetSessionName(); err == nil && (existing == nil || *existing == "") {
 			_ = ctx.SetSessionName(name)

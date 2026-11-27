@@ -34,6 +34,13 @@ const (
 // when nil, readSessionSettings falls back to ctx.GetSettings() and env vars.
 var Setting func(ctx sdk.Context, key string) any
 
+// WriteSpill persists oversized eval output and returns an artifact URL or ID
+// (e.g. "artifact://<id>" or "local://<N>.log"). Wired by the integrator in
+// wiring.go to shell.WriteSessionSpill; when nil, oversized output truncates
+// inline without creating an artifact file.
+// upstream: packages/coding-agent/src/eval/executor-base.ts, packages/tui/src/tools/output-meta.ts
+var WriteSpill func(ctx sdk.Context, label, content string) string
+
 // SessionSettings holds resolved eval-related settings for one call.
 type SessionSettings struct {
 	AllowPy           bool
@@ -732,10 +739,27 @@ func (m *Manager) Execute(ctx sdk.Context, params map[string]any) (sdk.ToolResul
 	var outputMeta *OutputMeta
 	var truncNotice string
 	if kRes.Truncation != nil {
+		var spillRef string
+		if WriteSpill != nil {
+			fullContent := kRes.FullOutput
+			if fullContent == "" {
+				fullContent = outputText
+			}
+			label := string(cellLanguage)
+			if cellResult.Title != "" {
+				label = cellResult.Title
+			}
+			if ref := strings.TrimSpace(WriteSpill(ctx, label, fullContent)); ref != "" {
+				spillRef = ref
+				kRes.Truncation.ArtifactID = normalizeArtifactID(ref)
+				if kRes.Truncation.TotalBytes > len(fullContent) {
+					kRes.Truncation.ArtifactElidedBytes = kRes.Truncation.TotalBytes - len(fullContent)
+				}
+			}
+		}
 		outputMeta = &OutputMeta{Truncation: kRes.Truncation}
-		truncNotice = formatTruncationNotice(kRes.Truncation)
+		truncNotice = formatTruncationNotice(kRes.Truncation, spillRef)
 	}
-
 	statusMu.Lock()
 	cellResult.Output = runtimeOutput
 	cellResult.DurationMs = &durationMs

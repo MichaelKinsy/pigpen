@@ -30,6 +30,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/modes"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prediction"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prompt"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/providerwire"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ratchet"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/search"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/settings"
@@ -92,6 +93,9 @@ func wireSettings() {
 	modes.SetSetting = settings.Set
 	snapcompact.Setting = settings.Any
 	snapcompact.HandoffPrompt = modes.RenderHandoffPrompt
+	files.Setting = settings.Any
+	providerwire.Setting = settings.Any
+	providerwire.SetSetting = settings.Set
 	prompt.Skillful = func(ctx sdk.Context) bool {
 		return settings.Enabled(ctx, "skillful", true)
 	}
@@ -117,7 +121,7 @@ func wireSettings() {
 	// All other keys come from `settings.Any`.
 	shell.Setting = func(ctx sdk.Context, key string) any {
 		switch key {
-		case "bash.patterns", "bash.allowedEnvVars":
+		case "bash.patterns", "bash.allowedEnvVars", "bash.allowCompoundCommands", "bash.direnv":
 			return settings.OperatorAny(ctx, key)
 		case "tools.approval.bash":
 			if m, ok := settings.Any(ctx, "tools.approval").(map[string]any); ok {
@@ -267,6 +271,15 @@ func wireSpillAndURLs() {
 	// session's `local://` directory (upstream: session/artifacts.ts:86-163).
 	shell.LocalSpillRoot = urls.LocalRoot
 	jobs.SpillFunc = shell.WriteSessionSpill
+	spillAdapter := func(ctx sdk.Context, _ string, content string) string {
+		url, err := shell.WriteSessionSpill(ctx, []byte(content))
+		if err != nil {
+			return ""
+		}
+		return url
+	}
+	eval.WriteSpill = spillAdapter
+	snapcompact.WriteSpill = spillAdapter
 
 	urls.SetLocalRootProvider(func(ctx sdk.Context) (string, bool) {
 		root, ok := agents.ParentLocalRoot(ctx)

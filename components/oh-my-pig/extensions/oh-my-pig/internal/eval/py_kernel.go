@@ -477,6 +477,7 @@ func samePreludeSnippet(a, b preludeSnippet) bool {
 // kernelResult is the outcome of one cell executed against a Python or JS kernel.
 type kernelResult struct {
 	Output         string
+	FullOutput     string
 	Truncation     *TruncationMeta
 	ExitCode       *int
 	Cancelled      bool
@@ -959,7 +960,7 @@ func (k *pythonKernel) execRaw(
 		return kernelResult{}, errors.New("Python kernel is not running")
 	}
 
-	outBuf := newBoundedOutputBuffer(DefaultOutputMaxBytes)
+	outBuf := newSpillableOutputBuffer(DefaultOutputMaxBytes, WriteSpill != nil)
 	var displays []DisplayOutput
 	var dispMu sync.Mutex
 
@@ -1050,8 +1051,13 @@ func (k *pythonKernel) execRaw(
 	dispCopy := append([]DisplayOutput(nil), displays...)
 	dispMu.Unlock()
 
+	fullOut := ""
+	if truncMeta != nil && WriteSpill != nil {
+		fullOut = outBuf.FullText()
+	}
 	return kernelResult{
 		Output:         outStr,
+		FullOutput:     fullOut,
 		Truncation:     truncMeta,
 		ExitCode:       exitCode,
 		Cancelled:      cancelled,

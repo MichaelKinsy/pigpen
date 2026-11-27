@@ -767,7 +767,7 @@ func (m *manager) maybeRunLoopIteration(ctx sdk.Context, sid string) string {
 			prevCancel()
 		}
 
-		verdict := EvaluateLoopCondition(ctx, condCtx, *cond, defaultLoopConditionTimeoutMs)
+		verdict := EvaluateLoopCondition(ctx, condCtx, *cond, loopConditionTimeoutMs(ctx))
 		condCancel()
 
 		// If Escape aborted the run while the condition command was running,

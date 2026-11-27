@@ -52,8 +52,8 @@ Pinned upstream release: **omp `v19.1.1`** (commit `31ffee513f`).
 |---|---|---|
 | `grep.enabled` | `true` | Registered by default (PiG manages active tools) |
 | `glob.enabled` | `true` | Registered by default (PiG manages active tools) |
-| `grep.contextBefore` | `0` | Default `0` only; settings override not wired |
-| `grep.contextAfter` | `0` | Default `0` only; settings override not wired |
+| `grep.contextBefore` | `0` | Yes via `search.Setting(ctx, "grep.contextBefore")` (explicit tool `context`/`contextBefore` params override; default `0`) |
+| `grep.contextAfter` | `0` | Yes via `search.Setting(ctx, "grep.contextAfter")` (explicit tool `context`/`contextAfter` params override; default `0`) |
 | `find.enabled` | `"auto"` | Yes, via `search.Setting(ctx, "find.enabled")`: `"auto"` requires native classifier (`ModelTypeClassifier`), `"on"` also allows session chat model via `Context.Complete`, `"off"` disables `find` |
 | `find.hitThreshold` | `0.2` | Yes, via `search.Setting(ctx, "find.hitThreshold")` |
 | `find.verifyModel` | `undefined` | Not wired (uses same judge for wave 3) |
@@ -66,7 +66,6 @@ Pinned upstream release: **omp `v19.1.1`** (commit `31ffee513f`).
 | Non-stdlib archive formats in archive-member grep (`7z`, `rar`, `tar.zst`, `tar.bz2`, `tar.xz`, `iso`, `cab`, `asar`, etc.) | `packages/coding-agent/src/tools/grep.ts:326-331` | Go stdlib supports ZIP (`.zip`/`.jar`/`.war`/`.ear`/`.apk`/`.whl`/`.ipa`/`.xpi`/`.vsix`/`.nupkg`/`.cbz`), TAR, and TAR.GZ/TGZ; other formats fail truthfully with `cannot open archive: Reading <format> archives is not supported in this Go standard-library port` |
 | External HTTP(S) URL grep (`https://...`) | `packages/coding-agent/src/tools/grep.ts:169-201,705-721` | Requires `fetch` materialization helper with cache/raw-mode handling; fails with an explicit message pointing to `read` |
 | Jupyter `.ipynb` cell-projection grep | `packages/coding-agent/src/tools/grep.ts:951-1021` | Requires omp's `notebookToEditableText` projection; raw `.ipynb` matches stay unanchored (no edit tags), matching omp's fallback |
-| Context lines (`grep.contextBefore` / `grep.contextAfter`) | `packages/coding-agent/src/tools/grep.ts:741-743` | Default in omp is 0; settings-driven context-line buffering is omitted because `search.Setting` currently wires `find.*` settings only |
 | Comma and whitespace path-list delimiters | `packages/coding-agent/src/tools/path-utils.ts:602-660` | `;` and JSON-array lists are ported; comma/whitespace heuristic splitting is omitted to keep literal-filename safety simple without extra stat probes |
 | Parallel directory walking & oversized-last grep scheduling | `crates/xfs/src/walk/parallel.rs`, `crates/xfs/src/grep/run.rs:970-1000` | Content search and `find` lexical scan run in parallel worker pools with reused buffers; directory traversal stays sequential via `os.ReadDir` |
 | `find` Spotlight filename ranker & `find.verifyModel` override | `packages/coding-agent/src/tools/jfind/cascade.ts:336-347,543-580` | Spotlight is an omp-specific remote experiment service; wave 1 uses judge filename batches and wave 3 uses the resolved judge |
