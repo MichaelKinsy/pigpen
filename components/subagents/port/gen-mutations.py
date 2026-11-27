@@ -213,6 +213,31 @@ m("pane-task-size", "panes.go", 'if len(req.Stdin) > paneTaskMax {', 'if false {
 m("pane-chain-wiring", "extension.go", "jsTrim(fields[1]), func(s string) { ctx.Notify(s, \"info\") }, paneHostFor(ctx, defaults))", "jsTrim(fields[1]), func(s string) { ctx.Notify(s, \"info\") }, nil)\n\t_ = defaults")
 m("pane-goos", "panes.go", '*s.herdrPanes && goos != "windows" &&', '*s.herdrPanes &&')
 
+# rexpanes.go: Rex panes
+m("rex-setting", "discovery.go", "d.rexPanes = set.rexPanes", "d.rexPanes = nil")
+m("rex-goos", "rexpanes.go", '*s.rexPanes && goos != "windows" &&', '*s.rexPanes &&')
+m("rex-bin-dir", "rexpanes.go", 'return filepath.Join(d, "rex")', 'return filepath.Join("rex")')
+m("rex-env-rex", "rexpanes.go", '!strings.HasPrefix(k, "REX_")', 'true')
+m("rex-env-name", "rexpanes.go", "ok && shellName.MatchString(k) &&", "ok &&")
+m("rex-env-quote", "rexpanes.go", "strings.ReplaceAll(v, \"'\", `'\\''`)", "v")
+m("rex-root-record", "rexpanes.go", 'if r.ID == "" {', "if true {")
+m("rex-exit-first", "rexpanes.go", "\tif proc.LastExit != nil {", "\tif false {")
+m("rex-task-size", "rexpanes.go", "if len(req.Stdin) > paneTaskMax {", "if false {")
+m("rex-fallback", "rexpanes.go", '); err != nil {\n\t\treturn fallback(fmt.Sprintf("Rex is not reachable (%v); %s runs without a pane.", err, agent))', "); err != nil {\n\t\treturn childResult{}, err")
+m("rex-focus", "rexpanes.go", '"--focus=false", ', "")
+m("rex-shell-none", "rexpanes.go", '"--shell=none", ', "")
+m("rex-env-file", "rexpanes.go", 'envFile.WriteString(rexEnvScript(req.Env))', 'envFile.WriteString("")')
+m("rex-print", "rexpanes.go", "paneArgs(req.Args, dir, id, req.Stdin)...)...)", "append(append([]string{}, req.Args...), \"--session-dir\", dir, \"--session-id\", id, \"--\", req.Stdin)...)...)")
+m("rex-no-block", "rexpanes.go", ' || len(started.BlockIDs) == 0 || started.BlockIDs[0] == ""', "")
+m("rex-close", "rexpanes.go", 'defer func() { _, _ = rexCLI(p.bin, "block", "close", "-s", p.session, block) }()', "_ = block")
+m("rex-turn", "rexpanes.go", 'st == "idle" && turned', 'st == "idle"')
+m("rex-turn-blocked", "rexpanes.go", 'turned = turned || st == "working" || st == "blocked"', 'turned = turned || st == "working" || st == "blocked" || st == "idle"')
+m("rex-notify-once", "rexpanes.go", 'if st == "blocked" && !blocked {', 'if st == "blocked" && (!blocked || true) {')
+m("rex-lost", "rexpanes.go", 'return childResult{Exit: 1, Stderr: fmt.Sprintf("Rex stopped answering while %s ran in %s: %v", agent, block, err)}, nil', "break")
+m("rex-screen-tail", "rexpanes.go", "lines[max(0, len(lines)-40):]", "lines")
+m("rex-wiring", "extension.go", "panesEnabled(s, os.Getenv, runtime.GOOS), rexPanesEnabled(s, os.Getenv, runtime.GOOS)", "panesEnabled(s, os.Getenv, runtime.GOOS), false")
+m("pane-answer-quit", "panes.go", "\t\t\tif res.Exit == 0 {\n\t\t\t\tres.Exit = 1", "\t\t\tif false {\n\t\t\t\tres.Exit = 1")
+
 bad = False
 for x in M:
     text = open(os.path.join(root, x["file"])).read()

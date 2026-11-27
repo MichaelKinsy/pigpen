@@ -90,6 +90,34 @@ and when the task is over 100 KiB (it travels as an argument).
 
 Checked with PiG 0.5.3, herdr-core 0.1.16 and 0.1.17, and the Herdr app 0.1.11.
 
+## Panes in Rex (opt-in)
+
+Set `rexPanes` to show each child in a pane beside yours in [Rex](https://www.superlogical.com/rex). It is read like `herdrPanes`:
+
+```json
+{ "subagents": { "rexPanes": true } }
+```
+
+It applies only when PiG runs in a Rex terminal (`REX_SESSION` and `REX_BLOCK` are set), and never on Windows. In a Herdr
+Desktop terminal with `herdrPanes` on, Herdr's panes win. Each `subagent` child and `/run-chain` step then starts as an
+interactive `pig` in a split to the right of your pane (`rex split`, focus unchanged), labelled with the agent's name. PiG
+drives Rex through its CLI: the `rex` in `REX_BIN_DIR`, else the one on `PATH`.
+
+The tool waits until the child's first turn ends, returns the same text the hidden child would (its last assistant message,
+read from its session file), then ends the child and closes its pane. Escape ends it too. Rex counts no turns, so the turn has
+ended when the child reports `done` or `error` (OSC 7501), or `idle` after it was seen working. A child that stops on a dialog
+(`blocked`) waits for you, with one notification per block. The session file goes where it does for a Herdr pane.
+
+The child's environment is yours, as for the hidden child, without the `REX_` variables of your pane (Rex sets the child's
+own). It travels in a file only you can read, which the child's shell (`/bin/sh`) reads and removes before it starts `pig`, so
+it is neither on a command line nor read by a login shell. The task is an argument of the child's command line, visible in
+process listings. A parent PiG that is killed outright leaves the child's pane open.
+
+The child runs hidden, as without the setting, with a warning, when Rex cannot be reached or your pane is unknown to it, and
+when the task is over 100 KiB.
+
+Checked with PiG 0.7.0 and Rex 0.1.0-preview.21 on macOS.
+
 ## What is ported
 
 Frontmatter parsing, agent and chain definitions (discovery in the project, the user's directories and the builtin set,
