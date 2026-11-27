@@ -143,6 +143,17 @@ func (j *AgentJob) Details() map[string]any {
 		if j.hasEvalData {
 			ev["data"] = j.evalData
 		}
+		if j.singleResult != nil {
+			if j.singleResult.PatchPath != "" {
+				ev["patchPath"] = j.singleResult.PatchPath
+			}
+			if j.singleResult.BranchName != "" {
+				ev["branchName"] = j.singleResult.BranchName
+			}
+			if j.singleResult.HasRootChanges != nil {
+				ev["hasRootChanges"] = *j.singleResult.HasRootChanges
+			}
+		}
 		det["evalResult"] = ev
 	}
 	return det
@@ -457,6 +468,16 @@ func (rt *Runtime) EffectiveConfig(ctx sdk.Context) Config {
 		cfg.MaxEffort = me
 	}
 	cfg.IsolationEnabled = st.Bool("task.isolation.enabled")
+	cfg.IsolationApply = st.Bool("task.isolation.apply")
+	if m := strings.TrimSpace(st.String("task.isolation.merge")); m != "" {
+		cfg.IsolationMerge = m
+	}
+	if c := strings.TrimSpace(st.String("task.isolation.commits")); c != "" {
+		cfg.IsolationCommits = c
+	}
+	if b := strings.TrimSpace(st.String("isolation.backend")); b != "" {
+		cfg.IsolationBackend = b
+	}
 	cfg.MaxConcurrency = st.Int("task.maxConcurrency")
 	cfg.MaxRecursionDepth = st.Int("task.maxRecursionDepth")
 	cfg.MaxRuntimeMs = st.Int("task.maxRuntimeMs")
@@ -1031,6 +1052,15 @@ func RenderTaskDescription(cfg Config, discovered []AgentDefinition, parentSpawn
 	if cfg.Structured {
 		b.WriteString("- `schemaMode`: default permissive warns after retries; strict fails.\n")
 	}
+	if cfg.IsolationEnabled {
+		if strings.EqualFold(strings.TrimSpace(cfg.IsolationMerge), "branch") {
+			b.WriteString("- `isolated`: worktree; changes captured on `omp-task/<id>` branch.\n")
+		} else if cfg.IsolationApply {
+			b.WriteString("- `isolated`: worktree; successful changes apply to parent.\n")
+		} else {
+			b.WriteString("- `isolated`: worktree; changes retained, not applied.\n")
+		}
+	}
 	b.WriteString("\nShared edits need one integration owner; give each task its files")
 	if !cfg.BatchEnabled {
 		b.WriteString(" and interfaces")
@@ -1517,6 +1547,12 @@ func (rt *Runtime) ExecuteTask(ctx sdk.Context, rawParams map[string]any) (sdk.T
 			preflightErrs = append(preflightErrs, fmt.Sprintf("%s failed preflight: Subagent isolated execution requires task.isolation.enabled; it is currently false.", label))
 			continue
 		}
+		if item.Isolated != nil && *item.Isolated {
+			if _, err := ResolveGitRepoRoot(context.Background(), cwd); err != nil {
+				preflightErrs = append(preflightErrs, fmt.Sprintf("%s failed preflight: %s", label, err.Error()))
+				continue
+			}
+		}
 		if planMode {
 			ag = CreatePlanModeAgent(ag)
 		}
@@ -1761,7 +1797,7 @@ func (rt *Runtime) ExecuteTask(ctx sdk.Context, rawParams map[string]any) (sdk.T
 			aggMu.Unlock()
 
 			noticeEnabled := cfg.SoftRequestBudgetNotice
-			sr := RunSubagent(jobCtx, rt.Registry, RunRequest{
+			runReq := RunRequest{
 				SDK:                        longLivedCtx,
 				ParentSessionID:            sessKey,
 				ParentAgentID:              parentAgentID,
@@ -1800,7 +1836,14 @@ func (rt *Runtime) ExecuteTask(ctx sdk.Context, rawParams map[string]any) (sdk.T
 				OnToolResult: func(tool, intent, text string) {
 					job.RecordToolCall(tool, intent, text)
 				},
-			})
+			}
+			var sr SingleResult
+			var mergeSummary string
+			if sp.spec.item.Isolated != nil && *sp.spec.item.Isolated {
+				sr, mergeSummary = RunIsolatedSubagent(jobCtx, rt.Registry, runReq, cfg.IsolationMerge, cfg.IsolationApply)
+			} else {
+				sr = RunSubagent(jobCtx, rt.Registry, runReq)
+			}
 
 			failed := sr.Aborted || sr.ExitCode != 0 || sr.Error != ""
 			aggMu.Lock()
@@ -1849,8 +1892,8 @@ func (rt *Runtime) ExecuteTask(ctx sdk.Context, rawParams map[string]any) (sdk.T
 			aggMu.Unlock()
 
 			ref, _ := rt.Registry.GetInSession(sessKey, sp.agentID)
-			resumable := ref.IsResumable()
-			summary := FormatTaskResultSummary(sr, sr.DurationMs, "", resumable)
+			resumable := ref.IsResumable() && !sr.Isolated
+			summary := FormatTaskResultSummary(sr, sr.DurationMs, mergeSummary, resumable)
 			hint := FormatFollowUpHint(sp.agentID, sr.Aborted, sr.Isolated, true, resumable, ref != nil)
 			deliveryText := summary + "\n\n" + hint
 
@@ -2010,9 +2053,10 @@ func (rt *Runtime) runSyncFanout(
 	}
 
 	var (
-		mu      sync.Mutex
-		results = make([]SingleResult, len(plans))
-		wg      sync.WaitGroup
+		mu             sync.Mutex
+		results        = make([]SingleResult, len(plans))
+		mergeSummaries = make([]string, len(plans))
+		wg             sync.WaitGroup
 	)
 
 	emitCombined := func() {
@@ -2059,7 +2103,7 @@ func (rt *Runtime) runSyncFanout(
 			}
 			defer rt.sem.Release()
 			noticeEnabled := cfg.SoftRequestBudgetNotice
-			results[pos] = RunSubagent(runCtx, rt.Registry, RunRequest{
+			runReq := RunRequest{
 				SDK:                        longLivedCtx,
 				ParentSessionID:            sessKey,
 				ParentAgentID:              parentAgentID,
@@ -2095,7 +2139,12 @@ func (rt *Runtime) runSyncFanout(
 					mu.Unlock()
 					emitCombined()
 				},
-			})
+			}
+			if sp.spec.item.Isolated != nil && *sp.spec.item.Isolated {
+				results[pos], mergeSummaries[pos] = RunIsolatedSubagent(runCtx, rt.Registry, runReq, cfg.IsolationMerge, cfg.IsolationApply)
+			} else {
+				results[pos] = RunSubagent(runCtx, rt.Registry, runReq)
+			}
 		}()
 	}
 	wg.Wait()
@@ -2107,7 +2156,7 @@ func (rt *Runtime) runSyncFanout(
 		hasUsage     bool
 		anyError     bool
 	)
-	for _, r := range results {
+	for i, r := range results {
 		if r.ExitCode != 0 || r.Error != "" || r.Aborted {
 			anyError = true
 		}
@@ -2119,7 +2168,7 @@ func (rt *Runtime) runSyncFanout(
 			outputPaths = append(outputPaths, r.OutputPath)
 		}
 		ref, _ := rt.Registry.GetInSession(sessKey, r.ID)
-		contentParts = append(contentParts, FormatTaskResultSummary(r, r.DurationMs, "", ref.IsResumable()))
+		contentParts = append(contentParts, FormatTaskResultSummary(r, r.DurationMs, mergeSummaries[i], ref.IsResumable() && !r.Isolated))
 	}
 
 	det := TaskToolDetails{

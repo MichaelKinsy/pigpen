@@ -14,9 +14,9 @@ States used in this document:
 
 ---
 
-## Final Gate Proof Runs (Single Binary `r37`, PiG `v0.8.0`)
+## Final Gate Proof Runs (Single Binary `r38`, PiG `v0.8.0`)
 
-Earlier "0 unexplained" claims were withdrawn after an audit of the proof harness's allowlists and normalisers (the audit and the review notes cited below are working notes of the port and are not in this repository): the oracle hid details differences under listed text, path masks hid unstandardised macOS `/private` paths, the Tern comparer checked only one node per part without frame alignment, and the terminal comparer ignored per-cell colours and SGR attributes. All three harnesses were corrected, the port was fixed against them, and all three proof harnesses below ran alone in sequence on **one final Binary**: **`r37`** (`80,060,034` bytes, sha256 `7ee9a33986e14dc9966d88a39de814431b821e7f4fb6db8fa14e1ffd73e9b5bd`), built from the source of the PiG release `v0.8.0` (`b133288823`, tagged `v0.8.0`, matching `piglet.yaml`'s `requires.pig: ">=0.8.0 <0.9.0"`). Every allowlist entry was verified against `UPSTREAM.md` and `OMP-UPSTREAM.md` with zero stale or unused entries.
+Earlier "0 unexplained" claims were withdrawn after an audit of the proof harness's allowlists and normalisers (the audit and the review notes cited below are working notes of the port and are not in this repository): the oracle hid details differences under listed text, path masks hid unstandardised macOS `/private` paths, the Tern comparer checked only one node per part without frame alignment, and the terminal comparer ignored per-cell colours and SGR attributes. All three harnesses were corrected, the port was fixed against them, and all three proof harnesses below ran alone in sequence on **one final Binary**: **`r38`** (`80,345,970` bytes, sha256 `4d29b3e1b3fa474a4e083ab64193ef06f02d97dfa89e5b05147c52539ea81245`), built from the source of the PiG release `v0.8.0` (`b133288823`, tagged `v0.8.0`, matching `piglet.yaml`'s `requires.pig: ">=0.8.0 <0.9.0"`). Every allowlist entry was verified against `UPSTREAM.md` and `OMP-UPSTREAM.md` with zero stale or unused entries.
 The reference is the omp `19.1.1` binary. omp updates itself: on the day of these runs `omp` on `PATH` became `19.2.1`, and a first run compared against it reported omp's own changes as 2 call and 16 surface differences. The harnesses now refuse any omp but `19.1.1` (`proof/omp_version.sh`); the runs below name the `19.1.1` binary with `OMP_BIN`.
 
 ### Block 1 — Per-Tool Oracle (`proof/oracle.sh`)
@@ -24,8 +24,8 @@ The reference is the omp `19.1.1` binary. omp updates itself: on the day of thes
 ```text
 Command: ORACLE_MODE=both OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            ORACLE_OUT=<out>/oracle piglets/oh-my-pig/proof/oracle.sh piglets/oh-my-pig/proof/cases
-Run:     Binary r37 (sha256 7ee9a33986e14dc9966d88a39de814431b821e7f4fb6db8fa14e1ffd73e9b5bd), omp 19.1.1,
-         measured 2026-11-27 17:34Z–17:45Z, alone, no allowances, exit 0
+Run:     Binary r38 (sha256 4d29b3e1b3fa474a4e083ab64193ef06f02d97dfa89e5b05147c52539ea81245), omp 19.1.1,
+         measured 2026-11-27 18:34Z–18:46Z, alone, no allowances, exit 0
 Totals:  74 cases (0 failed), 474 calls:
          352 identical, 114 details-listed, 8 differs-listed, 0 details-only, 0 timing, 0 differs, 0 missing
 Recorded tool_execution_start: 471 identical, 3 recorded-listed (HOST), 0 recorded-differs
@@ -41,8 +41,8 @@ Hygiene: network_attempts=0, leaked_pids=0
 ```text
 Command: OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            OMP_PROOF_ROOT=<out>/tern piglets/oh-my-pig/proof/run.sh
-Run:     Binary r37 (sha256 7ee9a33986e14dc9966d88a39de814431b821e7f4fb6db8fa14e1ffd73e9b5bd), omp 19.1.1,
-         measured 2026-11-27 17:41Z–17:43Z, alone, no allowances, exit 0
+Run:     Binary r38 (sha256 4d29b3e1b3fa474a4e083ab64193ef06f02d97dfa89e5b05147c52539ea81245), omp 19.1.1,
+         measured 2026-11-27 18:41Z–18:43Z, alone, no allowances, exit 0
 Capture: capture_valid=true (33/33 turns consumed per side, in_flight=0)
 Parts:   30 parts across 23/23 steps (0 not-compared steps):
          13 same, 17 expected, 0 timing, 0 differs, 0 missing
@@ -61,8 +61,8 @@ Stylesheets: 0 rules rejected by Tern on either side (the comparer fails on a re
 ```text
 Command: OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            ANSI_OUT=<out>/ansi piglets/oh-my-pig/proof/ansi.sh
-Run:     Binary r37 (sha256 7ee9a33986e14dc9966d88a39de814431b821e7f4fb6db8fa14e1ffd73e9b5bd), omp 19.1.1,
-         measured 2026-11-27 17:43Z–17:45Z, alone, no allowances, exit 0
+Run:     Binary r38 (sha256 4d29b3e1b3fa474a4e083ab64193ef06f02d97dfa89e5b05147c52539ea81245), omp 19.1.1,
+         measured 2026-11-27 18:43Z–18:46Z, alone, no allowances, exit 0
 Capture: capture_valid=true (33/33 turns, 15 prompts, 5 snapshots, 0 leaked PIDs per side;
          scrollback 232 omp / 243 pig lines)
          verdict=expected, total_unexplained_all=0 (text=0, blank=0, colour=0, mode=0), timing_pairs=0
@@ -82,7 +82,7 @@ Allowlist: 18 entries in terminal_allowlist.json (9 text, 4 colour/attrs, 4 blan
 
 ### Block 4 — Gate Suites, Differentials, Vet & Repository Checks
 
-- **Full extension suites (PiG `v0.8.0` SDK, measured `2026-11-27 17:34Z–17:38Z`, Tern env vars unset)**: **43 packages `ok`, 0 `FAIL`, 3 packages without test files; 1,470 top-level tests: 1,470 `PASS` / 0 `FAIL` / 0 `SKIP`** (including `internal/providerwire`, `internal/snapcompact`, `internal/shell`, `internal/files`, `internal/search`, `internal/modes`, `internal/agents`, `internal/eval`, `internal/ansi` verified with `-race`, plus real tools including `gopls` and `ast-grep`, `OMP_REAL_BROWSER=1` with the two click-loop tests at `OMP_LOOP_ITERS=200`, the two real-Chrome relay tests with `OMP_RELAY_BINARY` naming the gated Binary, `OMP_TERN_DAEMON_TEST=1`, `OMP_REGEN_JS_REWRITER=1`, `OMP_REGEN_RELAY_EXTENSION=1`, `OMP_SRC` `docs_index` parity, and the full approval and intent differential corpora with `FAIL=1`).
+- **Full extension suites (PiG `v0.8.0` SDK, measured `2026-11-27 18:34Z–18:39Z`, Tern env vars unset)**: **43 packages `ok`, 0 `FAIL`, 3 packages without test files; 1,500 top-level tests: 1,500 `PASS` / 0 `FAIL` / 0 `SKIP`** (including `internal/providerwire`, `internal/modes`, `internal/todo`, `internal/snapcompact`, `internal/autolearn`, `internal/eval`, `internal/agents`, `internal/prompt` verified with `-race`, plus real tools including `gopls` and `ast-grep`, `OMP_REAL_BROWSER=1` with the two click-loop tests at `OMP_LOOP_ITERS=200`, the two real-Chrome relay tests with `OMP_RELAY_BINARY` naming the gated Binary, `OMP_TERN_DAEMON_TEST=1`, `OMP_REGEN_JS_REWRITER=1`, `OMP_REGEN_RELAY_EXTENSION=1`, `OMP_SRC` `docs_index` parity, and the full approval and intent differential corpora with `FAIL=1`).
 - **Full 2,000-iteration real-Chrome click loops (run separately on the release candidate's SDK, not repeated on `v0.8.0`; `-timeout 60m`, `OMP_REAL_BROWSER=1`, display locked, load 23 → 9)**: `TestRealPass4_F1_NavigatingClickLoop2000Iterations` **PASS** (`60.07s`) and `TestRealPass5_F1_NoURLTabNavigatingClickLoop2000Iterations` **PASS** (`559.56s`) — 2,000 iterations each with sibling tab open and verified, `wedges=0`.
 - **Frontend, vet, harness & repository checks**:
   - `piglets/pig-tern/frontend` Go suite: **152 `Test*` functions, `ok`** (with `-race`), and `piglets/oh-my-pig/frontend`: **1, `ok`**; `gofmt` clean and `go vet` exit 0 on `darwin`, `linux`, and `windows` for the extension module, `pig-tern/frontend`, and `piglets/oh-my-pig/frontend`.
@@ -96,7 +96,7 @@ Allowlist: 18 entries in terminal_allowlist.json (9 text, 4 colour/attrs, 4 blan
 - **Bash interceptor differential** (`internal/shell/testdata/gen_interceptor_diff.ts` + checked-in `interceptor_diff.txt.gz`, **200,000** recorded omp verdicts, `go test ./internal/shell -run TestInterceptorDifferentialAgainstOmp`): **0** differences across all 4 lookaround rules ported to Go.
 - **Hashline block-op oracle** (`internal/hashline/testdata/blockspans/*.json`, **10,573** anchors across 30 files from real `omp` 19.1.1, `go test ./internal/hashline -run TestBlockSpansAgainstRealOmpOracle`): **0 WRONG** spans; on held-out Sample 3 (9 resolvable languages, 4,088 anchors, 1,604 omp-resolved): **1,063** exact matches, **541** conservative refusals (**33.7%**), **0 WRONG**; plus third-party YAML hold-out (1,666 anchors): 644 equal, 33 refused, 989 refused by both, **0 WRONG**.
 - **JS cell rewriter** (`internal/eval`, `go test ./internal/eval`): runs omp `v19.1.1`'s bundled rewriter + `@babel/parser@7.29.9`; verified on 190 JS/TS matrix and adversarial cases under `bun` and `node` 22+, and deterministic regeneration verified (`OMP_REGEN_JS_REWRITER=1`).
-- **Unit & integration test counts**: **1,470** executable top-level Go `Test*` tests in the extension module (`1,471` `func Test*` declarations including `TestMain` in `internal/ask/main_test.go`; `1,448` in 41 `internal/` packages + `2` in `brand` + `21` in module root), **152** in `piglets/pig-tern/frontend`, **1** in `piglets/oh-my-pig/frontend`, and **46** Python `test_*` methods in `proof/test_oracle_harness.py`.
+- **Unit & integration test counts**: **1,500** executable top-level Go `Test*` tests in the extension module (`1,501` `func Test*` declarations including `TestMain` in `internal/ask/main_test.go`; `1,478` in 41 `internal/` packages + `2` in `brand` + `21` in module root), **152** in `piglets/pig-tern/frontend`, **1** in `piglets/oh-my-pig/frontend`, and **46** Python `test_*` methods in `proof/test_oracle_harness.py`.
 ---
 
 ## What Each Comparison Covers — and Does Not Cover
@@ -331,16 +331,16 @@ The `relay` backend (`app: "relay"`, `browser.relay`, `PI_BROWSER_RELAY`) drives
 
 ## Settings
 
-- **Schema vs runtime**: omp `v19.1.1` defines **644** keys across 42 domain modules; `internal/settings/schema.json` knows all **644** keys (`cfg://`), **138** are consumed by extension areas (counted in the appendix), and **every other key (506 of 644) is accepted, validated, and saved by `cfg://` and `config.yml`, and silently ignored at runtime.**
+- **Schema vs runtime**: omp `v19.1.1` defines **644** keys across 42 domain modules; `internal/settings/schema.json` knows all **644** keys (`cfg://`), **148** are consumed by extension areas (counted in the appendix), and **every other key (496 of 644) is accepted, validated, and saved by `cfg://` and `config.yml`, and silently ignored at runtime.**
 - **High-surprise ignored keys (by omp UI tab)**:
   - *Appearance*: `theme.dark`, `theme.light`, `colorBlindMode`, `composer.shape`, `composer.tokenRate`, `statusLine.preset`, `statusLine.separator`, `statusLine.sessionAccent`, `tui.hyperlinks`.
   - *Model & thinking*: `defaultThinkingLevel` (including `"auto"`), `providers.autoThinkingMaxEffort`, `hideThinkingBlock`, `expandThinkingBlocks`, `prewalk.*`.
   - *Context*: `workspace.additionalDirectories`, `contextFiles.extra`.
   - *Files & search*: `edit.mode`, `read.lineNumbers`, `read.renderMarkdown`, `read.summarize.enabled`, `grep.enabled`, `glob.enabled`, `find.verifyModel`.
   - *Shell & eval*: `shellPath`, `bash.gitGuard`, `shellMinimizer.enabled`, `eval.autoProvision`, `eval.tools.enabled`, `eval.autoBackground.enabled`.
-  - *Interaction & modes*: `steeringMode`, `followUpMode`, `interruptMode`, `tui.vimMode`, `btw.inject`, `todo.eager`, `todo.backend`.
-  - *Tasks & memory*: `task.speculativeLaunch`, `task.completionProbe`, `worktree.clone`, `isolation.backend`, `memory.backend`, `providers.fetch`.
-- **138 consumed keys by area**: `agents` (18), `ansi` (4), `approval` (3), `ask` (2), `ast` (3), `autolearn` (1), `browser` (13), `checkpoint` (1), `commit` (2), `debug` (1), `eval` (5), `files` (5: `edit.blockAutoGenerated`, `edit.enforceSeenLines`, `read.defaultLimit`, `tools.artifactSpillThreshold`, `tools.outputMaxColumns`), `github` (4), `intent`/`wiring` (1), `lsp` (10), `modes` (8: `goal.enabled`, `loop.conditionTimeoutMs`, `magicKeywords.enabled`, `modelRoles`, `plan.autosave`, `plan.autosaveDir`, `plan.enabled`, `skillful`), `prediction` (2), `providerwire` (5: `extendedContext`, `modelRoles`, `tier.anthropic`, `tier.google`, `tier.openai`), `ratchet` (1), `search` (4, incl. `grep.contextBefore`/`After`), `shell` (18, incl. `bash.allowCompoundCommands`, `bash.direnv`, `bash.direnvLoadTimeoutMs`), `snapcompact` (11: `compaction.{enabled,keepRecentTokens,methodOrder,midTurnEnabled,reserveTokens,supersedeReads,thresholdPercent,thresholdTokens}`, `contextPromotion.enabled`, `modelRoles`, `snapcompact.shape`), `tern` (6), `todo` (5), `toolcmd`/`wiring` (3), `urls`/`wiring` (1), `vibe` (2), `web` (12), `wiring` (`includeWorkspaceTree`, `out.enabled`, `skillful`, `ttsr.*`); union = **138** unique keys.
+  - *Interaction & modes*: `steeringMode`, `followUpMode`, `interruptMode`, `tui.vimMode`, `btw.inject`, `todo.backend`.
+  - *Tasks & memory*: `task.speculativeLaunch`, `task.completionProbe`, `worktree.clone`, `memory.backend`, `providers.fetch`.
+- **148 consumed keys by area**: `agents` (22, incl. `isolation.backend`, `task.isolation.{enabled,apply,merge,commits}`), `ansi` (4), `approval` (3), `ask` (2), `ast` (3), `autolearn` (3: `autolearn.{enabled,autoContinue,minToolCalls}`), `browser` (13), `checkpoint` (1), `commit` (2), `debug` (1), `eval` (5), `files` (5), `github` (4), `intent`/`wiring` (1), `lsp` (10), `modes` (8), `prediction` (2), `providerwire` (5), `ratchet` (1), `search` (4), `shell` (18), `snapcompact` (14, incl. `images.blockImages`, `snapcompact.{shape,systemPrompt,toolResults}`), `tern` (6), `todo` (6, incl. `todo.eager`), `toolcmd`/`wiring` (3), `urls`/`wiring` (1), `vibe` (2), `web` (12), `wiring` (`includeWorkspaceTree`, `modelRoles`, `out.enabled`, `skillful`, `ttsr.*`); union = **148** unique keys.
 
 ---
 
@@ -469,8 +469,8 @@ PIG_SRC=$PIG_SRC DIFF_OUT=<out>/approval piglets/oh-my-pig/proof/diff/approval/m
 ### Disagreements Between Sources
 
 - **Blockspans anchor total**: `internal/hashline/UPSTREAM.md` prose says `10,568` (Sample 3 `4,083`), while summing `total` across all 30 JSON files in `internal/hashline/testdata/blockspans/` gives **10,573** (Sample 3 `4,088`). The JSON sum (`10,573`) is used here.
-- **Extension `func Test*` vs executed top-level tests**: `grep -rn '^func Test'` counts **1,471** declarations, while `go test` executes **1,470** top-level `Test*` functions; the difference of 1 is `TestMain` in `internal/ask/main_test.go`.
-- **Settings consumed**: scanning non-test Go files outside `internal/settings/` for all 644 schema keys matches 140 literals; `"temperature"` (LLM/web API field) and `"extensions"` (Chrome `Preferences` JSON key in `internal/relay`) are not setting reads and are excluded, giving **138**.
+- **Extension `func Test*` vs executed top-level tests**: `grep -rn '^func Test'` counts **1,501** declarations, while `go test` executes **1,500** top-level `Test*` functions; the difference of 1 is `TestMain` in `internal/ask/main_test.go`.
+- **Settings consumed**: scanning non-test Go files outside `internal/settings/` for all 644 schema keys matches 150 literals; `"temperature"` (LLM/web API field) and `"extensions"` (Chrome `Preferences` JSON key in `internal/relay`) are not setting reads and are excluded, giving **148**.
 - **Welcome tip lists vs omp's `tips.txt`**: omp's `packages/tui/src/prompt/tips.txt` has **35** tips (plus 1 hard-coded unicode-preset tip); `welcomeTips` (16) has 10 lines matching omp's `tips.txt` ignoring backticks + 6 port-adapted lines, and `ompWelcomeTips` (14) has 6 lines matching omp's `tips.txt` ignoring backticks + 8 port-adapted command lines.
 - **Full differential READMEs vs latest gate runs**: `proof/diff/intent/README.md` and `proof/diff/approval/README.md` embed earlier snapshots (233 host refusals; 279 approval mismatches); the run on the PiG `v0.8.0` SDK ran both full corpora with `FAIL=1` and 0 unexpected mismatches (8 lenient host refusals in `intent-diff`, 0 unexpected in `approval-diff`).
 - **Pre-existing repo test failure**: `npm test` reports 489 pass, 2 skipped, 1 fail (`scripts/npm-packages.test.mjs:112` for the `ahp` package), present before `oh-my-pig` work began.

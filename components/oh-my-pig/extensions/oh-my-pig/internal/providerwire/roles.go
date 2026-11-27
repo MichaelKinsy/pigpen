@@ -446,9 +446,6 @@ func ResolveRoleWithThinking(ctx sdk.Context, role string) (provider, id, thinki
 			available = models
 			return available
 		}
-		if models, err := reg.GetAll(); err == nil {
-			available = models
-		}
 		return available
 	}
 
@@ -479,10 +476,25 @@ func resolveSelector(reg sdk.ModelRegistry, loadAvailable func() []map[string]an
 		return "", "", false
 	}
 
-	// Explicit provider/modelId selector: try exact ModelRegistry.Find first.
+	// Explicit provider/modelId selector: match against authenticated/available
+	// models first so unauthenticated catalog entries are never selected over
+	// available providers or the active-model fallback. Only fall back to
+	// reg.Find when GetAvailable() is empty (e.g. minimal test hosts that only
+	// implement Find).
 	if slash := strings.IndexByte(selector, '/'); slash > 0 && slash < len(selector)-1 {
 		wantProvider := strings.TrimSpace(selector[:slash])
 		wantID := strings.TrimSpace(selector[slash+1:])
+		models := loadAvailable()
+		if len(models) > 0 {
+			wantKey := revisionSpellingKey(wantID)
+			for _, m := range models {
+				mp, mid := extractModelIdentity(m)
+				if strings.EqualFold(mp, wantProvider) && (strings.EqualFold(mid, wantID) || revisionSpellingKey(mid) == wantKey) {
+					return mp, mid, true
+				}
+			}
+			return "", "", false
+		}
 		if found, err := reg.Find(wantProvider, wantID); err == nil && found != nil {
 			p, mID := extractModelIdentity(found)
 			if p == "" {
@@ -492,15 +504,6 @@ func resolveSelector(reg sdk.ModelRegistry, loadAvailable func() []map[string]an
 				mID = wantID
 			}
 			return p, mID, true
-		}
-		// Fallback: case-insensitive / dot-dash revision match in available models.
-		models := loadAvailable()
-		wantKey := revisionSpellingKey(wantID)
-		for _, m := range models {
-			mp, mid := extractModelIdentity(m)
-			if strings.EqualFold(mp, wantProvider) && (strings.EqualFold(mid, wantID) || revisionSpellingKey(mid) == wantKey) {
-				return mp, mid, true
-			}
 		}
 		return "", "", false
 	}

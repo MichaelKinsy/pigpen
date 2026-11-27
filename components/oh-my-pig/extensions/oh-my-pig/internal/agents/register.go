@@ -136,9 +136,9 @@ func taskToolAdvertisedSignature(cfg Config, spawns string) string {
 	disabled := append([]string(nil), cfg.DisabledAgents...)
 	slices.Sort(disabled)
 	return fmt.Sprintf(
-		"async=%t|batch=%t|struct=%t|steps=%t|effort=%t|iso=%t|pcm=%s|spawns=%s|disabled=%v",
+		"async=%t|batch=%t|struct=%t|steps=%t|effort=%t|iso=%t|isoApply=%t|pcm=%s|spawns=%s|disabled=%v",
 		cfg.AsyncEnabled, cfg.BatchEnabled, cfg.Structured, cfg.StepsEnabled,
-		cfg.EnableEffort, cfg.IsolationEnabled, cfg.PerCallModel, spawns, disabled,
+		cfg.EnableEffort, cfg.IsolationEnabled, cfg.IsolationApply, cfg.PerCallModel, spawns, disabled,
 	)
 }
 

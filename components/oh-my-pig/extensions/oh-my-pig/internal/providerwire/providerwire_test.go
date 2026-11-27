@@ -656,11 +656,23 @@ func TestForcedToolChoiceAllWireShapesAndAutoClear(t *testing.T) {
 				t.Fatalf("expected no-op when forced tool absent from payload tools, got %s", string(rawSkipped))
 			}
 
-			// 3. Auto-clear on EventTurnEnd so it never sticks.
+			// 3. Mid-stream turn_end before request runs preserves pending forced tool;
+			// once applied on before_provider_request, turn_end clears it.
 			mgr.setForcedToolChoice(sid, "read")
 			_ = h.emit(sdk.EventTurnEnd, map[string]any{"type": "turn_end"})
+			if got := mgr.getForcedTool(sid); got != "read" {
+				t.Fatalf("expected unapplied forced tool to survive in-flight turn_end, got %q", got)
+			}
+			_ = h.emit(sdk.EventBeforeProviderRequest, map[string]any{
+				"type": "before_provider_request",
+				"payload": map[string]any{
+					"model": tc.model["id"],
+					"tools": tc.tools,
+				},
+			})
+			_ = h.emit(sdk.EventTurnEnd, map[string]any{"type": "turn_end"})
 			if got := mgr.getForcedTool(sid); got != "" {
-				t.Fatalf("expected forced tool cleared on turn_end, still %q", got)
+				t.Fatalf("expected applied forced tool cleared on turn_end, still %q", got)
 			}
 			rawAfterTurn := h.emitRaw(sdk.EventBeforeProviderRequest, map[string]any{
 				"type": "before_provider_request",

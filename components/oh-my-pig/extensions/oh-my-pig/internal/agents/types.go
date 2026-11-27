@@ -326,6 +326,10 @@ type SingleResult struct {
 	Usage                 *Usage                    `json:"usage,omitempty"`
 	OutputPath            string                    `json:"outputPath,omitempty"`
 	Isolated              bool                      `json:"isolated,omitempty"`
+	PatchPath             string                    `json:"patchPath,omitempty"`
+	HasRootChanges        *bool                     `json:"hasRootChanges,omitempty"`
+	BranchName            string                    `json:"branchName,omitempty"`
+	BranchBaseSHA         string                    `json:"branchBaseSha,omitempty"`
 	ExtractedToolData     map[string][]any          `json:"extractedToolData,omitempty"`
 	OutputMeta            *OutputMeta               `json:"outputMeta,omitempty"`
 }
@@ -445,10 +449,14 @@ type Config struct {
 	EnableEffort            bool
 	MaxEffort               string // "minimal"|"low"|"medium"|"high"|"xhigh"|"max"; default "max"
 	IsolationEnabled        bool
-	MaxConcurrency          int // 0 = unlimited; default 32
-	MaxRecursionDepth       int // <0 = unlimited; default 2 (host capped to 1)
-	MaxRuntimeMs            int // 0 = unlimited
-	SoftRequestBudget       int // 0 = disabled; default 200
+	IsolationApply          bool   // default true (`task.isolation.apply`)
+	IsolationMerge          string // "patch" | "branch"; default "patch" (`task.isolation.merge`)
+	IsolationCommits        string // "generic" | "ai"; default "generic" (`task.isolation.commits`)
+	IsolationBackend        string // default "git" / "auto" (`isolation.backend`)
+	MaxConcurrency          int    // 0 = unlimited; default 32
+	MaxRecursionDepth       int    // <0 = unlimited; default 2 (host capped to 1)
+	MaxRuntimeMs            int    // 0 = unlimited
+	SoftRequestBudget       int    // 0 = disabled; default 200
 	SoftRequestBudgetNotice bool
 	AgentSoftRequestBudget  map[string]int
 	AgentIdleTTLMs          int // 0 = disabled; default 420_000 (7 min)
@@ -474,6 +482,10 @@ func DefaultConfig() Config {
 		EnableEffort:            false,
 		MaxEffort:               "max",
 		IsolationEnabled:        false,
+		IsolationApply:          true,
+		IsolationMerge:          "patch",
+		IsolationCommits:        "generic",
+		IsolationBackend:        "git",
 		MaxConcurrency:          32,
 		MaxRecursionDepth:       2,
 		MaxRuntimeMs:            0,

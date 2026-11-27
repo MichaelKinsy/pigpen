@@ -606,20 +606,26 @@ func (rt *Runtime) invokeAgentSpawn(call eval.PreludeCall, sessKey string, args 
 		requestedIso = iso
 	}
 	hasApplyControl := false
+	var applyOverride bool
 	if rawApply, exists := args["apply"]; exists && rawApply != nil {
-		if _, ok := rawApply.(bool); !ok {
+		v, ok := rawApply.(bool)
+		if !ok {
 			return nil, errors.New("agent() received invalid arguments: apply must be a boolean")
 		}
 		hasIsolationControl = true
 		hasApplyControl = true
+		applyOverride = v
 	}
 	hasMergeControl := false
+	var mergeOverride bool
 	if rawMerge, exists := args["merge"]; exists && rawMerge != nil {
-		if _, ok := rawMerge.(bool); !ok {
+		v, ok := rawMerge.(bool)
+		if !ok {
 			return nil, errors.New("agent() received invalid arguments: merge must be a boolean")
 		}
 		hasIsolationControl = true
 		hasMergeControl = true
+		mergeOverride = v
 	}
 
 	// Validate `tools` array (`agent-bridge.ts:38,185-187`).
@@ -652,14 +658,11 @@ func (rt *Runtime) invokeAgentSpawn(call eval.PreludeCall, sessKey string, args 
 	if requestedIso && !cfg.IsolationEnabled {
 		return nil, errors.New("Subagent isolated execution requires task.isolation.enabled; it is currently false.")
 	}
-	if requestedIso {
-		return nil, errors.New("Subagent isolated execution (worktree isolation) is not ported in oh-my-pig.")
+	if hasApplyControl && !requestedIso {
+		return nil, errors.New("Subagent isolation control `apply` requires `isolated: true`.")
 	}
-	if hasApplyControl {
-		return nil, errors.New("Subagent isolated execution (`apply`) requires task.isolation.enabled; worktree isolation is not ported in oh-my-pig.")
-	}
-	if hasMergeControl {
-		return nil, errors.New("Subagent isolated execution (`merge`) requires task.isolation.enabled; worktree isolation is not ported in oh-my-pig.")
+	if hasMergeControl && !requestedIso {
+		return nil, errors.New("Subagent isolation control `merge` requires `isolated: true`.")
 	}
 	if len(evalToolNames) > 0 {
 		return nil, errors.New("Eval-defined tools are disabled; exposing kernel-defined @tool/tool() functions to subagents is not ported in oh-my-pig.")
@@ -693,6 +696,11 @@ func (rt *Runtime) invokeAgentSpawn(call eval.PreludeCall, sessKey string, args 
 	cwd := call.SDK.Cwd()
 	if cwd == "" {
 		cwd, _ = os.Getwd()
+	}
+	if requestedIso {
+		if _, err := ResolveGitRepoRoot(context.Background(), cwd); err != nil {
+			return nil, err
+		}
 	}
 	disc := rt.discover(cwd)
 	ag, ok := GetAgent(disc.Agents, agentName)
@@ -771,7 +779,7 @@ func (rt *Runtime) invokeAgentSpawn(call eval.PreludeCall, sessKey string, args 
 		}
 		defer rt.sem.Release()
 
-		sr := RunSubagent(jobCtx, rt.Registry, RunRequest{
+		runReq := RunRequest{
 			SDK:                        longLivedCtx,
 			ParentSessionID:            sessKey,
 			ParentAgentID:              parentAgentID,
@@ -802,7 +810,30 @@ func (rt *Runtime) invokeAgentSpawn(call eval.PreludeCall, sessKey string, args 
 			OnToolResult: func(tool, intent, text string) {
 				job.RecordToolCall(tool, intent, text)
 			},
-		})
+		}
+		var sr SingleResult
+		if requestedIso {
+			// upstream: packages/coding-agent/src/eval/agent-bridge.ts — eval `agent(isolated=true)` defaults apply=true.
+			effApply := true
+			if hasApplyControl {
+				effApply = applyOverride
+			}
+			effMerge := cfg.IsolationMerge
+			if hasMergeControl && !mergeOverride {
+				effMerge = "patch"
+			}
+			var isoSummary string
+			sr, isoSummary = RunIsolatedSubagent(jobCtx, rt.Registry, runReq, effMerge, effApply)
+			if isoSummary != "" {
+				if strings.TrimSpace(sr.Output) != "" {
+					sr.Output = strings.TrimRight(sr.Output, "\n") + "\n\n" + isoSummary
+				} else {
+					sr.Output = isoSummary
+				}
+			}
+		} else {
+			sr = RunSubagent(jobCtx, rt.Registry, runReq)
+		}
 		failed := sr.Aborted || sr.ExitCode != 0 || sr.Error != ""
 		status := "completed"
 		var errStr string

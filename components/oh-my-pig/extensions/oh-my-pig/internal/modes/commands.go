@@ -460,7 +460,42 @@ func supportedEffortsForContext(ctx sdk.Context, mi *sdk.ModelInfo) []string {
 	return []string{"off", "minimal", "low", "medium", "high", "xhigh", "max"}
 }
 
-// handleSwitchCommand implements `/switch [model[:level]]`.
+// completeRename performs the LLM completion for `/rename` auto-title generation.
+// Overridable in unit tests so tests never make network calls.
+var completeRename = func(ctx sdk.Context, modelObj, req, auth map[string]any) (json.RawMessage, error) {
+	return ctx.Complete(modelObj, req, auth)
+}
+
+// renameTitleSystemPrompt mirrors omp's title-system.md + title-marker-instruction.md
+// for concise session title generation.
+// upstream: packages/coding-agent/src/prompts/system/title-system.md
+// upstream: packages/coding-agent/src/prompts/system/title-marker-instruction.md
+const renameTitleSystemPrompt = `You name coding-agent sessions. Write a 3-6 word title for the task in the next message.
+
+Output exactly one line: the title inside <title> tags, or <title/> when there is no task to name.
+
+Rules:
+- Name the user's goal as a short imperative phrase built from the user's own key words.
+- Answer <title/> for greetings, acknowledgements, gibberish, or requests too vague to name.
+- No quotes, trailing punctuation, or explanations.`
+
+var (
+	renameTitleTagRE    = regexp.MustCompile(`(?is)<title>([\s\S]*?)</title>`)
+	renameEmptyTagRE    = regexp.MustCompile(`(?i)<title\s*/>`)
+	renameThinkTagRE    = regexp.MustCompile(`(?is)^\s*<(?:think|thinking|reasoning)>[\s\S]*?</(?:think|thinking|reasoning)>\s*`)
+	renameTrailingPunct = regexp.MustCompile(`[.!?]+$`)
+)
+
+const renameTitleMaxChars = 80
+
+// isRoleSelector reports whether spec is a role alias (`@role`, `pi/<role>`, `*`)
+// with an optional `:level` thinking suffix.
+func isRoleSelector(spec string) bool {
+	return strings.HasPrefix(spec, "@") || strings.HasPrefix(spec, "pi/") || spec == "*"
+}
+
+// handleSwitchCommand implements `/switch [model[:level]]` including `@role`,
+// `pi/<role>`, and `*` selectors (with optional `:level` thinking suffix).
 // upstream: packages/coding-agent/src/slash-commands/builtin-modes.ts:457-506
 func (m *manager) handleSwitchCommand(ctx sdk.Context, args string) error {
 	selector := strings.TrimSpace(args)
@@ -475,6 +510,26 @@ func (m *manager) handleSwitchCommand(ctx sdk.Context, args string) error {
 	}
 
 	modelSpec, thinkingLevel := splitModelThinkingSuffix(selector)
+	if isRoleSelector(modelSpec) {
+		if ResolveRole == nil {
+			notifyError(ctx, fmt.Sprintf("Unknown model: %s", selector))
+			return nil
+		}
+		prov, id, roleThinking, resolved := ResolveRole(ctx, selector)
+		if !resolved || id == "" {
+			notifyError(ctx, fmt.Sprintf("Unknown model: %s", selector))
+			return nil
+		}
+		if prov != "" {
+			modelSpec = prov + "/" + id
+		} else {
+			modelSpec = id
+		}
+		if thinkingLevel == "" && roleThinking != "" {
+			thinkingLevel = roleThinking
+		}
+	}
+
 	ok, err := ctx.SetModelNamed(modelSpec)
 	if err != nil {
 		notifyError(ctx, fmt.Sprintf("Failed to switch model: %v", err))
@@ -503,13 +558,20 @@ func splitModelThinkingSuffix(spec string) (model, level string) {
 	return spec, ""
 }
 
-// handleRenameCommand implements `/rename <title>`.
+// handleRenameCommand implements `/rename [title]`.
+// When no title argument is provided, generates a concise title from the
+// session branch via the `@smol` role model (falling back to the active model).
 // upstream: packages/coding-agent/src/slash-commands/builtin-lifecycle.ts:613-689
+// upstream: packages/coding-agent/src/utils/title-generator.ts:380-573
 func (m *manager) handleRenameCommand(ctx sdk.Context, args string) error {
 	title := strings.TrimSpace(args)
 	if title == "" {
-		notifyInfo(ctx, "Could not generate a session title. Use /rename <title> to set one.")
-		return nil
+		generated := m.generateSessionTitle(ctx)
+		if generated == "" {
+			notifyInfo(ctx, "Could not generate a session title. Use /rename <title> to set one.")
+			return nil
+		}
+		title = generated
 	}
 	if err := ctx.SetSessionName(title); err != nil {
 		notifyError(ctx, fmt.Sprintf("Rename failed: %v", err))
@@ -517,6 +579,183 @@ func (m *manager) handleRenameCommand(ctx sdk.Context, args string) error {
 	}
 	notifyInfo(ctx, fmt.Sprintf("Session renamed to %s.", title))
 	return nil
+}
+
+// extractRenamePrompt builds a compact user-turn excerpt from the active branch
+// for `/rename` auto-title generation. Returns "" when the branch has no user text.
+func extractRenamePrompt(branch []sdk.BranchEntry) string {
+	var firstUser string
+	var recent []string
+	for _, e := range branch {
+		if e.Type != "message" {
+			continue
+		}
+		txt := strings.TrimSpace(e.Content)
+		if txt == "" {
+			continue
+		}
+		if e.Role == "user" {
+			if firstUser == "" {
+				firstUser = txt
+			}
+			recent = append(recent, "<user>"+txt+"</user>")
+		} else if e.Role == "assistant" {
+			recent = append(recent, "<assistant>"+txt+"</assistant>")
+		}
+	}
+	if firstUser == "" {
+		return ""
+	}
+	if len(recent) <= 1 {
+		return truncateRunes(firstUser, 1200)
+	}
+	const maxRecent = 4
+	if len(recent) > maxRecent {
+		recent = append([]string{recent[0]}, recent[len(recent)-(maxRecent-1):]...)
+	}
+	return truncateRunes("<chat>\n"+strings.Join(recent, "\n")+"\n</chat>", 1600)
+}
+
+func truncateRunes(s string, maxRunes int) string {
+	if maxRunes <= 0 {
+		return ""
+	}
+	runes := []rune(s)
+	if len(runes) <= maxRunes {
+		return s
+	}
+	return string(runes[:maxRunes])
+}
+
+// cleanGeneratedTitle extracts and sanitizes a title from model completion output.
+// upstream: packages/coding-agent/src/utils/title-generator.ts:546-655
+// upstream: packages/coding-agent/src/tiny/text.ts:204-242
+func cleanGeneratedTitle(raw string) string {
+	s := strings.TrimSpace(raw)
+	if s == "" {
+		return ""
+	}
+	if m := renameTitleTagRE.FindStringSubmatch(s); m != nil {
+		s = strings.TrimSpace(m[1])
+	} else if renameEmptyTagRE.MatchString(s) {
+		return ""
+	} else {
+		for {
+			next := renameThinkTagRE.ReplaceAllString(s, "")
+			if next == s {
+				break
+			}
+			s = next
+		}
+		s = strings.ReplaceAll(s, "<title>", "")
+		s = strings.ReplaceAll(s, "</title>", "")
+		s = strings.ReplaceAll(s, "<TITLE>", "")
+		s = strings.ReplaceAll(s, "</TITLE>", "")
+		s = strings.TrimSpace(s)
+	}
+	if s == "" {
+		return ""
+	}
+	// Keep first non-empty line.
+	for _, line := range strings.Split(strings.ReplaceAll(s, "\r\n", "\n"), "\n") {
+		if trimmed := strings.TrimSpace(line); trimmed != "" {
+			s = trimmed
+			break
+		}
+	}
+	// Strip surrounding quotes and trailing sentence punctuation.
+	for len(s) >= 2 && ((s[0] == '"' && s[len(s)-1] == '"') || (s[0] == '\'' && s[len(s)-1] == '\'') || (s[0] == '`' && s[len(s)-1] == '`')) {
+		s = strings.TrimSpace(s[1 : len(s)-1])
+	}
+	s = strings.TrimSpace(renameTrailingPunct.ReplaceAllString(s, ""))
+	if s == "" || strings.EqualFold(s, "none") {
+		return ""
+	}
+	// Collapse internal whitespace and remove control characters.
+	var b strings.Builder
+	prevSpace := false
+	for _, r := range s {
+		if r < 0x20 || r == 0x7f {
+			continue
+		}
+		if r == ' ' || r == '\t' {
+			if !prevSpace && b.Len() > 0 {
+				b.WriteByte(' ')
+				prevSpace = true
+			}
+			continue
+		}
+		prevSpace = false
+		b.WriteRune(r)
+	}
+	cleaned := strings.TrimSpace(b.String())
+	if cleaned == "" || strings.EqualFold(cleaned, "none") {
+		return ""
+	}
+	runes := []rune(cleaned)
+	if len(runes) > renameTitleMaxChars {
+		cleaned = strings.TrimSpace(string(runes[:renameTitleMaxChars]))
+	}
+	return cleaned
+}
+
+func (m *manager) generateSessionTitle(ctx sdk.Context) string {
+	branch, err := ctx.GetBranch()
+	if err != nil {
+		return ""
+	}
+	promptText := extractRenamePrompt(branch)
+	if promptText == "" {
+		return ""
+	}
+
+	var provider, modelID string
+	if ResolveRole != nil {
+		if p, id, _, ok := ResolveRole(ctx, "@smol"); ok && id != "" {
+			provider, modelID = p, id
+		}
+	}
+	if modelID == "" {
+		mi, err := ctx.GetModelInfo()
+		if err != nil || mi == nil || mi.ID == "" {
+			return ""
+		}
+		provider, modelID = mi.Provider, mi.ID
+	}
+
+	modelObj := map[string]any{
+		"id":       modelID,
+		"provider": provider,
+	}
+	if regModel, err := ctx.ModelRegistry().Find(provider, modelID); err == nil && regModel != nil {
+		modelObj = regModel
+	}
+
+	var auth map[string]any
+	if rawAuth, err := ctx.GetModelAuth(provider, modelID); err == nil && len(rawAuth) > 0 {
+		_ = json.Unmarshal(rawAuth, &auth)
+	}
+
+	req := map[string]any{
+		"systemPrompt": renameTitleSystemPrompt,
+		"maxTokens":    1024,
+		"messages": []map[string]any{
+			{
+				"role":    "user",
+				"content": []map[string]any{{"type": "text", "text": promptText}},
+			},
+		},
+	}
+
+	raw, err := completeRename(ctx, modelObj, req, auth)
+	if err != nil {
+		return ""
+	}
+	text, errMsg := extractCompleteText(raw)
+	if errMsg != "" || text == "" {
+		return ""
+	}
+	return cleanGeneratedTitle(text)
 }
 
 // handleDumpCommand implements `/dump`: copies formatted session transcript to clipboard.
@@ -680,6 +919,9 @@ func (m *manager) handleForceCommand(ctx sdk.Context, args string) error {
 	m.mu.Lock()
 	m.stateLocked(sid).forcedTool = toolName
 	m.mu.Unlock()
+	if SetForcedToolChoice != nil {
+		SetForcedToolChoice(sid, toolName)
+	}
 	notifyInfo(ctx, fmt.Sprintf("Next turn forced to use %s.", toolName))
 	if prompt != "" {
 		return sendPromptOrSteer(ctx, prompt)

@@ -72,6 +72,7 @@ type sessionState struct {
 
 	shake   shakeState
 	midTurn midTurnState
+	inline  inlineState
 }
 
 type manager struct {
@@ -149,6 +150,7 @@ func (m *manager) clearCache(sid string) {
 		st.cachedKey = ""
 		st.cachedArchive = nil
 		st.cacheLoaded = false
+		st.inline.clear()
 	}
 }
 
@@ -188,6 +190,7 @@ func registerWithManager(ext *sdk.Extension, m *manager) {
 	ext.OnEvent(sdk.EventSessionTree, m.onSessionTree)
 	ext.OnSessionStart(m.onSessionStart)
 	ext.OnEvent(sdk.EventContext, m.onContext)
+	ext.OnEvent(sdk.EventContextWithSystem, m.onContextWithSystem)
 	ext.OnEvent(sdk.EventTurnEnd, m.onTurnEnd)
 	ext.OnEvent(sdk.EventAgentBeforeSettle, m.onAgentBeforeSettle)
 }
@@ -302,6 +305,7 @@ func (m *manager) onSessionCompact(ctx sdk.Context, data map[string]any) (any, e
 		st.midTurn.overflowPending = false
 		st.midTurn.overflowReason = ""
 		st.midTurn.overflowMessageEntryID = ""
+		st.inline.clear()
 	}
 	m.mu.Unlock()
 	entry, _ := data["compactionEntry"].(map[string]any)

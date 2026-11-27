@@ -97,6 +97,17 @@ var IncludeWorkspaceTree func(ctx sdk.Context) bool
 // upstream: packages/coding-agent/src/slash-commands/builtin-modes.ts:564-617
 var Skillful func(ctx sdk.Context) bool
 
+// AutoLearnInstructions returns standing auto-learn guidance for the system
+// prompt when `manage_skill` is active (`autolearn.enabled: true`), or ""
+// otherwise. Nil by default (no-op on default sessions).
+// upstream: packages/coding-agent/src/autolearn/controller.ts:36-41
+var AutoLearnInstructions func(ctx sdk.Context) string
+
+// PrepareSystemPrompt optionally transforms the rendered system prompt before
+// returning it from `before_agent_start` (used by `snapcompact.PrepareInlineSystemPrompt`
+// for `snapcompact.systemPrompt: "all"|"agents-md"`). Nil or default setting is a no-op.
+var PrepareSystemPrompt func(ctx sdk.Context, rendered string) string
+
 // Personality selects one of omp's bundled personality presets (or "none").
 // upstream: packages/coding-agent/src/system-prompt.ts:125-130
 type Personality string
@@ -1061,6 +1072,15 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 			skills = skillsFromOptions(options)
 		}
 		appendPrompt, _ := options["appendSystemPrompt"].(string)
+		if AutoLearnInstructions != nil && (slices.Contains(activeTools, "manage_skill") || slices.Contains(mountedCommands, "manage_skill")) {
+			if guidance := strings.TrimSpace(AutoLearnInstructions(ctx)); guidance != "" {
+				if strings.TrimSpace(appendPrompt) != "" {
+					appendPrompt = strings.TrimRight(appendPrompt, "\n") + "\n\n" + guidance
+				} else {
+					appendPrompt = guidance
+				}
+			}
+		}
 		var ruleOpts RuleDiscoveryOptions
 		if RuleOptions != nil {
 			ruleOpts = RuleOptions(ctx)
@@ -1121,6 +1141,9 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 			AppendSystemPrompt:   appendPrompt,
 			IncludeWorkspaceTree: includeWorkspaceTree,
 		})
+		if PrepareSystemPrompt != nil {
+			rendered = PrepareSystemPrompt(ctx, rendered)
+		}
 		return map[string]any{"systemPrompt": rendered}, nil
 	})
 

@@ -21,10 +21,22 @@ import (
 //go:embed todo.md
 var todoPrompt string
 
+//go:embed eager-todo.md
+var eagerTodoTemplate string
+
 // Setting reads an omp setting by key (e.g. "todo.enabled", "todo.reminders",
 // "todo.remindersMax", "todo.midRunNudges", "tasks.todoClearDelay").
 // Nil falls back to omp's defaults. Assigned by the integrator.
 var Setting func(ctx sdk.Context, key string) any
+
+// SetForcedToolChoice arms a turn-scoped wire-level `tool_choice` override for
+// sessionID. Wired by the integrator to `providerwire.SetForcedToolChoice`.
+var SetForcedToolChoice func(sessionID, toolName string)
+
+// ForcedToolChoice returns the currently armed wire-level forced tool name for
+// sessionID, or "". Wired by the integrator to `providerwire.ForcedToolChoice`
+// so `todo.eager` never clobbers a user's `/force:<tool>`.
+var ForcedToolChoice func(sessionID string) string
 
 // hudTimer is the minimal timer handle used by the auto-clear scheduler so
 // tests can inject a deterministic clock without real wall-clock sleeps.
@@ -896,10 +908,61 @@ func (a *app) onAgentBeforeSettle(ctx sdk.Context, data map[string]any) (any, er
 	}, nil
 }
 
-// onBeforeAgentStart resets per-user-prompt reminder and mid-run nudge budgets.
+// renderEagerTodoPrelude renders omp's embedded `eager-todo.md` template for
+// `forced` (`todo.eager == "always"`) vs non-forced (`todo.eager == "preferred"`).
+// upstream: packages/coding-agent/src/prompts/system/eager-todo.md
+// upstream: packages/coding-agent/src/session/todo-tracker.ts:200-207
+func renderEagerTodoPrelude(forced bool) string {
+	tpl := strings.ReplaceAll(eagerTodoTemplate, "\r\n", "\n")
+	const (
+		ifOpen  = "{{#if forced}}\n"
+		ifElse  = "{{else}}\n"
+		ifClose = "{{/if}}\n"
+	)
+	if start := strings.Index(tpl, ifOpen); start >= 0 {
+		rest := tpl[start+len(ifOpen):]
+		if elseIdx := strings.Index(rest, ifElse); elseIdx >= 0 {
+			afterElse := rest[elseIdx+len(ifElse):]
+			if closeIdx := strings.Index(afterElse, ifClose); closeIdx >= 0 {
+				branch := afterElse[:closeIdx]
+				if forced {
+					branch = rest[:elseIdx]
+				}
+				tpl = tpl[:start] + branch + afterElse[closeIdx+len(ifClose):]
+			}
+		}
+	}
+	tpl = strings.ReplaceAll(tpl, "{{toolRefs.todo}}", "todo")
+	return strings.TrimRight(tpl, "\n")
+}
+
+// hasPriorUserMessage reports whether the active session branch already contains
+// a prior user message.
+// upstream: packages/coding-agent/src/session/todo-tracker.ts:191
+func hasPriorUserMessage(ctx sdk.Context) bool {
+	branch, err := ctx.SessionManager().GetBranch(nil)
+	if err != nil {
+		return false
+	}
+	for _, entry := range branch {
+		if t, _ := entry["type"].(string); t != "message" {
+			continue
+		}
+		if msg, ok := entry["message"].(map[string]any); ok {
+			if role, _ := msg["role"].(string); role == "user" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// onBeforeAgentStart resets per-user-prompt reminder and mid-run nudge budgets,
+// and when `todo.eager` is `"preferred"` or `"always"`, injects omp's first-turn
+// eager todo prelude (and arms forced wire `tool_choice: todo` for `"always"`).
 // Must NOT reset on agent_start because PiG emits agent_start on every continuation run.
-// upstream: packages/coding-agent/src/session/todo-tracker.ts:147-153
-func (a *app) onBeforeAgentStart(ctx sdk.Context, _ map[string]any) (any, error) {
+// upstream: packages/coding-agent/src/session/todo-tracker.ts:147-153,180-219
+func (a *app) onBeforeAgentStart(ctx sdk.Context, data map[string]any) (any, error) {
 	key := a.effectiveSessionKey(ctx)
 	if key == "" {
 		return nil, nil
@@ -910,8 +973,49 @@ func (a *app) onBeforeAgentStart(ctx sdk.Context, _ map[string]any) (any, error)
 	st.reminderAwaitingProgress = false
 	st.mutationsSinceLastTouch = 0
 	st.midRunNudgeCount = 0
+	hasPhases := len(st.phases) > 0
 	storeMu.Unlock()
-	return nil, nil
+
+	// Default ("default") is a strict no-op: zero change to default sessions.
+	mode := settingString(ctx, "todo.eager", "default")
+	if mode != "preferred" && mode != "always" {
+		return nil, nil
+	}
+	if !settingBool(ctx, "todo.enabled", true) || gate.PlanActive(ctx) || hasPhases {
+		return nil, nil
+	}
+	activeTools, activeErr := ctx.GetActiveTools()
+	if activeErr == nil && !slices.Contains(activeTools, "todo") {
+		return nil, nil
+	}
+	if ForcedToolChoice != nil && ForcedToolChoice(key) != "" {
+		return nil, nil
+	}
+	promptText, hasPrompt := data["prompt"].(string)
+	if hasPrompt {
+		trimmed := strings.TrimRight(promptText, " \t\r\n")
+		if strings.HasSuffix(trimmed, "?") || strings.HasSuffix(trimmed, "!") {
+			return nil, nil
+		}
+		if hasPriorUserMessage(ctx) {
+			return nil, nil
+		}
+	} else if hasPriorUserMessage(ctx) {
+		return nil, nil
+	}
+
+	forced := mode == "always"
+	rendered := renderEagerTodoPrelude(forced)
+	if forced && hasPrompt && SetForcedToolChoice != nil {
+		SetForcedToolChoice(key, "todo")
+	}
+	return map[string]any{
+		"message": map[string]any{
+			"customType": "eager-todo-prelude",
+			"content":    rendered,
+			"display":    false,
+		},
+	}, nil
 }
 
 // onToolResult records tool progress so subsequent stops can re-escalate reminders

@@ -28,6 +28,18 @@ const (
 	// SettingEnabled is the master gate for autolearn / manage_skill (default false).
 	// upstream: packages/coding-agent/src/autolearn/settings.ts:10-21
 	SettingEnabled = "autolearn.enabled"
+
+	// SettingAutoContinue enables automatic post-stop capture turns (default false).
+	// upstream: packages/coding-agent/src/autolearn/settings.ts:23-35
+	SettingAutoContinue = "autolearn.autoContinue"
+
+	// SettingMinToolCalls is the minimum tool calls per turn before auto-capture triggers (default 5).
+	// upstream: packages/coding-agent/src/autolearn/settings.ts:38
+	SettingMinToolCalls = "autolearn.minToolCalls"
+
+	// DefaultMinToolCalls is the default value for autolearn.minToolCalls.
+	// upstream: packages/coding-agent/src/autolearn/settings.ts:38
+	DefaultMinToolCalls = 5
 )
 
 var (

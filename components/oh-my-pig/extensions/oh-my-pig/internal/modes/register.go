@@ -348,6 +348,8 @@ func (m *manager) replayFromBranch(ctx sdk.Context, sid string, coldResume bool)
 		planPaused        bool
 		planFilePath      string
 		planHasEntered    bool
+		planPrevModel     string
+		planPrevThinking  string
 		planReferencePath = defaultPlanFileURL
 		goalState         *GoalModeState
 	)
@@ -383,14 +385,24 @@ func (m *manager) replayFromBranch(ctx sdk.Context, sid string, coldResume bool)
 			} else {
 				planFilePath = defaultPlanFileURL
 			}
+			if pm, _ := mc.Data["prePlanModelIdentity"].(string); pm != "" {
+				planPrevModel = pm
+			}
+			if pt, _ := mc.Data["prePlanThinkingLevel"].(string); pt != "" {
+				planPrevThinking = pt
+			}
 		case "plan_paused":
 			planEnabled = false
 			planPaused = true
 			planHasEntered = true
+			planPrevModel = ""
+			planPrevThinking = ""
 		case "goal", "goal_paused":
 			planEnabled = false
 			planPaused = false
 			planFilePath = ""
+			planPrevModel = ""
+			planPrevThinking = ""
 			if rawGoal, ok := mc.Data["goal"]; ok {
 				b, _ := json.Marshal(rawGoal)
 				var g Goal
@@ -416,6 +428,8 @@ func (m *manager) replayFromBranch(ctx sdk.Context, sid string, coldResume bool)
 			planEnabled = false
 			planPaused = false
 			planFilePath = ""
+			planPrevModel = ""
+			planPrevThinking = ""
 			goalState = nil
 			if p, _ := mc.Data["approvedPlanFilePath"].(string); p != "" {
 				planReferencePath = p
@@ -434,12 +448,19 @@ func (m *manager) replayFromBranch(ctx sdk.Context, sid string, coldResume bool)
 	}
 
 	now := m.now()
+	var restoreModel, restoreThinking string
 	m.mu.Lock()
 	st := m.stateLocked(sid)
+	if st.planEnabled && !planEnabled && st.planPrevModel != "" {
+		restoreModel = st.planPrevModel
+		restoreThinking = st.planPrevThinking
+	}
 	st.planEnabled = planEnabled
 	st.planPaused = planPaused
 	st.planFilePath = planFilePath
 	st.planHasEntered = planHasEntered
+	st.planPrevModel = planPrevModel
+	st.planPrevThinking = planPrevThinking
 	st.planReferencePath = planReferencePath
 	st.goalState = goalState
 	if goalState != nil && goalState.Enabled && isGoalAccountingStatus(goalState.Goal) {
@@ -456,6 +477,9 @@ func (m *manager) replayFromBranch(ctx sdk.Context, sid string, coldResume bool)
 			"mode": "goal_paused",
 			"data": map[string]any{"goal": pausedGoal},
 		})
+	}
+	if restoreModel != "" {
+		m.restorePlanPreviousModel(ctx, restoreModel, restoreThinking)
 	}
 }
 
@@ -507,8 +531,20 @@ func (m *manager) onInput(ctx sdk.Context, data map[string]any) (any, error) {
 		st.planAwaitingProgress = false
 		// Record +Nk / +Nk! turn budget for `TurnBudgetFor(ctx)` (no model-facing text;
 		// upstream agent-session.ts:9091-9092).
-		st.turnBudget = ParseTurnBudget(text)
+		tb := ParseTurnBudget(text)
+		st.turnBudget = tb
+		st.turnBudgetHasBaseline = false
+		st.turnBudgetBaselineOut = 0
 		m.mu.Unlock()
+		if tb != nil {
+			baseOut := m.readCurrentSessionUsage(ctx).Output
+			m.mu.Lock()
+			if st2 := m.sessions[sid]; st2 != nil {
+				st2.turnBudgetHasBaseline = true
+				st2.turnBudgetBaselineOut = baseOut
+			}
+			m.mu.Unlock()
+		}
 	}
 
 	// `chillax`: lower pinned thinking level on models supporting per-message effort.

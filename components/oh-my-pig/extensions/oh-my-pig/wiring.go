@@ -91,6 +91,28 @@ func wireSettings() {
 	}
 	modes.Setting = settings.Any
 	modes.SetSetting = settings.Set
+	modes.ResolveRole = providerwire.ResolveRoleWithThinking
+	modes.SetForcedToolChoice = providerwire.SetForcedToolChoice
+	modes.ClearForcedToolChoice = providerwire.ClearForcedToolChoice
+	todo.SetForcedToolChoice = providerwire.SetForcedToolChoice
+	todo.ForcedToolChoice = providerwire.ForcedToolChoice
+	agents.ResolveModelRole = func(ctx sdk.Context, selector string) (provider, id, thinking string, ok bool) {
+		// Resolve `@role` / `pi/<role>` for subagents only when that role is
+		// explicitly configured in `modelRoles`, preserving parent active-model
+		// inheritance and zero `modelRole` drift on default sessions.
+		roleName, _, isAlias := providerwire.ParseRoleAlias(selector)
+		if !isAlias {
+			base := strings.TrimSpace(selector)
+			if colon := strings.LastIndexByte(base, ':'); colon > 0 {
+				base = base[:colon]
+			}
+			roleName = strings.ToLower(strings.TrimSpace(base))
+		}
+		if !hasConfiguredRoleSetting(ctx, roleName) {
+			return "", "", "", false
+		}
+		return providerwire.ResolveRoleWithThinking(ctx, selector)
+	}
 	snapcompact.Setting = settings.Any
 	snapcompact.HandoffPrompt = modes.RenderHandoffPrompt
 	files.Setting = settings.Any
@@ -99,9 +121,13 @@ func wireSettings() {
 	prompt.Skillful = func(ctx sdk.Context) bool {
 		return settings.Enabled(ctx, "skillful", true)
 	}
+	prompt.AutoLearnInstructions = autolearn.BuildInstructions
+	prompt.PrepareSystemPrompt = snapcompact.PrepareInlineSystemPrompt
 	web.Setting = settings.Any
 	eval.Setting = settings.Any
 	commit.Setting = settings.Any
+	eval.ResolveModelRole = providerwire.ResolveRoleWithThinking
+	eval.TurnBudgetHook = modes.TurnBudgetSnapshot
 	prediction.Setting = settings.Any
 	prediction.IsSubagent = agents.IsSubagent
 	ratchet.Setting = settings.Any
@@ -146,8 +172,12 @@ func wireSettings() {
 	// Per-area boolean Enabled hooks -> internal/settings.Enabled.
 	ast.Enabled = settings.Enabled
 	autolearn.Enabled = settings.Enabled
+	autolearn.Setting = settings.Any
 	autolearn.IsSubagent = agents.IsSubagent
 	autolearn.ExplicitTools = agents.ExplicitTools
+	autolearn.GoalActive = func(ctx sdk.Context) bool {
+		return modes.Current(ctx) == modes.ModeGoal
+	}
 	checkpoint.Enabled = settings.Enabled
 	debug.Enabled = settings.Enabled
 	github.Enabled = settings.Enabled
@@ -383,4 +413,31 @@ func formatDisplayPath(absPath, cwd string) string {
 		}
 	}
 	return filepath.ToSlash(absPath)
+}
+
+func hasConfiguredRoleSetting(ctx sdk.Context, roleName string) bool {
+	if roleName == "" {
+		return false
+	}
+	raw := settings.Any(ctx, "modelRoles")
+	if raw == nil {
+		return false
+	}
+	switch m := raw.(type) {
+	case map[string]any:
+		for k, v := range m {
+			if strings.EqualFold(strings.TrimSpace(k), roleName) {
+				if s, ok := v.(string); ok && strings.TrimSpace(s) != "" {
+					return true
+				}
+			}
+		}
+	case map[string]string:
+		for k, v := range m {
+			if strings.EqualFold(strings.TrimSpace(k), roleName) && strings.TrimSpace(v) != "" {
+				return true
+			}
+		}
+	}
+	return false
 }

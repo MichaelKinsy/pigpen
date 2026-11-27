@@ -60,8 +60,10 @@ type sessionState struct {
 	extendedContext *bool
 
 	// forcedTool holds a turn-scoped tool name injected as forced tool_choice
-	// on the next provider request and cleared automatically on turn/agent end.
-	forcedTool string
+	// on the next provider request and cleared after it is applied (on turn_end)
+	// or unconditionally on agent_end/session end.
+	forcedTool        string
+	forcedToolApplied bool
 }
 
 type manager struct {
@@ -175,10 +177,13 @@ func (m *manager) setForcedToolChoice(sid, toolName string) {
 	if toolName == "" {
 		if st, ok := m.sessions[sid]; ok {
 			st.forcedTool = ""
+			st.forcedToolApplied = false
 		}
 		return
 	}
-	m.stateLocked(sid).forcedTool = toolName
+	st := m.stateLocked(sid)
+	st.forcedTool = toolName
+	st.forcedToolApplied = false
 }
 
 func (m *manager) clearForcedToolChoice(sid string) {
@@ -188,6 +193,30 @@ func (m *manager) clearForcedToolChoice(sid string) {
 	m.mu.Lock()
 	if st, ok := m.sessions[sid]; ok {
 		st.forcedTool = ""
+		st.forcedToolApplied = false
+	}
+	m.mu.Unlock()
+}
+
+func (m *manager) clearAppliedForcedToolChoice(sid string) {
+	if sid == "" {
+		return
+	}
+	m.mu.Lock()
+	if st, ok := m.sessions[sid]; ok && st.forcedToolApplied {
+		st.forcedTool = ""
+		st.forcedToolApplied = false
+	}
+	m.mu.Unlock()
+}
+
+func (m *manager) markForcedToolApplied(sid string) {
+	if sid == "" {
+		return
+	}
+	m.mu.Lock()
+	if st, ok := m.sessions[sid]; ok && st.forcedTool != "" {
+		st.forcedToolApplied = true
 	}
 	m.mu.Unlock()
 }
@@ -379,8 +408,8 @@ func (m *manager) onBeforeProviderRequest(ctx sdk.Context, data map[string]any) 
 
 	if forced != "" {
 		applyForcedToolChoice(payload, family, forced)
+		m.markForcedToolApplied(sid)
 	}
-
 	return nil, nil
 }
 
@@ -431,7 +460,10 @@ func (m *manager) onBeforeProviderHeaders(ctx sdk.Context, data map[string]any) 
 }
 
 func (m *manager) onTurnEnd(ctx sdk.Context, _ map[string]any) (any, error) {
-	m.clearForcedToolChoice(sessionIDOf(ctx))
+	// Clear only if the forced tool_choice was actually applied on a provider
+	// request; mid-stream `/force` steers must survive the in-flight turn's
+	// turn_end so they apply to the steered turn (upstream: agent-session.ts:3573-3587).
+	m.clearAppliedForcedToolChoice(sessionIDOf(ctx))
 	return nil, nil
 }
 
@@ -733,6 +765,10 @@ func applyForcedToolChoice(payload map[string]any, family wireFamily, toolName s
 
 	switch toolFamily {
 	case familyAnthropic:
+		// Anthropic rejects forced `tool_choice` (`type: "tool"`) when extended
+		// thinking is enabled (upstream: packages/ai/src/providers/anthropic.ts:4382-4400).
+		delete(payload, "thinking")
+		stripAnthropicThinkingContextManagement(payload)
 		payload["tool_choice"] = map[string]any{
 			"type": "tool",
 			"name": toolName,
@@ -759,6 +795,35 @@ func applyForcedToolChoice(payload map[string]any, family wireFamily, toolName s
 			"mode":                 "ANY",
 			"allowedFunctionNames": []any{toolName},
 		}
+	}
+}
+
+// stripAnthropicThinkingContextManagement removes `clear_thinking_*` edits
+// from Anthropic's `context_management` object when thinking is disabled for a
+// forced tool_choice turn (upstream: packages/ai/src/providers/anthropic.ts:4382-4400).
+func stripAnthropicThinkingContextManagement(payload map[string]any) {
+	cm, ok := payload["context_management"].(map[string]any)
+	if !ok || cm == nil {
+		return
+	}
+	edits, ok := cm["edits"].([]any)
+	if !ok {
+		return
+	}
+	kept := make([]any, 0, len(edits))
+	for _, raw := range edits {
+		em, ok := raw.(map[string]any)
+		if ok {
+			if t, _ := em["type"].(string); strings.HasPrefix(t, "clear_thinking") {
+				continue
+			}
+		}
+		kept = append(kept, raw)
+	}
+	if len(kept) == 0 {
+		delete(payload, "context_management")
+	} else {
+		cm["edits"] = kept
 	}
 }
 

@@ -121,6 +121,7 @@ type RunRequest struct {
 	ParentAgentID              string
 	ParentLocalRoot            string
 	Cwd                        string
+	Worktree                   string // isolated worktree path when running isolated
 	AgentDir                   string
 	TaskDepth                  int
 	Index                      int
@@ -389,6 +390,13 @@ func RenderSubagentSystemPrompt(req RunRequest, roster PeerRoster, structured bo
 
 	b.WriteString("⁂ Coop\n")
 	b.WriteString("You are operating on a piece of work assigned to you by the main agent.\n\n")
+	if wt := strings.TrimSpace(req.Worktree); wt != "" {
+		b.WriteString("# Working Tree\n")
+		b.WriteString("You are working in an isolated working tree at `")
+		b.WriteString(wt)
+		b.WriteString("` for this sub-task.\n")
+		b.WriteString("You NEVER modify files outside this tree or in the original repository.\n\n")
+	}
 
 	if req.IRCEnabled && req.ID != "" {
 		b.WriteString("\n# Peers\n")
@@ -538,42 +546,112 @@ func ResolveChildToolNames(agent AgentDefinition, childDepth, maxDepth int, stru
 	return nil, exclude
 }
 
-// ResolveModelForChild resolves a list of candidate model selectors (e.g.
-// `["anthropic/claude-haiku-4-5"]` or `["@smol"]`) against the host's
-// ModelRegistry. When no explicit candidate resolves (e.g. `@role` aliases or
-// empty list), it falls back to the parent session's active model
-// (`ctx.ModelQualified()` -> `ModelRegistry().Find`), matching omp's
-// `modelPatternParentFallback` (`task/executor.ts:5242-5244`) rather than
-// letting PiG pick the settings-file default or first available model.
-func ResolveModelForChild(ctx sdk.Context, candidates []string) (modelObj map[string]any, thinkingSuffix string) {
+// ResolveModelRole resolves a model-role selector (e.g. `@smol`, `@slow:high`,
+// `@task`, `pi/slow`, `default`, `*`) to a concrete provider, model ID, and
+// optional thinking suffix. Wired to `providerwire.ResolveRoleWithThinking` in
+// `wiring.go`.
+// upstream: packages/coding-agent/src/config/model-resolver.ts
+var ResolveModelRole func(ctx sdk.Context, selector string) (provider, id, thinking string, ok bool)
+
+// splitSelectorThinking splits an optional trailing `:thinkingLevel` suffix
+// from a model selector when the suffix is a recognized omp thinking level.
+func splitSelectorThinking(sel string) (base, suffix string) {
+	if colon := strings.LastIndexByte(sel, ':'); colon > 0 {
+		tail := strings.ToLower(strings.TrimSpace(sel[colon+1:]))
+		switch tail {
+		case "off", "minimal", "low", "medium", "high", "xhigh", "max", "auto", "lo", "med", "hi":
+			return strings.TrimSpace(sel[:colon]), normalizeThinkingLevel(tail)
+		}
+	}
+	return sel, ""
+}
+
+// parseModelRoleSelector reports whether sel is a role alias (`@role`,
+// `pi/role`, `default`, or `*`, with optional `:thinking` suffix) and returns
+// the canonical lowercase role name.
+// upstream: packages/coding-agent/src/config/model-roles.ts
+func parseModelRoleSelector(sel string) (roleName string, isRole bool) {
+	trimmed := strings.TrimSpace(sel)
+	if trimmed == "" {
+		return "", false
+	}
+	base, _ := splitSelectorThinking(trimmed)
+	lower := strings.ToLower(base)
+	switch {
+	case lower == "default" || lower == "*":
+		return "default", true
+	case strings.HasPrefix(lower, "@"):
+		name := strings.TrimSpace(strings.TrimPrefix(lower, "@"))
+		if name == "" || strings.Contains(name, "/") {
+			return "", false
+		}
+		return name, true
+	case strings.HasPrefix(lower, "pi/"):
+		name := strings.TrimSpace(strings.TrimPrefix(lower, "pi/"))
+		if name == "" || strings.Contains(name, "/") {
+			return "", false
+		}
+		return name, true
+	default:
+		return "", false
+	}
+}
+
+// lookupModelInRegistry resolves (provider, id) via ModelRegistry.Find,
+// falling back to a case-insensitive scan of GetAvailable().
+func lookupModelInRegistry(reg sdk.ModelRegistry, provider, id string) map[string]any {
+	if m, err := reg.Find(provider, id); err == nil && m != nil {
+		return m
+	}
+	avail, err := reg.GetAvailable()
+	if err != nil {
+		return nil
+	}
+	for _, m := range avail {
+		mp, _ := m["provider"].(string)
+		mid, _ := m["id"].(string)
+		if strings.EqualFold(mp, provider) && strings.EqualFold(mid, id) {
+			return m
+		}
+	}
+	return nil
+}
+
+// resolveModelForChildWithRole resolves candidate model selectors against
+// ResolveModelRole (for `@role`, `pi/<role>`, `default`, `*`) and the host's
+// ModelRegistry, returning the resolved model object, optional thinking suffix,
+// and matched role name (empty for direct provider/id selectors or fallback).
+func resolveModelForChildWithRole(ctx sdk.Context, candidates []string) (modelObj map[string]any, thinkingSuffix string, modelRole string) {
 	var zero sdk.Context
 	if ctx == zero {
-		return nil, ""
+		return nil, "", ""
 	}
 	reg := ctx.ModelRegistry()
 	for _, raw := range candidates {
 		sel := strings.TrimSpace(raw)
-		if sel == "" || strings.HasPrefix(sel, "@") || sel == "default" {
+		if sel == "" {
 			continue
 		}
-		// Optional `:thinkingLevel` suffix.
-		base := sel
-		var suffix string
-		if colon := strings.LastIndexByte(sel, ':'); colon > 0 {
-			tail := strings.ToLower(strings.TrimSpace(sel[colon+1:]))
-			switch tail {
-			case "off", "minimal", "low", "medium", "high", "xhigh", "max", "lo", "med", "hi":
-				base = sel[:colon]
-				suffix = normalizeThinkingLevel(tail)
+		if roleName, isRole := parseModelRoleSelector(sel); isRole {
+			if ResolveModelRole == nil {
+				continue
 			}
+			prov, id, thinking, ok := ResolveModelRole(ctx, sel)
+			if ok && prov != "" && id != "" {
+				if m := lookupModelInRegistry(reg, prov, id); m != nil {
+					return m, normalizeThinkingLevel(thinking), roleName
+				}
+			}
+			continue
 		}
+		base, suffix := splitSelectorThinking(sel)
 		provider, id, hasSlash := strings.Cut(base, "/")
 		if hasSlash {
 			if m, err := reg.Find(provider, id); err == nil && m != nil {
-				return m, suffix
+				return m, suffix, ""
 			}
 		}
-		// Fallback: scan available models by exact ID or suffix match.
+		// Fallback: scan available models by exact ID or provider/id match.
 		avail, err := reg.GetAvailable()
 		if err != nil {
 			continue
@@ -582,22 +660,36 @@ func ResolveModelForChild(ctx sdk.Context, candidates []string) (modelObj map[st
 			mp, _ := m["provider"].(string)
 			mid, _ := m["id"].(string)
 			if hasSlash && strings.EqualFold(mp, provider) && strings.EqualFold(mid, id) {
-				return m, suffix
+				return m, suffix, ""
 			}
 			if !hasSlash && strings.EqualFold(mid, base) {
-				return m, suffix
+				return m, suffix, ""
 			}
 		}
 	}
 	// Parent active model fallback (`task/executor.ts:5242-5244`).
 	if parentQual := strings.TrimSpace(ctx.ModelQualified()); parentQual != "" {
 		if prov, id, ok := strings.Cut(parentQual, "/"); ok && prov != "" && id != "" {
-			if m, err := reg.Find(prov, id); err == nil && m != nil {
-				return m, ""
+			if m := lookupModelInRegistry(reg, prov, id); m != nil {
+				return m, "", ""
 			}
 		}
 	}
-	return nil, ""
+	return nil, "", ""
+}
+
+// ResolveModelForChild resolves a list of candidate model selectors (e.g.
+// `["anthropic/claude-haiku-4-5"]`, `["@smol"]`, `["@slow:high"]`,
+// `["pi/task"]`, or `["default"]`) against `ResolveModelRole` and the host's
+// ModelRegistry. When no candidate resolves (or `ResolveModelRole == nil` for
+// role aliases), it falls back to the parent session's active model
+// (`ctx.ModelQualified()` -> `ModelRegistry().Find`), matching omp's
+// `modelPatternParentFallback` (`task/executor.ts:5242-5244`) rather than
+// letting PiG pick the settings-file default or first available model.
+// upstream: packages/coding-agent/src/task/executor.ts:4988-5015,5242-5244
+func ResolveModelForChild(ctx sdk.Context, candidates []string) (modelObj map[string]any, thinkingSuffix string) {
+	m, think, _ := resolveModelForChildWithRole(ctx, candidates)
+	return m, think
 }
 
 // thinkingEffortOrder is omp's THINKING_EFFORTS ladder from least to most
@@ -828,7 +920,7 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 	if len(modelCandidates) == 0 {
 		modelCandidates = req.Agent.Model
 	}
-	modelObj, modelThinkSuffix := ResolveModelForChild(req.SDK, modelCandidates)
+	modelObj, modelThinkSuffix, resolvedModelRole := resolveModelForChildWithRole(req.SDK, modelCandidates)
 	thinkingLevel := ClampThinkingLevelToCeiling(modelObj, ResolveChildThinkingLevel(req.Agent.ThinkingLevel, req.Effort, modelThinkSuffix), req.MaxEffort)
 
 	softBudgetNotice := true
@@ -854,6 +946,7 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 			RecentTools:   []RecentTool{},
 			RecentOutput:  []string{},
 			ModelOverride: req.ModelOverride,
+			ModelRole:     resolvedModelRole,
 		}
 		usageTotals         Usage
 		hasUsage            bool
@@ -1615,6 +1708,7 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 		ContextTokens:         ctxTokens,
 		ContextWindow:         ctxWindow,
 		ModelOverride:         req.ModelOverride,
+		ModelRole:             resolvedModelRole,
 		ResolvedModel:         resolvedModel,
 		ResolvedModelIdentity: resolvedModelID,
 		ResolvedThinkingLevel: resolvedThink,

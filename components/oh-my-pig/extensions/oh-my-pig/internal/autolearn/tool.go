@@ -136,6 +136,7 @@ func Register(e *sdk.Extension) {
 			"skillPaths": []string{dir},
 		}, nil
 	})
+	registerController(e)
 }
 
 func agentDirForContext(ctx sdk.Context) string {

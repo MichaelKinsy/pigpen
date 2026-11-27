@@ -46,6 +46,19 @@ var ParentSession func(ctx sdk.Context) (parentSessionID string, isSubagent bool
 // matching omp (`interactive-mode.ts:6275, 6543, 7325, 7634, 7679`).
 var VibeActive func(ctx sdk.Context) bool
 
+// ResolveRole resolves a model role selector (e.g. "@smol", "@slow:high",
+// "pi/plan", "*") to a provider, model ID, and optional thinking level.
+// Wired by the integrator to `providerwire.ResolveRoleWithThinking`.
+var ResolveRole func(ctx sdk.Context, selector string) (provider, id, thinking string, ok bool)
+
+// SetForcedToolChoice arms a turn-scoped wire-level `tool_choice` override for
+// sessionID. Wired by the integrator to `providerwire.SetForcedToolChoice`.
+var SetForcedToolChoice func(sessionID, toolName string)
+
+// ClearForcedToolChoice clears any pending wire-level `tool_choice` override
+// for sessionID. Wired by the integrator to `providerwire.ClearForcedToolChoice`.
+var ClearForcedToolChoice func(sessionID string)
+
 // defaultStore is the single process-wide, session-ID-keyed store shared by
 // every extension instance PiG creates (one per session / reload / replacement).
 var (
@@ -93,6 +106,58 @@ func TurnBudgetFor(ctx sdk.Context) *TurnBudget {
 	return &cp
 }
 
+// TurnBudgetSnapshot returns the active turn budget (`total`, `spent` output
+// tokens since the user turn began, and `hard`). `spent` measures assistant
+// output tokens produced since the turn-start baseline rather than context size
+// (upstream: session-manager.ts:3332-3346, budget-bridge.ts:33-48).
+func TurnBudgetSnapshot(ctx sdk.Context) (total *int, spent int, hard bool) {
+	storeMu.RLock()
+	m := defaultStore
+	storeMu.RUnlock()
+	sid := strictSessionID(ctx)
+	if sid == "" {
+		return nil, 0, false
+	}
+	m.mu.Lock()
+	st := m.sessions[sid]
+	if st == nil {
+		m.mu.Unlock()
+		return nil, 0, false
+	}
+	var tb *TurnBudget
+	if st.turnBudget != nil {
+		cp := *st.turnBudget
+		tb = &cp
+	}
+	hasBase := st.turnBudgetHasBaseline
+	baseOut := st.turnBudgetBaselineOut
+	var goalTotal *int
+	goalSpent := 0
+	if st.goalState != nil && st.goalState.Enabled && st.goalState.Goal.TokenBudget != nil {
+		gb := *st.goalState.Goal.TokenBudget
+		goalTotal = &gb
+		goalSpent = st.goalState.Goal.TokensUsed
+	}
+	m.mu.Unlock()
+
+	if tb != nil {
+		t := tb.Total
+		total = &t
+		hard = tb.Hard
+		if hasBase {
+			cur := m.readCurrentSessionUsage(ctx)
+			if delta := cur.Output - baseOut; delta > 0 {
+				spent = delta
+			}
+		}
+		return total, spent, hard
+	}
+	if goalTotal != nil {
+		return goalTotal, goalSpent, false
+	}
+	return nil, 0, false
+}
+
 // manager owns all per-session state keyed strictly by session ID.
 type manager struct {
 	mu       sync.Mutex
@@ -123,6 +188,8 @@ type sessionState struct {
 	planReferenceSent    bool
 	planHasEntered       bool
 	planPrevTools        []string
+	planPrevModel        string
+	planPrevThinking     string
 	planProposeUsedTurn  bool
 	planAskUsedTurn      bool
 	planReminderCount    int
@@ -150,9 +217,10 @@ type sessionState struct {
 	loopCondCancel   context.CancelFunc
 	loopResubmitStop chan struct{}
 
-	// Turn budget (+Nk / +Nk!)
-	turnBudget *TurnBudget
-
+	// Turn budget (+Nk / +Nk!) and baseline assistant output tokens at turn start.
+	turnBudget            *TurnBudget
+	turnBudgetHasBaseline bool
+	turnBudgetBaselineOut int
 	// /force:<tool> next-turn notice
 	forcedTool string
 }
@@ -196,6 +264,9 @@ func (m *manager) endSession(sessionID string) {
 	delete(m.sessions, sessionID)
 	m.mu.Unlock()
 
+	if ClearForcedToolChoice != nil {
+		ClearForcedToolChoice(sessionID)
+	}
 	if cancel != nil {
 		cancel()
 	}

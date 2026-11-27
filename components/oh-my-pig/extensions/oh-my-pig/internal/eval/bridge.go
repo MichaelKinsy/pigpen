@@ -255,9 +255,13 @@ func dispatchBridgeCall(run *bridgeRun, name string, rawArgs json.RawMessage) (a
 	case "__cancel__":
 		return dispatchCancelCall(run, rawArgs)
 	case "__budget__":
-		return map[string]any{"total": nil, "spent": 0, "hard": false}, nil
-	case "__completion__", "__judge__", "__judge_batch__":
-		return nil, fmt.Errorf("%s is not available in this session", strings.Trim(name, "_"))
+		return dispatchBudgetCall(run)
+	case "__completion__":
+		return dispatchCompletionCall(run, rawArgs)
+	case "__judge__":
+		return dispatchJudgeCall(run, rawArgs)
+	case "__judge_batch__":
+		return dispatchJudgeBatchCall(run, rawArgs)
 	default:
 		return dispatchSessionToolCall(run, name, rawArgs)
 	}
@@ -798,11 +802,56 @@ func jobSnapshot(ref handleRef, j jobs.Job) map[string]any {
 					if data, exists := ev["data"]; exists {
 						out["data"] = data
 					}
+					if pp, ok := ev["patchPath"].(string); ok && pp != "" {
+						out["patchPath"] = pp
+					}
+					if bn, ok := ev["branchName"].(string); ok && bn != "" {
+						out["branchName"] = bn
+					}
 				}
 			}
 		}
 	}
 	return out
+}
+
+type resolvedEvalHandle struct {
+	ref        handleRef
+	job        jobs.Job
+	completion *completionHandleEntry
+}
+
+func resolveEvalHandle(sessionID string, ref handleRef) (resolvedEvalHandle, error) {
+	switch ref.Kind {
+	case "agent":
+		j, ok := jobs.Get(sessionID, ref.ID)
+		if !ok {
+			return resolvedEvalHandle{}, fmt.Errorf("unknown agent handle %s; result expired — read agent://%s", ref.ID, ref.ID)
+		}
+		return resolvedEvalHandle{ref: ref, job: j}, nil
+	case "completion":
+		c, ok := getCompletionHandle(sessionID, ref.ID)
+		if !ok {
+			return resolvedEvalHandle{}, fmt.Errorf("unknown completion handle %s; result expired", ref.ID)
+		}
+		return resolvedEvalHandle{ref: ref, completion: c}, nil
+	default:
+		return resolvedEvalHandle{}, fmt.Errorf("unknown %s handle %s; result expired", ref.Kind, ref.ID)
+	}
+}
+
+func (h resolvedEvalHandle) done() <-chan struct{} {
+	if h.completion != nil {
+		return h.completion.done
+	}
+	return h.job.Done()
+}
+
+func (h resolvedEvalHandle) snapshot(includeAttempts bool) map[string]any {
+	if h.completion != nil {
+		return h.completion.snapshot(includeAttempts)
+	}
+	return jobSnapshot(h.ref, h.job)
 }
 
 func dispatchWaitCall(run *bridgeRun, rawArgs json.RawMessage) (any, error) {
@@ -813,16 +862,13 @@ func dispatchWaitCall(run *bridgeRun, rawArgs json.RawMessage) (any, error) {
 	if err := json.Unmarshal(rawArgs, &args); err != nil || args.Items == nil {
 		return nil, errors.New("wait() requires an items array")
 	}
-	resolved := make([]jobs.Job, len(args.Items))
+	resolved := make([]resolvedEvalHandle, len(args.Items))
 	for i, item := range args.Items {
-		if item.Kind != "agent" {
-			return nil, fmt.Errorf("unknown %s handle %s; result expired", item.Kind, item.ID)
+		h, err := resolveEvalHandle(run.sessionID, item)
+		if err != nil {
+			return nil, err
 		}
-		j, ok := jobs.Get(run.sessionID, item.ID)
-		if !ok {
-			return nil, fmt.Errorf("unknown agent handle %s; result expired — read agent://%s", item.ID, item.ID)
-		}
-		resolved[i] = j
+		resolved[i] = h
 	}
 	return withBridgeTimeoutPause(run.emitStatus, func() (any, error) {
 		ctx := run.ctx
@@ -831,9 +877,9 @@ func dispatchWaitCall(run *bridgeRun, rawArgs json.RawMessage) (any, error) {
 			ctx, cancel = context.WithTimeout(run.ctx, time.Duration(*args.TimeoutMs)*time.Millisecond)
 			defer cancel()
 		}
-		for _, j := range resolved {
+		for _, h := range resolved {
 			select {
-			case <-j.Done():
+			case <-h.done():
 			case <-ctx.Done():
 				if run.ctx.Err() != nil {
 					return nil, errors.New("wait() aborted")
@@ -844,8 +890,8 @@ func dispatchWaitCall(run *bridgeRun, rawArgs json.RawMessage) (any, error) {
 		}
 	done:
 		snaps := make([]map[string]any, len(args.Items))
-		for i, item := range args.Items {
-			snaps[i] = jobSnapshot(item, resolved[i])
+		for i := range resolved {
+			snaps[i] = resolved[i].snapshot(false)
 		}
 		return map[string]any{"items": snaps}, nil
 	})
@@ -858,14 +904,11 @@ func dispatchStatusCall(run *bridgeRun, rawArgs json.RawMessage) (any, error) {
 	if err := json.Unmarshal(rawArgs, &args); err != nil || args.Item.ID == "" {
 		return nil, errors.New("handle request requires an item")
 	}
-	if args.Item.Kind != "agent" {
-		return nil, fmt.Errorf("unknown %s handle %s; result expired", args.Item.Kind, args.Item.ID)
+	h, err := resolveEvalHandle(run.sessionID, args.Item)
+	if err != nil {
+		return nil, err
 	}
-	j, ok := jobs.Get(run.sessionID, args.Item.ID)
-	if !ok {
-		return nil, fmt.Errorf("unknown agent handle %s; result expired — read agent://%s", args.Item.ID, args.Item.ID)
-	}
-	return jobSnapshot(args.Item, j), nil
+	return h.snapshot(true), nil
 }
 
 func dispatchCancelCall(run *bridgeRun, rawArgs json.RawMessage) (any, error) {
@@ -875,17 +918,17 @@ func dispatchCancelCall(run *bridgeRun, rawArgs json.RawMessage) (any, error) {
 	if err := json.Unmarshal(rawArgs, &args); err != nil || args.Item.ID == "" {
 		return nil, errors.New("handle request requires an item")
 	}
-	if args.Item.Kind != "agent" {
-		return nil, fmt.Errorf("unknown %s handle %s; result expired", args.Item.Kind, args.Item.ID)
+	h, err := resolveEvalHandle(run.sessionID, args.Item)
+	if err != nil {
+		return nil, err
 	}
-	j, ok := jobs.Get(run.sessionID, args.Item.ID)
-	if !ok {
-		return nil, fmt.Errorf("unknown agent handle %s; result expired — read agent://%s", args.Item.ID, args.Item.ID)
+	if h.completion != nil {
+		return map[string]any{"cancelled": h.completion.cancelHandle()}, nil
 	}
-	if j.Status() != "running" {
+	if h.job.Status() != "running" {
 		return map[string]any{"cancelled": false}, nil
 	}
-	j.Cancel()
+	h.job.Cancel()
 	return map[string]any{"cancelled": true}, nil
 }
 

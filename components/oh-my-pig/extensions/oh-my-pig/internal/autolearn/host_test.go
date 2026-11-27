@@ -184,6 +184,8 @@ func (h *autolearnHost) answer(f wireFrame) {
 		default:
 			res = nil
 		}
+	case "getSessionID":
+		res = map[string]any{"sessionId": h.sessionID}
 	case "getSettings":
 		res = map[string]any{"settings": map[string]any{}}
 	}

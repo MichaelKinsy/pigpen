@@ -964,6 +964,8 @@ func (m *manager) enterPlanMode(ctx sdk.Context, sid, planFilePath string) {
 	st.planAwaitingProgress = false
 	st.pendingPlanReview = nil
 	st.planHasEntered = true
+	st.planPrevModel = ""
+	st.planPrevThinking = ""
 	m.syncStatus(ctx, st)
 	m.mu.Unlock()
 
@@ -974,10 +976,25 @@ func (m *manager) enterPlanMode(ctx sdk.Context, sid, planFilePath string) {
 	st = m.stateLocked(sid)
 	planPrompt := m.buildPlanModeActivePrompt(ctx, st)
 	m.mu.Unlock()
+	// Switch to configured @plan role model when modelRoles.plan is explicitly set.
+	// upstream: packages/coding-agent/src/modes/interactive-mode.ts:5978-5989,6342-6344
+	m.applyPlanModeModel(ctx, sid)
+
+	modeData := map[string]any{"planFilePath": planFilePath}
+	m.mu.Lock()
+	if st := m.sessions[sid]; st != nil {
+		if st.planPrevModel != "" {
+			modeData["prePlanModelIdentity"] = st.planPrevModel
+		}
+		if st.planPrevThinking != "" {
+			modeData["prePlanThinkingLevel"] = st.planPrevThinking
+		}
+	}
+	m.mu.Unlock()
 
 	_ = ctx.AppendEntry(entryTypeModeChange, map[string]any{
 		"mode": "plan",
-		"data": map[string]any{"planFilePath": planFilePath},
+		"data": modeData,
 	})
 	if idle, err := ctx.IsIdle(); err == nil && !idle {
 		_ = ctx.SendMessage("plan-mode-context", planPrompt, false, sdk.SendMessageOptions{DeliverAs: "steer"})
@@ -993,10 +1010,14 @@ func (m *manager) exitPlanMode(ctx sdk.Context, sid string, paused, silent bool)
 		return
 	}
 	prevTools := append([]string(nil), st.planPrevTools...)
+	prevModel := st.planPrevModel
+	prevThinking := st.planPrevThinking
 	st.planEnabled = false
 	st.planPaused = paused
 	st.planFilePath = ""
 	st.planPrevTools = nil
+	st.planPrevModel = ""
+	st.planPrevThinking = ""
 	st.pendingPlanReview = nil
 	st.planProposeUsedTurn = false
 	st.planAskUsedTurn = false
@@ -1012,6 +1033,7 @@ func (m *manager) exitPlanMode(ctx sdk.Context, sid string, paused, silent bool)
 	}
 	// Let toolcmd deactivate `propose` if it was presented top-level while bash transport was off.
 	toolcmd.Sync(ctx)
+	m.restorePlanPreviousModel(ctx, prevModel, prevThinking)
 	modeVal := "none"
 	if paused {
 		modeVal = "plan_paused"
@@ -1036,6 +1058,80 @@ func (m *manager) disablePausedPlanMode(ctx sdk.Context, sid string) {
 
 	_ = ctx.AppendEntry(entryTypeModeChange, map[string]any{"mode": "none"})
 	notifyInfo(ctx, "Plan mode disabled.")
+}
+
+// hasConfiguredPlanRole reports whether `modelRoles` has an explicit non-empty
+// `"plan"` entry so default sessions without a configured plan role never switch.
+func hasConfiguredPlanRole(ctx sdk.Context) bool {
+	if Setting == nil {
+		return false
+	}
+	raw := Setting(ctx, "modelRoles")
+	switch m := raw.(type) {
+	case map[string]any:
+		for k, v := range m {
+			if strings.EqualFold(strings.TrimSpace(k), "plan") {
+				if s, ok := v.(string); ok && strings.TrimSpace(s) != "" {
+					return true
+				}
+			}
+		}
+	case map[string]string:
+		for k, v := range m {
+			if strings.EqualFold(strings.TrimSpace(k), "plan") && strings.TrimSpace(v) != "" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// applyPlanModeModel saves the pre-plan model & thinking level and switches to
+// the configured `@plan` role when `modelRoles.plan` is explicitly configured.
+// upstream: packages/coding-agent/src/modes/interactive-mode.ts:5978-5989
+func (m *manager) applyPlanModeModel(ctx sdk.Context, sid string) {
+	if ResolveRole == nil || !hasConfiguredPlanRole(ctx) {
+		return
+	}
+	prov, id, thinking, ok := ResolveRole(ctx, "@plan")
+	if !ok || id == "" {
+		return
+	}
+	target := id
+	if prov != "" {
+		target = prov + "/" + id
+	}
+	prevModel := ctx.ModelQualified()
+	prevThinking, _ := ctx.GetThinkingLevel()
+
+	switched, err := ctx.SetModelNamed(target)
+	if err != nil || !switched {
+		return
+	}
+	if thinking != "" {
+		ctx.SetThinkingLevel(thinking)
+	}
+
+	m.mu.Lock()
+	if st := m.sessions[sid]; st != nil && st.planEnabled {
+		st.planPrevModel = prevModel
+		st.planPrevThinking = prevThinking
+	}
+	m.mu.Unlock()
+}
+
+// restorePlanPreviousModel restores the model and thinking level saved when
+// entering plan mode.
+// upstream: packages/coding-agent/src/modes/interactive-mode.ts:6365-6383
+func (m *manager) restorePlanPreviousModel(ctx sdk.Context, prevModel, prevThinking string) {
+	if prevModel == "" {
+		return
+	}
+	if ok, err := ctx.SetModelNamed(prevModel); err == nil && ok {
+		if prevThinking != "" {
+			ctx.SetThinkingLevel(prevThinking)
+		}
+	}
 }
 
 // handleProposeTool implements omp's `propose` tool for submitting a plan.
@@ -1209,6 +1305,8 @@ func (m *manager) approvePlanFreshSession(ctx sdk.Context, sid string, details P
 	m.mu.Lock()
 	st := m.stateLocked(sid)
 	prevTools := append([]string(nil), st.planPrevTools...)
+	prevModel := st.planPrevModel
+	prevThinking := st.planPrevThinking
 	m.mu.Unlock()
 
 	var dispatchErr error
@@ -1223,6 +1321,7 @@ func (m *manager) approvePlanFreshSession(ctx sdk.Context, sid string, details P
 			}
 
 			execTools := restoreExecutionTools(newCtx, prevTools)
+			m.restorePlanPreviousModel(newCtx, prevModel, prevThinking)
 			if newSID := strictSessionID(newCtx); newSID != "" {
 				m.mu.Lock()
 				nst := m.stateLocked(newSID)
@@ -1267,6 +1366,8 @@ func (m *manager) approvePlanFreshSession(ctx sdk.Context, sid string, details P
 		oldSt.planEnabled = false
 		oldSt.planPaused = false
 		oldSt.planFilePath = ""
+		oldSt.planPrevModel = ""
+		oldSt.planPrevThinking = ""
 		oldSt.pendingPlanReview = nil
 	}
 	m.mu.Unlock()
