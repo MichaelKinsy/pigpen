@@ -1,0 +1,38 @@
+[
+  {
+    "name": "surface_profile_flag_passthrough_print_mode",
+    "file": "surface/cli_subcommands.go",
+    "find": "if i+1 < len(args) && isExistingProfileName(args[i+1]) {",
+    "replace": "if i+1 < len(args) && (isExistingProfileName(args[i+1]) || true) {"
+  },
+  {
+    "name": "filetools_read_detects_nul_binary",
+    "file": "filetools/read.go",
+    "find": "if bytes.IndexByte(sample, 0) >= 0 {\n\t\treturn true\n\t}",
+    "replace": "if false && bytes.IndexByte(sample, 0) >= 0 {\n\t\treturn true\n\t}"
+  },
+  {
+    "name": "memoryskills_rejects_replace_in_parser",
+    "file": "memoryskills/memory_tool.go",
+    "find": "\t\t\tif action == \"replace\" {\n\t\t\t\treturn nil, replaceRemovedError",
+    "replace": "\t\t\tif false && action == \"replace\" {\n\t\t\t\treturn nil, replaceRemovedError"
+  },
+  {
+    "name": "webmcp_ssrf_blocks_loopback_ip",
+    "file": "webmcp/web_extract.go",
+    "find": "if ip.IsLoopback() {\n\t\tif allowLocalhost {\n\t\t\treturn nil\n\t\t}\n\t\treturn fmt.Errorf(\"blocked loopback IP %s\", ip.String())\n\t}",
+    "replace": "if ip.IsLoopback() {\n\t\treturn nil\n\t}"
+  },
+  {
+    "name": "agents_cron_preserves_unknown_fields",
+    "file": "agents/cron.go",
+    "find": "if len(j.extra) == 0 {",
+    "replace": "if true || len(j.extra) == 0 {"
+  },
+  {
+    "name": "sessions_search_caps_tool_output",
+    "file": "sessions/search.go",
+    "find": "toolContentPrefixCap = 8192",
+    "replace": "toolContentPrefixCap = 1000000"
+  }
+]

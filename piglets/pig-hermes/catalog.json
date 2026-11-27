@@ -1,0 +1,10 @@
+{
+  "featured": false,
+  "updatedAt": "2026-11-26",
+  "languages": ["go"],
+  "notes": [
+    "An unofficial Go homage to Nous Research's Hermes Agent on PiG. Not affiliated with or endorsed by Nous Research. Pinned against NousResearch/hermes-agent commit 45e9584556a97f50a3cb6394a6e7f6afa97bb66a; parity is a goal, not a promise. PARITY.md lists every ported, host-native, and out-of-scope surface.",
+    "Fuses into a single Go binary with zero PiG built-in tools: the model sees Hermes's read_file, write_file, patch, search_files, terminal, process_manage, memory, skills_list, skill_view, skill_manage, session_search, delegate_task, todo_list, clarify, cronjob_manage, web_search, web_extract, and execute_code.",
+    "Exposes shared library pig-hermes-core, versioned EventBus channels, named SystemPromptSections, and a composable clihook dispatcher so derived Piglets such as oh-my-hermes-pig layer cleanly via extends:."
+  ]
+}

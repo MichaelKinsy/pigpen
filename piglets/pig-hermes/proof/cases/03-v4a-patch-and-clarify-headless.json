@@ -1,0 +1,42 @@
+{
+  "name": "03-v4a-patch-and-clarify-headless",
+  "prompt": "Apply a V4A multi-file patch and test headless clarify non-blocking return.",
+  "files": {
+    "a.txt": "alpha\nbeta\n"
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "patch",
+          "arguments": {
+            "mode": "patch",
+            "patch": "*** Begin Patch\n*** Update File: a.txt\n@@\n alpha\n-beta\n+BETA\n*** Add File: b.txt\n+created via v4a\n*** End Patch"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "clarify",
+          "arguments": {
+            "question": "Which target?",
+            "choices": ["darwin", "linux"]
+          }
+        }
+      ]
+    },
+    {
+      "text": "V4A patch and headless clarify verified."
+    }
+  ],
+  "expectToolResults": [
+    {"tool": "patch", "index": 0, "isError": false, "contains": ["a.txt"]},
+    {"tool": "clarify", "index": 0, "isError": false, "contains": ["non_interactive"]}
+  ],
+  "expectWorkFileContains": {
+    "a.txt": "BETA",
+    "b.txt": "created via v4a"
+  }
+}

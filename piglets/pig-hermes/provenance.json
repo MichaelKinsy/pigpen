@@ -1,0 +1,18 @@
+{
+  "origin": "original",
+  "authors": ["Michael Kinsy"],
+  "license": "MIT",
+  "licenseFile": "../../LICENSE",
+  "upstreams": [],
+  "dependencies": [
+    {
+      "name": "hermes-agent",
+      "authors": ["Nous Research"],
+      "url": "https://github.com/NousResearch/hermes-agent",
+      "revision": "45e9584556a97f50a3cb6394a6e7f6afa97bb66a",
+      "license": "MIT",
+      "licenseFile": "licenses/hermes-agent-LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

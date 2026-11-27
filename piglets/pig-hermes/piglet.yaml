@@ -1,0 +1,31 @@
+# pig-hermes: an unofficial Go homage to Nous Research's Hermes Agent on PiG.
+# Structured so derived Piglets (such as oh-my-hermes-pig) layer cleanly via extends:.
+# Keeps none of PiG's built-in tools; the model sees Hermes's tools from the pig-hermes extension.
+name: pig-hermes
+description: "An homage to Nous Research's Hermes Agent on PiG: Hermes's tools, bounded memory, skills, three-tier prompt, session search, delegation, cron, web/MCP, and slash commands as a single fused Go binary. Unofficial; not affiliated with Nous Research."
+release:
+  version: 0.1.0
+build:
+  extensionRealization: fused
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+packages:
+  # pig-hermes-core is a shared Go library Package, imported via go.work by pig-hermes
+  # and derived Piglets (e.g. oh-my-hermes-pig).
+  pig-hermes-core: local:../../components/pig-hermes-core
+  pig-hermes: local:../../components/pig-hermes
+systemPrompt:
+  file: ./prompts/system.md
+extensions:
+  - name: pig-hermes
+    origins: [package:pig-hermes]
+  # Include PiG's built-in MCP adapter so servers translated from ~/.hermes/config.yaml are exposed.
+  - name: pig-mcp-adapter
+skills: []
+# None of PiG's built-in tools: the model sees Hermes's read_file, write_file, patch, search_files,
+# terminal, process_manage, memory, skills_list, skill_view, skill_manage, session_search,
+# delegate_task, todo_list, clarify, cronjob_manage, web_search, web_extract, execute_code.
+tools: []
+# User and workspace extensions and skills remain available.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

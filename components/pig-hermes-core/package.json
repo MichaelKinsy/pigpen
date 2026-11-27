@@ -1,0 +1,43 @@
+{
+  "name": "@pi-in-go/pigpen-pig-hermes-core",
+  "version": "0.1.0",
+  "description": "Shared pure-Go library for pig-hermes and derived Piglets (such as oh-my-hermes-pig): Hermes path/profile resolution, config.yaml/.env loader, MEMORY.md/USER.md store and MemoryProvider interface, delegation RouteResolver, unified todo store, usage ledger, EventBus channel constants, and composable clihook dispatcher",
+  "keywords": [
+    "pig-package",
+    "hermes",
+    "hermes-agent",
+    "library",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/pig-hermes-core"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/pig-hermes-core#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "paths",
+    "config",
+    "memory",
+    "delegation",
+    "todo",
+    "usage",
+    "cli",
+    "events",
+    "go.mod",
+    "go.sum",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {}
+}

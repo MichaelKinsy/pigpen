@@ -375,6 +375,33 @@
       ]
     },
     {
+      "id": "pig-hermes",
+      "kind": "piglet",
+      "name": "pig-hermes",
+      "description": "An homage to Nous Research's Hermes Agent on PiG: Hermes's tools, bounded memory, skills, three-tier prompt, session search, delegation, cron, web/MCP, and slash commands as a single fused Go binary. Unofficial; not affiliated with Nous Research.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-hermes"
+      },
+      "manifestSha256": "b677dcb710e32a997ec3b2066e95c87073d8170be6a9dc0b9a7adee6aecbea71",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "An unofficial Go homage to Nous Research's Hermes Agent on PiG. Not affiliated with or endorsed by Nous Research. Pinned against NousResearch/hermes-agent commit 45e9584556a97f50a3cb6394a6e7f6afa97bb66a; parity is a goal, not a promise. PARITY.md lists every ported, host-native, and out-of-scope surface.",
+        "Fuses into a single Go binary with zero PiG built-in tools: the model sees Hermes's read_file, write_file, patch, search_files, terminal, process_manage, memory, skills_list, skill_view, skill_manage, session_search, delegate_task, todo_list, clarify, cronjob_manage, web_search, web_extract, and execute_code.",
+        "Exposes shared library pig-hermes-core, versioned EventBus channels, named SystemPromptSections, and a composable clihook dispatcher so derived Piglets such as oh-my-hermes-pig layer cleanly via extends:."
+      ]
+    },
+    {
       "id": "pig-music",
       "kind": "piglet",
       "name": "pig-music",

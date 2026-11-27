@@ -1,0 +1,51 @@
+{
+  "name": "01-surface-and-filetools",
+  "prompt": "Read demo.txt, patch line two to LINE_TWO, and search for LINE_TWO.",
+  "files": {
+    "demo.txt": "line one\nline two\nline three\n",
+    "AGENTS.md": "Always keep edits atomic."
+  },
+  "hermesFiles": {
+    "SOUL.md": "You are Hermes Oracle Test Identity."
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {"name": "read_file", "arguments": {"path": "demo.txt"}}
+      ]
+    },
+    {
+      "toolCalls": [
+        {"name": "patch", "arguments": {"path": "demo.txt", "old_string": "line two", "new_string": "LINE_TWO"}}
+      ]
+    },
+    {
+      "toolCalls": [
+        {"name": "search_files", "arguments": {"pattern": "LINE_TWO"}}
+      ]
+    },
+    {
+      "text": "Done patching and searching demo.txt."
+    }
+  ],
+  "expectTools": [
+    "read_file", "write_file", "patch", "search_files",
+    "terminal", "process_manage",
+    "memory", "skills_list", "skill_view", "skill_manage",
+    "session_search", "delegate_task", "todo_list", "clarify",
+    "cronjob_manage", "web_search", "web_extract", "execute_code"
+  ],
+  "forbidTools": ["read", "write", "edit", "bash", "grep", "find", "ls"],
+  "expectSystemContains": [
+    "Hermes Oracle Test Identity",
+    "Always keep edits atomic."
+  ],
+  "expectToolResults": [
+    {"tool": "read_file", "index": 0, "isError": false, "contains": ["1|line one", "2|line two"]},
+    {"tool": "patch", "index": 0, "isError": false, "contains": ["LINE_TWO"]},
+    {"tool": "search_files", "index": 0, "isError": false, "contains": ["demo.txt", "LINE_TWO"]}
+  ],
+  "expectWorkFileContains": {
+    "demo.txt": "LINE_TWO"
+  }
+}

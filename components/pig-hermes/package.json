@@ -1,0 +1,40 @@
+{
+  "name": "@pi-in-go/pigpen-pig-hermes",
+  "version": "0.1.0",
+  "description": "Go port of Nous Research's Hermes Agent as a fused PiG extension: Hermes file/patch/search/terminal/process tools, bounded memory & skills, three-tier system prompt, session search, delegation, cron, web/MCP, and Hermes slash commands & skins",
+  "keywords": [
+    "pig-package",
+    "hermes",
+    "hermes-agent",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/pig-hermes"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/pig-hermes#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "licenses",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/pig-hermes"
+    ]
+  }
+}

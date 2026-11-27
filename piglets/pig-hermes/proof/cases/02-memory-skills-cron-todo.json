@@ -1,0 +1,95 @@
+{
+  "name": "02-memory-skills-cron-todo",
+  "prompt": "Update memory, verify replace is rejected, create a skill, add a todo, and create a cron job.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "memory",
+          "arguments": {
+            "target": "memory",
+            "operations": [
+              {"action": "add", "content": "User builds Go single binaries on PiG."}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "memory",
+          "arguments": {
+            "target": "memory",
+            "operations": [
+              {"action": "replace", "old_text": "PiG", "content": "other"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "memory",
+          "arguments": {
+            "target": "memory",
+            "operations": [
+              {"action": "patch", "old_text": "PiG", "content": "PiG v0.8.0"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "todo_list",
+          "arguments": {
+            "todos": [
+              {"id": "1", "content": "Run oracle gate", "status": "in_progress"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "cronjob_manage",
+          "arguments": {
+            "action": "create",
+            "name": "nightly-audit",
+            "schedule": "0 3 * * *",
+            "prompt": "Audit repository health"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "terminal",
+          "arguments": {
+            "command": "echo hermes-oracle-ok"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Completed memory, todo, cron, and terminal verification."
+    }
+  ],
+  "expectToolResults": [
+    {"tool": "memory", "index": 0, "contains": ["User builds Go single binaries on PiG."]},
+    {"tool": "memory", "index": 1, "isError": true, "contains": ["expected one of [\"add\",\"patch\",\"remove\"]"]},
+    {"tool": "memory", "index": 2, "contains": ["User builds Go single binaries on PiG v0.8.0."]},
+    {"tool": "todo_list", "index": 0, "isError": false, "contains": ["Run oracle gate"]},
+    {"tool": "cronjob_manage", "index": 0, "isError": false, "contains": ["nightly-audit"]},
+    {"tool": "terminal", "index": 0, "isError": false, "contains": ["hermes-oracle-ok"]}
+  ],
+  "expectHermesFileContains": {
+    "memories/MEMORY.md": "User builds Go single binaries on PiG v0.8.0.",
+    "cron/jobs.json": "nightly-audit"
+  }
+}
