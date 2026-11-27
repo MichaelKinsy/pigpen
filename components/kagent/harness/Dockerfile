@@ -18,7 +18,7 @@
 
 ARG DEBIAN_IMAGE=debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
 ARG GOLANG_IMAGE=golang:1.27.3-trixie@sha256:af1bfc2614ebb1dbd31af514b78740fd678850e76498762b425ecee4c5c6ea80
-ARG PIG_COMMIT=51cc9f6f56be2ddcbd010e26db311814e9ddf08b
+ARG PIG_COMMIT=73585394f40cde45fd40889db265179ac3c2af99
 ARG GH_VERSION=2.103.3
 ARG RG_VERSION=15.2.0
 ARG FD_VERSION=10.5.1
@@ -38,7 +38,7 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
     CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/kagent-pig ${ADAPTER_PKG}
 
-# ---- PiG source at the exact commit (the 0.8.0 line, not yet tagged), verified against the commit it must be
+# ---- PiG source at the exact commit (v0.8.0), verified against the commit it must be
 FROM ${GOLANG_IMAGE} AS pig-src
 ARG PIG_COMMIT
 RUN set -eux; \

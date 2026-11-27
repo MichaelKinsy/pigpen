@@ -23,7 +23,7 @@ This directory is exported from `components/kagent/harness` of [MichaelKinsy/pig
 | --- | --- | --- |
 | kagent | `v1.0.1` (`api.kagent.dev/v1alpha3`) | the version the adapter's kagent packages and the chart are written against; the adapter pins its commit `558e3d761d8e` as a Go pseudo-version |
 | Agent Substrate | `v1.0.0` (`ate.dev/v1`) | the chart's tested version; preview gates `PerTemplateSnapshotLocation` and `GoldenEgressPolicy` are required |
-| PiG | commit `51cc9f6f56be2ddcbd010e26db311814e9ddf08b` (the 0.8.0 line, branch `fix/pi-pin-bump`, not yet tagged; earlier images used `v0.7.0`) | built from source at that exact commit; the build fails if it cannot be fetched or is not that commit |
+| PiG | commit `73585394f40cde45fd40889db265179ac3c2af99` (`v0.8.0`; earlier images used `v0.7.0` and `51cc9f6f56`) | built from source at that exact commit; the build fails if it cannot be fetched or is not that commit |
 | Go | 1.27.3 | adapter and Piglet builder |
 | Platforms | `linux/amd64`, `linux/arm64` | Verified: the amd64 and the arm64 image each build from this directory with plain `docker build` on a host of their own architecture and pass the tool smoke below. For arm64 that host was OrbStack on Apple Silicon, where the adapter's real-pig scenarios also passed with the image's `pig` against the mock model and the functional cluster checks passed on Kind (see [Verified on a cluster](#verified-on-a-cluster)). The measurements are amd64 only; the release workflow builds arm64 on a native arm64 runner |
 
