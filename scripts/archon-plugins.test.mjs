@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, describe, it } from 'node:test';
-import { checkDescriptor, checkPluginTag, componentKind, pluginVersion, readArchonPlugins, validatePlugin } from './archon-plugins.mjs';
+import { checkDescriptor, checkPaseoDescriptor, checkPluginTag, componentKind, pluginVersion, readArchonPlugins, readPaseoPlugins, validatePaseoPlugin, validatePlugin } from './archon-plugins.mjs';
 import { readPackages, root } from './packages.mjs';
 import { reservedNames } from './generate-index.mjs';
 
@@ -90,5 +90,20 @@ describe('validatePlugin', () => {
     assert.throws(() => validatePlugin(plugin(), { run: () => { ran = true; return { status: 0 }; } }), /schemaVersion/);
     assert.equal(ran, false);
     writeFileSync(join(plugin(), 'archon-plugin.json'), JSON.stringify(good));
+  });
+});
+
+describe('paseo plugin support', () => {
+  it('recognizes paseo-provider-pig as a paseo-plugin, reserves its name, and validates its descriptor', () => {
+    const plugins = readPaseoPlugins(root);
+    assert.ok(plugins.some((p) => p.dir === 'paseo-provider-pig'));
+    const pig = plugins.find((p) => p.dir === 'paseo-provider-pig');
+    assert.equal(componentKind(pig.path), 'paseo-plugin');
+    assert.ok(reservedNames(root).has('paseo-provider-pig'));
+    checkPaseoDescriptor(pig.descriptor);
+    const calls = [];
+    validatePaseoPlugin(pig.path, { run: (...call) => { calls.push(call); return { status: 0 }; } });
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0][1][0], '--test');
   });
 });
