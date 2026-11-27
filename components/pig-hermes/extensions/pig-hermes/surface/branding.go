@@ -15,16 +15,16 @@ const (
 // hermesArtPalette maps single-character ASCII pixel symbols to #RRGGBB colors
 // for the Hermes Winged-Helmet PiG mascot, caduceus hero, and PIG-HERMES brand.
 var hermesArtPalette = map[string]string{
-	"O": "#18141E", // dark outline, eyes, nostrils, hooves
+	"O": "#18151D", // classic PiG dark outline, eyes, nostrils, hooves
 	"G": "#FFD700", // bright Hermes gold
 	"A": "#FFBF00", // warm amber gold
 	"B": "#CD7F32", // bronze rim & shading
-	"W": "#FFF8DC", // cornsilk white wings & eye gleam
+	"W": "#FEFEFE", // crisp white wings & eye gleam
 	"C": "#E6D5A7", // wing feather shadow
-	"P": "#FFA8B7", // pig body pink
-	"p": "#FFC4CE", // pig highlight pink
-	"s": "#E88396", // pig snout pink
-	"b": "#FF869A", // pig cheek blush
+	"P": "#48A381", // classic PiG emerald green body (pig-default)
+	"p": "#64BE9E", // classic PiG green highlight
+	"s": "#32775E", // classic PiG deep teal snout
+	"b": "#82DBBA", // classic PiG mint cheek blush
 }
 
 // hermesBrandGrid is the 41x5 gold-to-bronze block wordmark: "PIG-HERMES".

@@ -394,14 +394,14 @@ func omhBrandingPalette() map[string]string {
 		"Y": "#FDE047", // bright crown gold
 		"G": "#F59E0B", // crown gold
 		"R": "#F43F5E", // crown ruby
-		"O": "#18141E", // dark outline
-		"K": "#18141E", // eyes & nostrils
-		"P": "#FFA8B7", // pig body pink
-		"p": "#FFC4CE", // pig highlight
-		"s": "#E88396", // snout
-		"b": "#FF869A", // cheek blush
-		"e": "#FF90A4", // inner ear
-		"W": "#F8FAFC", // wing feather white
+		"O": "#18151D", // classic PiG dark outline
+		"K": "#18151D", // eyes & nostrils
+		"P": "#48A381", // classic PiG emerald green body (pig-default)
+		"p": "#64BE9E", // classic PiG green highlight
+		"s": "#32775E", // classic PiG deep teal snout
+		"b": "#82DBBA", // classic PiG mint cheek blush
+		"e": "#48A381", // classic PiG inner ear
+		"W": "#FEFEFE", // crisp white wing feathers & eye gleam
 		"C": "#38BDF8", // OMH sky-cyan accent & wing trim
 	}
 }
