@@ -254,6 +254,7 @@ export const piglets = {
           t.type('/skill:pigpen-re');
           await t.waitFor(/→ skill:pigpen-rex\s+(?:\[\w+\]\s+)?Use the Rex terminal multiplexer CLI from PiG/);
           t.key('Escape');
+          await t.waitGone(/Use the Rex terminal multiplexer CLI from PiG/);
           t.key('C-u');
           await t.waitGone(/^\/skill:pigpen-re/m);
         },
