@@ -33,3 +33,12 @@
 | Fused Piglet binary build | `npm run build:piglet -- pig-hermes` | **PASS** (`dist/bin/pig-hermes`, 62.2 MB fused binary, verified & checksummed) |
 | Pigpen repo gates | `npm run check` (`generate-index --check`, `npm-packages`, `quality-gates`, `go-only`, `ports`, `skills-drift`) | **PASS** |
 | Hermetic `pigeq llm` oracle proof | `python3 -B piglets/pig-hermes/proof/oracle.py` | **PASS** (`3/3` cases, `14` LLM turns, `11` tool calls, `0` accidental network calls, `0` leaked PIDs, `0` built-in PiG tool leaks) |
+
+| Live PTY/ANSI visual proof | `PIG_HERMES_BIN=~/.local/bin/pig-hermes python3 -B piglets/pig-hermes/proof/ansi.py` | **PASS** (`truecolor=644`, `sgr=1404`, custom winged-pig login banner + 9 real `hermes-*.json` themes, `exit=0`, `0` net, `0` leaked PIDs) |
+
+## Wave 2 Deep-Layer & Visual Parity Additions
+- **Hermes Winged-Helmet PiG branding:** `ui.registerSprite("hermes-pig")` + `ui.setLogin(...)` (`41x5` gold `PIG-HERMES` brand, `32x14` winged-pig + caduceus hero, `16x14` mascot).
+- **9 real PiG theme JSONs:** auto-installed to `<agentDir>/themes/hermes-*.json` on startup and `/skin <name>`.
+- **Drop-in upstream `~/.hermes/state.db` session discovery:** read-only `sqlite3 -readonly -json` reader merged into `session_search` alongside PiG JSONL sessions.
+- **Hermes lean-tail & tool-result pruning compaction:** deterministic structured summary with `[pruned N chars]` capping in `OnSessionBeforeCompact` (safely delegating to PiG native compaction on `previousSummary` / `isSplitTurn`).
+- **Hardened `filetools`, `terminal`, `webmcp`:** symlink write-through, active Hermes `config.yaml` hard-deny, partial-read guard, trailing `&` auto-background + `WaitDelay` handling, and real DuckDuckGo HTML search parsing.
