@@ -1,0 +1,42 @@
+{
+  "name": "@pi-in-go/pigpen-rex",
+  "version": "0.1.0",
+  "description": "PiG session context extension (Go) and Skill for the Rex terminal multiplexer",
+  "keywords": [
+    "pig-package",
+    "pigpen",
+    "rex",
+    "multiplexer",
+    "extension",
+    "skill"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/rex"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/rex#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "skills",
+    "README.md",
+    "LICENSE",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/rex"
+    ],
+    "skills": [
+      "skills/pigpen-rex"
+    ]
+  }
+}
