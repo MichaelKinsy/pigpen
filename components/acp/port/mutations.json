@@ -75,7 +75,7 @@
   "name": "state-auth-error-ignored",
   "module": "cmd",
   "file": "internal/acp/agent.go",
-  "find": "stateErr != nil && MaybeAuthRequiredError(stateErr) != nil",
+  "find": "stateErr != nil && IsAuthFailure(stateErr)",
   "replace": "false",
   "equivalent": "the same credentials error is caught again by the configuration branch below it (both are upstream code); the mutant changes no observable result"
  },
@@ -303,8 +303,8 @@
   "name": "prompt-auth-error-swallowed",
   "module": "cmd",
   "file": "internal/acp/session.go",
-  "find": "if authErr := MaybeAuthRequiredError(err); authErr != nil {",
-  "replace": "if authErr := MaybeAuthRequiredError(err); false && authErr != nil {"
+  "find": "if IsAuthFailure(err) {",
+  "replace": "if false && IsAuthFailure(err) {"
  },
  {
   "name": "prompt-error-after-cancel-is-error",
@@ -536,6 +536,30 @@
   "file": "internal/acp/auth.go",
   "find": "\"forbidden\", \"401\", \"403\"}",
   "replace": "\"forbidden\", \"401\"}"
+ },
+ {
+  "name": "auth-method-advertised-without-capability",
+  "module": "cmd",
+  "file": "internal/acp/auth.go",
+  "find": "\tif !s.Terminal && !s.ZedMeta {\n\t\treturn []map[string]any{}\n\t}\n",
+  "replace": "",
+  "why": "acp-tck ACP-AUTH-002: no terminal method for a client without auth.terminal"
+ },
+ {
+  "name": "terminal-type-without-capability",
+  "module": "cmd",
+  "file": "internal/acp/auth.go",
+  "find": "\tif s.Terminal {\n\t\tmethod[\"type\"]",
+  "replace": "\tif true {\n\t\tmethod[\"type\"]",
+  "why": "a Zed-only client must not be told the method is a terminal one"
+ },
+ {
+  "name": "auth-required-without-method",
+  "module": "cmd",
+  "file": "internal/acp/auth.go",
+  "find": "\tif len(methods) == 0 {\n\t\treturn ErrInternal(map[string]any{}, noAuthMessage)\n\t}\n",
+  "replace": "",
+  "why": "acp-tck ACP-AUTH-005: -32000 only with an advertised method"
  },
  {
   "name": "unknown-method-succeeds",

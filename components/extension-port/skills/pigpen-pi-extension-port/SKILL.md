@@ -42,9 +42,9 @@ The commands below use the variables `env.sh` exports: `$PIGEQ_PIG`, `$PIGEQ_PI`
 `--pig`, `--pi` and `--sdk-dir`).
 
 `--root` is optional (a new private directory, printed in the script, so lanes never share one).
-`--pi` must be the Pi version the pig is built to match: `pig --version` prints the PiG version, `+`, and
-that Pi version (`0.4.0+1.0.0` for PiG 0.4.0, which follows Pi 1.0.0; a build of the 0.4.1 content ends in
-`+1.0.1`), and `pigeq env` refuses another. With
+`--pi` must be the Pi version the pig is built to match: `pig version` prints it on its `upstream pi:` line
+(`upstream pi: 1.0.1` for a PiG that follows Pi 1.0.1; an untagged pin adds `+` and the commit), and
+`pigeq env` refuses another. `pig --version` does not say it: from PiG 0.8.0 on it prints Pi's version alone. With
 none installed: `npm i @earendil-works/pi-coding-agent@<that Pi version>` (for example `@1.0.1`) in a
 scratch directory and pass its `node_modules/.bin/pi`. After sourcing, `HOME` is the scratch home, so
 `~` no longer means yours: use absolute paths (`$PIGEQ_REAL_HOME` keeps the real one).
@@ -261,6 +261,10 @@ later slice are stated once in a slice map, `--deferred port/slices.json` (`{"<l
 their cases without a twin or named skip are counted as `DEFERRED`, not hidden behind per-case
 synthetic reasons. A helper other than `tw`/`tskip` is invisible to the checker: keep the twin
 helper, and put an adaptation note inside its body.
+
+**Intention check before a skip.** If a case does not apply as written, test what it protects
+in the port's own way: through a TypeScript caller, as a Go build check, or as an explicit
+parameter. Skip only when that is impossible or worthless, and give the reason in `tskip`.
 
 **Layer 2: scenarios and golden traces.** When the original has no tests (or beyond
 them), derive scenarios from every branch of the source: each success, rejection,

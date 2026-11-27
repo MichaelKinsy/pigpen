@@ -266,6 +266,8 @@ components/herdr/                   directly installable herdr reporter Package
                                     (Go extension and its tests, and the pigpen-herdr-desktop Skill)
 components/ollama-native/            directly installable Ollama provider Package (native /api/chat;
                                     started by Peder Munksgaard, see its CREDITS.md)
+components/pi-opencode-free/         directly installable OpenCode Zen free-model provider Package
+                                    (Go port of pi-opencode-free, GPL-3.0-or-later; see its CREDITS.md)
 components/pig-play/                Go library Package: pig sprite, pixel, arcade, termgame, gamemcp (no extension)
 components/pig-runner/              PiG Runner, /runner (Go, from PiG Standard)
 components/angry-pigs/              Angry Pigs, /angry-pigs (Go, from PiG Standard)
@@ -399,8 +401,8 @@ Binaries it builds as short-lived artifacts for inspection.
 | `android-cross` | with `platform-matrix` | `go build` and `go vet` of every module for `android/arm64` (Termux) with `CGO_ENABLED=0`. A compile check, not a Binary: pig's builder builds only the machine it runs on |
 | `ci-result` | always | the one required check: green when `validate` and every `slow-checks` job passed and the other tiers passed or were skipped |
 
-The smoke runs each Binary in a throwaway home with `PIG_TEST_FAUX=1` (no network, model or credentials): `--version` must match the
-pinned pig, and `-p "reply with exactly: ok" --model test-faux/faux-1 --no-session` must exit 0, answer `ok` and print no
+The smoke runs each Binary in a throwaway home with `PIG_TEST_FAUX=1` (no network, model or credentials): `version` must report the
+pinned pig (`--version` prints Pi's version from PiG 0.8.0 on), and `-p "reply with exactly: ok" --model test-faux/faux-1 --no-session` must exit 0, answer `ok` and print no
 `Failed to load extension`. That proves a Binary starts on the platform, loads every fused extension and completes a turn; what each
 extension does is the Go tests' job. Run it yourself with `npm run platform-smoke` (set `PIG_BIN` and `PIG_SOURCE_ROOT`; `-- --only <name>`
 for one Piglet) and the android check with `npm run cross-check` (set `PIG_SDK_DIR` or `PIG_BIN`).

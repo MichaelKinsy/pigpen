@@ -666,6 +666,23 @@
       "lane": "pig-model-tweaks",
       "status": "porting",
       "credit": "Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292."
+    },
+    {
+      "id": "pi-opencode-free",
+      "name": "pi-opencode-free",
+      "kind": "port",
+      "summary": "OpenCode Zen's free models as a keyless PiG provider: discovers them from the Zen endpoint, enriches them from models.dev, persists the catalog, and sends the OpenCode client headers on Chat Completions and Responses requests.",
+      "upstream": {
+        "name": "pi-opencode-free",
+        "url": "https://github.com/pedrostarkealexis/pi-opencode-free",
+        "commit": "0f4c16bade33106847ae4abd8d2be2d1b0058e36",
+        "license": "GPL-3.0-or-later",
+        "author": "Pedro Alexis"
+      },
+      "targetPackage": "components/pi-opencode-free",
+      "lane": "pi-opencode-free",
+      "status": "porting",
+      "credit": "Go port of pi-opencode-free 0.2.0, https://github.com/pedrostarkealexis/pi-opencode-free, by Pedro Alexis (GPL-3.0-or-later), at commit 0f4c16bade33106847ae4abd8d2be2d1b0058e36."
     }
   ]
 }

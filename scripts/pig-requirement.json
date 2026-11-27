@@ -1,16 +1,16 @@
 {
-  "pig": "0.7.0",
+  "pig": "0.8.0",
   "note": "The pig these scripts and tests target: the same major.minor, at least this patch. Raise it with the SDK bump (scripts/pig-bin.mjs). `release` pins the public PiG release CI downloads (scripts/fetch-pig.mjs) and the source commit its Piglet builds need; the sha256 values are the release's SHA256SUMS, checked against a download of each archive. Re-pin with scripts/pin-pig-release.mjs <version>.",
   "release": {
     "repository": "MichaelKinsy/PiG",
-    "tag": "v0.7.0",
-    "commit": "beb56447c476da70d05d8e1e1ca9e993b367cb8b",
+    "tag": "v0.8.0",
+    "commit": "73585394f40cde45fd40889db265179ac3c2af99",
     "assets": {
-      "linux/amd64": { "file": "pig-0.7.0-linux-amd64.tar.gz", "sha256": "0b5ab7cb5f680e7d3353bdaa3a1018863c3c3552f88bec730370668e5819995a" },
-      "linux/arm64": { "file": "pig-0.7.0-linux-arm64.tar.gz", "sha256": "88d2dcb4a4852a980dc1ca9202eed9455ff8fb011553c8db62c1b85c676a366b" },
-      "darwin/arm64": { "file": "pig-0.7.0-darwin-arm64.tar.gz", "sha256": "d87c65e03acec77c8fa3ced323c27f27386b69bdeca80fde56008c85d47ad1a4" },
-      "darwin/amd64": { "file": "pig-0.7.0-darwin-amd64.tar.gz", "sha256": "6c744b3b1368fb8272dfa64033f06c0207822dede05f1ac0df838e960d7e3ac1" },
-      "windows/amd64": { "file": "pig-0.7.0-windows-amd64.zip", "sha256": "c73deb7f6036962d9bcb4ff53e9935011b06ccf0b62513d85b728b94de2e2cd2" }
+      "linux/amd64": { "file": "pig-0.8.0-linux-amd64.tar.gz", "sha256": "e5f4188b193b5b9722039c9cb8378b2dbd62d1aeebaeda1a62589ac1303ef23c" },
+      "linux/arm64": { "file": "pig-0.8.0-linux-arm64.tar.gz", "sha256": "ec7abf7cd366526cc76ce2c72f4a195e13bde748f9ec9512c5c09965a22f0e84" },
+      "darwin/arm64": { "file": "pig-0.8.0-darwin-arm64.tar.gz", "sha256": "ef01402733d4a9f342114ada300f66161a0ce23abd867e66ec67321341e6a5de" },
+      "darwin/amd64": { "file": "pig-0.8.0-darwin-amd64.tar.gz", "sha256": "07de5e84dd4cb76b97aae824812b7990dff6e9dc57ac0493940c3ed012dc5881" },
+      "windows/amd64": { "file": "pig-0.8.0-windows-amd64.zip", "sha256": "4af6d390570a83705b12f111677944c29007302786819205ec81f76f5782ad51" }
     }
   }
 }

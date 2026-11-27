@@ -115,7 +115,7 @@ func (r *Runtime) webSearch(ctx context.Context, params map[string]any, update f
 	if workflowInput == nil {
 		workflowInput = r.cfg.Root["workflow"]
 	}
-	workflow := resolveWebSearchWorkflow(workflowInput, r.hasUI())
+	workflow := resolveWebSearchWorkflow(workflowInput, r.hasUI(ctx))
 	recency := normalizeRecency(params["recencyFilter"])
 
 	if len(queries) == 0 {
@@ -208,7 +208,7 @@ func (r *Runtime) webSearch(ctx context.Context, params map[string]any, update f
 	if proxy != nil {
 		proxyStr = *proxy
 	}
-	return r.buildSearchReturn(searchReturn{queryList: queries, results: results, urls: urls, includeContent: opts.IncludeContent, inline: inline, proxy: proxy, proxyStr: proxyStr}), nil
+	return r.buildSearchReturn(ctx, searchReturn{queryList: queries, results: results, urls: urls, includeContent: opts.IncludeContent, inline: inline, proxy: proxy, proxyStr: proxyStr}), nil
 }
 
 func resolveWebSearchWorkflow(input any, hasUI bool) string {
@@ -288,7 +288,7 @@ func boundSearchPresentation(text, guidance, truncationGuidance string, maxChars
 	return presentation{text: bounded, truncated: true, originalChars: n, returnedChars: prefix, omittedChars: n - prefix}
 }
 
-func (r *Runtime) buildSearchReturn(o searchReturn) ToolOutput {
+func (r *Runtime) buildSearchReturn(ctx context.Context, o searchReturn) ToolOutput {
 	successful, totalResults := 0, 0
 	for _, res := range o.results {
 		if res.Error == nil {
@@ -334,7 +334,7 @@ func (r *Runtime) buildSearchReturn(o searchReturn) ToolOutput {
 	if inlineReady {
 		fetchID = GenerateID()
 		data := &StoredSearchData{ID: fetchID, Type: "fetch", Timestamp: nowMs(), URLs: o.inline}
-		r.host.AppendEntry("web-search-results", StoreFetchedContentResult(fetchID, data))
+		r.hostFor(ctx).AppendEntry("web-search-results", StoreFetchedContentResult(fetchID, data))
 	} else if o.includeContent {
 		fetchID = r.startBackgroundFetch(o.urls, o.proxy)
 	}
@@ -342,7 +342,7 @@ func (r *Runtime) buildSearchReturn(o searchReturn) ToolOutput {
 	searchID := GenerateID()
 	stored := &StoredSearchData{ID: searchID, Type: "search", Timestamp: nowMs(), Queries: o.results}
 	StoreResult(searchID, stored)
-	r.host.AppendEntry("web-search-results", stored)
+	r.hostFor(ctx).AppendEntry("web-search-results", stored)
 
 	background := fetchID != "" && !inlineReady
 	unbounded := jsTrim(out.String())
@@ -617,7 +617,7 @@ func (r *Runtime) sourceCheck(ctx context.Context, params map[string]any, _ func
 	if err := StoreResearchArtifact(&artifact); err != nil {
 		return ToolOutput{}, err
 	}
-	r.host.AppendEntry("web-search-results", map[string]any{"id": artifact.ID, "type": "research", "timestamp": artifact.Timestamp, "artifact": artifact})
+	r.hostFor(ctx).AppendEntry("web-search-results", map[string]any{"id": artifact.ID, "type": "research", "timestamp": artifact.Timestamp, "artifact": artifact})
 	getTool := ""
 	if r.cfg.GetSearchContent {
 		getTool = r.cfg.Names.GetSearchContent

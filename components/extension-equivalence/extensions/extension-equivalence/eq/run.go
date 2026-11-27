@@ -352,7 +352,7 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 			return nil, err
 		}
 	}
-	baseEnv := append([]string{"PATH=" + origPath, "HOME=" + home, "TMPDIR=" + tmp, "LANG=C.UTF-8"}, hermeticGit()...)
+	baseEnv := append([]string{"PATH=" + origPath, "HOME=" + home, "TMPDIR=" + tmp, "TMP=" + tmp, "TEMP=" + tmp, "LANG=C.UTF-8"}, hermeticGit()...)
 	for _, argv := range sc.Setup {
 		if len(argv) == 0 {
 			return nil, errors.New("empty setup command")
@@ -394,7 +394,14 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 				return nil, false
 			}
 		} else {
-			llm.system = func(text string) (any, bool) { return systemDelta(baseSystem, rec.norm.str(text)) }
+			llm.system = func(text string) (any, bool) {
+				if dump := os.Getenv("EQ_DUMP_SYSTEM"); dump != "" {
+					f, _ := os.Create(dump)
+					fmt.Fprintf(f, "=== BASE ===\n%s\n=== GOT ===\n%s\n", baseSystem, text)
+					f.Close()
+				}
+				return systemDelta(baseSystem, rec.norm.str(text))
+			}
 		}
 		models := map[string]any{"providers": map[string]any{"eq-llm": map[string]any{
 			"baseUrl": llm.baseURL(), "api": "openai-completions", "apiKey": "eq-key",
@@ -429,7 +436,7 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 		return nil, err
 	}
 	for name, target := range tc.tools {
-		if err := os.Symlink(target, filepath.Join(toolbin, name)); err != nil {
+		if err := linkOrCopy(target, filepath.Join(toolbin, name)); err != nil {
 			return nil, err
 		}
 	}
@@ -447,7 +454,7 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	}
 	env := append([]string{
 		"PATH=" + lanePath,
-		"HOME=" + home, "TMPDIR=" + tmp, "LANG=C.UTF-8", "TERM=dumb", "NO_COLOR=1",
+		"HOME=" + home, "TMPDIR=" + tmp, "TMP=" + tmp, "TEMP=" + tmp, "LANG=C.UTF-8", "TERM=dumb", "NO_COLOR=1",
 		"PIG_HOME=" + filepath.Join(root, "pighome"), "PIG_CODING_AGENT_DIR=" + agent, "PI_CODING_AGENT_DIR=" + agent,
 		"PI_SKIP_VERSION_CHECK=1", "PI_OFFLINE=1", "PI_TELEMETRY=0",
 		"EQ_SHIM_SOCK=" + shims.sockPath,

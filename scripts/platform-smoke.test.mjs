@@ -12,12 +12,13 @@ const scratch = mkdtempSync(join(tmpdir(), 'platform-smoke-test-'));
 after(() => rmSync(scratch, { recursive: true, force: true }));
 let n = 0;
 
-/** A fake Binary: `version` for --version, and for a print-mode run `turn` = { stdout, stderr, status }. It also records its environment. */
-function fake({ version = `${requiredPigVersion()}+1.0.0`, versionStatus = 0, stdout = 'ok', stderr = '', status = 0 } = {}) {
+/** A fake Binary: `version` for `version` (and Pi's version for --version, as PiG 0.8.0 does), and for a print-mode run `turn` = { stdout, stderr, status }. It also records its environment. */
+function fake({ version = `pig: ${requiredPigVersion()}\nupstream pi: 1.0.0`, versionStatus = 0, stdout = 'ok', stderr = '', status = 0 } = {}) {
   const file = join(scratch, `bin-${n++}`);
   const q = (text) => `'${text.replace(/'/g, `'\\''`)}'`;
   writeFileSync(file, `#!/bin/sh
-if [ "$1" = "--version" ]; then printf '%s\\n' ${q(version)}; exit ${versionStatus}; fi
+if [ "$1" = "--version" ]; then echo 1.0.0; exit 0; fi
+if [ "$1" = "version" ]; then printf '%s\\n' ${q(version)}; exit ${versionStatus}; fi
 env > "${file}.env"
 printf '%s\\n' "$*" > "${file}.args"
 printf '%s\\n' ${q(stdout)}
@@ -31,7 +32,7 @@ const result = (checks) => Object.fromEntries(checks.map((c) => [c.name, c.ok]))
 
 describe('smokeBinary', { skip: !posix && 'fake Binaries are shell scripts' }, () => {
   it('passes a Binary that reports the pinned version and answers the faux turn', () => {
-    assert.deepEqual(result(smokeBinary(fake())), { '--version': true, 'faux turn': true });
+    assert.deepEqual(result(smokeBinary(fake())), { version: true, 'faux turn': true });
   });
 
   it('runs the faux turn in print mode with the test model, no session, and an isolated environment', () => {
@@ -53,11 +54,11 @@ describe('smokeBinary', { skip: !posix && 'fake Binaries are shell scripts' }, (
   });
 
   it('fails a Binary built against another pig version', () => {
-    assert.equal(result(smokeBinary(fake({ version: '0.3.0+0.87.1' })))['--version'], false);
+    assert.equal(result(smokeBinary(fake({ version: 'pig: 0.3.0\nupstream pi: 0.87.1' }))).version, false);
   });
 
-  it('fails a Binary whose --version exits nonzero', () => {
-    assert.equal(result(smokeBinary(fake({ versionStatus: 3 })))['--version'], false);
+  it('fails a Binary whose version exits nonzero', () => {
+    assert.equal(result(smokeBinary(fake({ versionStatus: 3 }))).version, false);
   });
 
   it('fails an extension that did not load, even when the turn still answers ok and exits 0', () => {
@@ -86,7 +87,7 @@ describe('smokeBinary', { skip: !posix && 'fake Binaries are shell scripts' }, (
 
   it('fails a Binary that cannot be run at all', () => {
     const checks = smokeBinary(join(scratch, 'missing'));
-    assert.deepEqual(result(checks), { '--version': false, 'faux turn': false });
+    assert.deepEqual(result(checks), { version: false, 'faux turn': false });
   });
 });
 

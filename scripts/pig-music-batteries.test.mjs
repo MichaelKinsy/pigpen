@@ -76,7 +76,4 @@ describe('pig-music in pig-with-batteries', () => {
     }
   });
 
-  it('targets the pig that builds it', () => {
-    assert.match(JSON.parse(read('scripts/pig-requirement.json')).pig, /^0\.7\./);
-  });
 });

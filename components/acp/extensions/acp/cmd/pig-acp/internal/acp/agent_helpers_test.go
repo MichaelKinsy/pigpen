@@ -186,6 +186,9 @@ func (s *scheduler) drain() {
 // testAgent is `new PiAcpAgent(conn)` with the seams the twins replace.
 func testAgent(conn Conn) (*Agent, *scheduler) {
 	a := NewAgent(conn)
+	// A client that can run a terminal sign-in, so auth failures keep their -32000 shape; the no-capability case is
+	// tested by setting a.auth to the zero AuthSupport.
+	a.auth = AuthSupport{Terminal: true}
 	sch := &scheduler{}
 	a.schedule = sch.add
 	a.store = newMemStore()

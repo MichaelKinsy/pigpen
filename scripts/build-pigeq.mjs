@@ -9,7 +9,7 @@ import { goModules, goWorkEnv, root } from './go-modules.mjs';
 
 const output = resolve(process.argv[2] || join(root, 'dist/bin/pigeq'));
 const modules = goModules().filter((dir) => dir.includes('extension-equivalence'));
-const command = modules.find((dir) => dir.endsWith('cmd/pigeq'));
+const command = modules.find((dir) => dir.split(/[\\/]/).slice(-2).join('/') === 'cmd/pigeq');
 if (!command) throw new Error('cmd/pigeq module not found');
 mkdirSync(dirname(output), { recursive: true });
 const result = spawnSync('go', ['build', '-o', output, '.'], { cwd: command, env: goWorkEnv(modules), stdio: 'inherit' });

@@ -11,17 +11,18 @@ import { goCaches } from './go-modules.mjs';
 const scratch = mkdtempSync(join(tmpdir(), 'pig-bin-test-'));
 after(() => rmSync(scratch, { recursive: true, force: true }));
 let n = 0;
-/** A fake pig that prints `output` for --version and exits `status`. */
+/** A fake pig that prints `output` for `version` and exits `status`; for `--version` it prints Pi's version, as PiG 0.8.0 does. */
 function fakePig(output, status = 0) {
   const file = join(scratch, `pig-${n++}`);
-  writeFileSync(file, `#!/bin/sh\nprintf '%s\\n' '${output}'\nexit ${status}\n`);
+  writeFileSync(file, `#!/bin/sh\nif [ "$1" = --version ]; then echo 1.5.2; exit 0; fi\nprintf '%s\\n' '${output}'\nexit ${status}\n`);
   chmodSync(file, 0o755);
   return file;
 }
 const [major, minor, patch] = parsePigVersion(requiredPigVersion());
 
 describe('pig version', () => {
-  it('reads the first x.y.z and ignores build metadata', () => {
+  it('reads the first x.y.z of the first line and ignores what follows', () => {
+    assert.deepEqual(parsePigVersion('pig: 0.8.0\nupstream pi: 1.5.2\ngo: go1.27.4'), [0, 8, 0]);
     assert.deepEqual(parsePigVersion('0.3.1+0.99.2'), [0, 3, 1]);
     assert.deepEqual(parsePigVersion('pig 10.20.30 (abc)\nsecond 1.2.3'), [10, 20, 30]);
     assert.equal(parsePigVersion('dev'), undefined);
@@ -41,12 +42,12 @@ describe('requirePig', () => {
   it('needs PIG_BIN and never falls back to a pig on PATH', () => {
     assert.throws(() => requirePig({ PATH: process.env.PATH }), /PIG_BIN is not set.*never falls back to the pig on PATH/s);
   });
-  it('accepts a pig at the required version', () => {
-    const pig = fakePig(`${major}.${minor}.${patch}+0.99.2`);
+  it('accepts a pig at the required version, read from `pig version` and not from --version', () => {
+    const pig = fakePig(`pig: ${major}.${minor}.${patch}\nupstream pi: 1.5.2`);
     assert.equal(requirePig({ PATH: process.env.PATH, PIG_BIN: pig }), pig);
   });
   it('rejects an older pig and names what it is, what is needed and how to get it', () => {
-    const pig = fakePig(`${major}.${minor - 1}.0+0.87.1`);
+    const pig = fakePig(`pig: ${major}.${minor - 1}.0`);
     assert.throws(() => requirePig({ PATH: process.env.PATH, PIG_BIN: pig }), (error) => {
       assert.ok(error.message.includes(`PIG_BIN=${pig} is pig ${major}.${minor - 1}.0`), error.message);
       assert.ok(error.message.includes(`>= ${requiredPigVersion()}`), error.message);
@@ -55,10 +56,10 @@ describe('requirePig', () => {
     });
   });
   it('rejects a newer minor, a missing binary and output that is not a version', () => {
-    assert.throws(() => requirePig({ PATH: process.env.PATH, PIG_BIN: fakePig(`${major}.${minor + 1}.0`) }), /is pig/);
+    assert.throws(() => requirePig({ PATH: process.env.PATH, PIG_BIN: fakePig(`pig: ${major}.${minor + 1}.0`) }), /is pig/);
     assert.throws(() => requirePig({ PATH: process.env.PATH, PIG_BIN: join(scratch, 'missing') }), /cannot be run/);
     assert.throws(() => requirePig({ PATH: process.env.PATH, PIG_BIN: fakePig('not a version') }), /did not report a version/);
-    assert.throws(() => requirePig({ PATH: process.env.PATH, PIG_BIN: fakePig(`${major}.${minor}.${patch}`, 3) }), /did not report a version/);
+    assert.throws(() => requirePig({ PATH: process.env.PATH, PIG_BIN: fakePig(`pig: ${major}.${minor}.${patch}`, 3) }), /did not report a version/);
   });
 });
 

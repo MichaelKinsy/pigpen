@@ -45,8 +45,8 @@ func TestSessionConfigOptions(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if result.Models == nil || result.Models.CurrentModelID != "test/beta" || result.Modes.CurrentModeID != "high" {
-			t.Fatalf("models=%+v modes=%+v", result.Models, result.Modes)
+		if result.Modes.CurrentModeID != "high" {
+			t.Fatalf("modes=%+v", result.Modes)
 		}
 		var thinking []any
 		for _, l := range allLevels {

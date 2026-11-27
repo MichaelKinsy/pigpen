@@ -313,9 +313,12 @@ func TestPromptRouting(t *testing.T) {
 	})
 	t.Run("a turn that fails with an auth error surfaces AUTH_REQUIRED", func(t *testing.T) {
 		sess := &fakeSession{id: "s1", cwd: cwdNow(t), proc: newFakeProc(), promptFn: func(string, []Image) TurnResult {
-			return TurnResult{Err: ErrAuthRequired(map[string]any{"authMethods": AuthMethods(true)}, "Configure an API key or log in with an OAuth provider.")}
+			return TurnResult{Err: errAuthFailure}
 		}}
 		a, _ := testAgent(newFakeConn())
+		if _, err := a.Initialize(InitializeRequest{ProtocolVersion: 1, ClientCapabilities: map[string]any{"auth": map[string]any{"terminal": true}}}); err != nil {
+			t.Fatal(err)
+		}
 		a.sessions = &fakeSessions{session: sess, anyID: true}
 		_, err := a.Prompt(promptText("s1", "hi"))
 		if re, ok := err.(*RequestError); !ok || re.Code != -32000 {

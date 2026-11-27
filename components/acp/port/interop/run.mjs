@@ -113,7 +113,7 @@ const check = (what, fn) => {
 
 try {
   const init = await within(
-    conn.initialize({ protocolVersion: acp.PROTOCOL_VERSION, clientCapabilities: { fs: { readTextFile: true, writeTextFile: true }, terminal: true } }),
+    conn.initialize({ protocolVersion: acp.PROTOCOL_VERSION, clientCapabilities: { fs: { readTextFile: true, writeTextFile: true }, terminal: true, auth: { terminal: true } } }),
     30000,
     'initialize',
   );
@@ -127,11 +127,11 @@ try {
   });
 
   const session = await within(conn.newSession({ cwd: work, mcpServers: [] }), 60000, 'session/new');
-  check('session/new returns models, modes and config options from pig', () => {
+  check('session/new returns modes and config options from pig, and no field outside the schema', () => {
     assert.ok(session.sessionId);
-    assert.equal(session.models.currentModelId, 'acp-llm/acp-1');
+    assert.equal(session.models, undefined);
     assert.ok(session.modes.availableModes.length > 0);
-    assert.ok(session.configOptions.some((o) => o.id === 'model'));
+    assert.equal(session.configOptions.find((o) => o.id === 'model')?.currentValue, 'acp-llm/acp-1');
   });
 
   const p1 = await within(conn.prompt({ sessionId: session.sessionId, prompt: [{ type: 'text', text: 'say hello' }] }), 60000, 'prompt 1');
