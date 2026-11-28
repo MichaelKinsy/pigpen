@@ -48,8 +48,8 @@ var omhThemeSpecs = []omhThemeSpec{
 	{
 		ThemeName:   "omh-sky",
 		ShortName:   "sky",
-		Accent:      "#38BDF8",
-		Border:      "#0EA5E9",
+		Accent:      "#00CED1",
+		Border:      "#00A8AD",
 		BorderMuted: "#1E4E68",
 		Success:     "#34D399",
 		Error:       "#F87171",
@@ -64,7 +64,7 @@ var omhThemeSpecs = []omhThemeSpec{
 		SuccessBg:   "#0E332B",
 		ErrorBg:     "#3B1A22",
 		SearchBg:    "#3B3214",
-		SyntaxKw:    "#38BDF8",
+		SyntaxKw:    "#00CED1",
 		SyntaxFn:    "#FBBF24",
 		SyntaxVar:   "#7DD3FC",
 		SyntaxStr:   "#A7F3D0",
@@ -106,11 +106,11 @@ var omhThemeSpecs = []omhThemeSpec{
 	{
 		ThemeName:   "omh-crimson",
 		ShortName:   "crimson",
-		Accent:      "#F43F5E",
-		Border:      "#E11D48",
+		Accent:      "#FF6A3D",
+		Border:      "#E0532A",
 		BorderMuted: "#5E2330",
 		Success:     "#34D399",
-		Error:       "#FB7185",
+		Error:       "#FF3D6E",
 		Warning:     "#FBBF24",
 		Text:        "#FFE4E8",
 		Muted:       "#C7929C",
@@ -122,7 +122,7 @@ var omhThemeSpecs = []omhThemeSpec{
 		SuccessBg:   "#143328",
 		ErrorBg:     "#471620",
 		SearchBg:    "#423115",
-		SyntaxKw:    "#F43F5E",
+		SyntaxKw:    "#FF6A3D",
 		SyntaxFn:    "#FBBF24",
 		SyntaxVar:   "#FDA4AF",
 		SyntaxStr:   "#A7F3D0",
@@ -190,6 +190,20 @@ var omhThemeSpecs = []omhThemeSpec{
 		CardBg:      "#2A2A37",
 		InfoBg:      "#2D4F67",
 	},
+}
+
+// lookupThemeSpec resolves the full omhThemeSpec for a theme name (accepting
+// short names like "sky", full names like "omh-sky", or "default"), falling
+// back to the default sky palette when unknown.
+func lookupThemeSpec(name string) omhThemeSpec {
+	if th, ok := LookupTheme(name); ok {
+		for _, spec := range omhThemeSpecs {
+			if spec.ShortName == th.Name {
+				return spec
+			}
+		}
+	}
+	return omhThemeSpecs[0]
 }
 
 type pigThemeDocument struct {
@@ -402,7 +416,7 @@ func omhBrandingPalette() map[string]string {
 		"b": "#82DBBA", // classic PiG mint cheek blush
 		"e": "#48A381", // classic PiG inner ear
 		"W": "#FEFEFE", // crisp white wing feathers & eye gleam
-		"C": "#38BDF8", // OMH sky-cyan accent & wing trim
+		"C": "#00CED1", // OMH sky-turquoise accent & wing trim
 	}
 }
 

@@ -656,13 +656,13 @@ func TestSlashCommandsAndSessionLifecycle(t *testing.T) {
 		t.Fatalf("expected own tool renderer for terminal, got use=%q id=%q", use, renderID)
 	}
 	callLines := host.renderTool("terminal", renderID, "call", map[string]any{"command": "echo hi"}, nil)
-	if len(callLines) != 1 || !strings.Contains(callLines[0], "├─ terminal") {
+	if len(callLines) != 1 || !strings.Contains(callLines[0], "├─") || !strings.Contains(callLines[0], "echo hi") {
 		t.Errorf("unexpected tool call render lines: %v", callLines)
 	}
 	resLines := host.renderTool("terminal", renderID, "result", map[string]any{}, map[string]any{
 		"content": []map[string]any{{"type": "text", "text": "hi"}},
 	})
-	if len(resLines) != 1 || !strings.Contains(resLines[0], "└─ hi") {
+	if len(resLines) != 1 || !strings.Contains(resLines[0], "└─") || !strings.Contains(resLines[0], "hi") {
 		t.Errorf("unexpected tool result render lines: %v", resLines)
 	}
 
@@ -815,7 +815,7 @@ func TestSlashCommandsAndSessionLifecycle(t *testing.T) {
 
 	// /compress
 	host.runCommand("compress", "")
-	if got := lastMsg(); !strings.Contains(got, "/compact") || !strings.Contains(got, "12000") {
+	if got := lastMsg(); !strings.Contains(got, "Compaction triggered") || !strings.Contains(got, "12000") {
 		t.Errorf("/compress unexpected output: %q", got)
 	}
 

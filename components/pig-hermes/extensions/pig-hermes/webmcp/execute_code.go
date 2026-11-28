@@ -3,6 +3,8 @@ package webmcp
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,7 +14,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/config"
 )
@@ -20,6 +21,7 @@ import (
 const (
 	defaultExecTimeoutSec = 60
 	maxExecTimeoutSec     = 300
+	maxSpillBytes         = 32 << 20 // 32 MiB cap for stdout spill file
 )
 
 // CodeExecResult is the structured result returned by execute_code.
@@ -30,6 +32,8 @@ type CodeExecResult struct {
 	Output          string  `json:"output"`
 	Stderr          string  `json:"stderr,omitempty"`
 	Truncated       bool    `json:"truncated,omitempty"`
+	StdoutSpillPath string  `json:"stdout_spill_path,omitempty"`
+	SpillCapped     bool    `json:"spill_capped,omitempty"`
 	DurationSeconds float64 `json:"duration_seconds"`
 	Error           string  `json:"error,omitempty"`
 }
@@ -115,14 +119,15 @@ func handleExecuteCode(ctx context.Context, params map[string]any, timeoutSec, m
 	start := time.Now()
 	cmd := exec.Command(interp, scriptPath)
 	cmd.Dir = tmpDir
+	cmd.Env = scrubbedExecEnv(os.Environ())
 	setProcGroup(cmd)
 	cmd.WaitDelay = 2 * time.Second
 
-	stdoutBuf := newBoundedBuffer(maxBytes)
+	stdoutBuf := newSpillingBuffer(maxBytes)
+	defer stdoutBuf.Close()
 	stderrBuf := newBoundedBuffer(maxBytes)
 	cmd.Stdout = stdoutBuf
 	cmd.Stderr = stderrBuf
-
 	if err := cmd.Start(); err != nil {
 		return toolErrorResult(fmt.Sprintf("execute_code: start %s: %v", interp, err))
 	}
@@ -153,7 +158,7 @@ func handleExecuteCode(ctx context.Context, params map[string]any, timeoutSec, m
 	}
 
 	duration := time.Since(start).Seconds()
-	stdoutText, stdoutTrunc := stdoutBuf.Result()
+	stdoutText, stdoutTrunc, spillPath, spillCapped := stdoutBuf.Result()
 	stderrText, stderrTrunc := stderrBuf.Result()
 	truncated := stdoutTrunc || stderrTrunc
 
@@ -164,9 +169,10 @@ func handleExecuteCode(ctx context.Context, params map[string]any, timeoutSec, m
 		Output:          stdoutText,
 		Stderr:          stderrText,
 		Truncated:       truncated,
+		StdoutSpillPath: spillPath,
+		SpillCapped:     spillCapped,
 		DurationSeconds: roundSeconds(duration),
 	}
-
 	isErr := false
 	switch {
 	case timedOut:
@@ -258,4 +264,233 @@ func (b *boundedBuffer) Result() (string, bool) {
 		return b.buf.String() + "\n[output truncated]", true
 	}
 	return b.buf.String(), false
+}
+
+// scrubbedExecEnv removes sensitive secret environment variables from child subprocesses
+// while retaining safe execution vars (PATH, HOME, TMPDIR, LANG, TERM, HERMES_HOME, HERMES_PROFILE, etc.).
+func scrubbedExecEnv(environ []string) []string {
+	out := make([]string, 0, len(environ))
+	for _, kv := range environ {
+		k, _, ok := strings.Cut(kv, "=")
+		if !ok {
+			continue
+		}
+		if isSensitiveExecEnvKey(k) {
+			continue
+		}
+		out = append(out, kv)
+	}
+	return out
+}
+
+var safeExecEnvKeep = map[string]bool{
+	"PATH":           true,
+	"HOME":           true,
+	"TMPDIR":         true,
+	"TEMP":           true,
+	"TMP":            true,
+	"LANG":           true,
+	"LC_ALL":         true,
+	"TERM":           true,
+	"HERMES_HOME":    true,
+	"HERMES_PROFILE": true,
+	"USER":           true,
+	"SHELL":          true,
+	"PWD":            true,
+	"SYSTEMROOT":     true,
+	"COMSPEC":        true,
+	"PATHEXT":        true,
+	"WINDIR":         true,
+}
+
+var sensitiveExecEnvSubstrings = []string{
+	"KEY",
+	"TOKEN",
+	"SECRET",
+	"PASSWORD",
+	"PASSWD",
+	"CREDENTIAL",
+	"AUTH",
+	"DSN",
+	"WEBHOOK",
+	"CREDS",
+	"BEARER",
+	"APIKEY",
+	"COOKIE",
+	"PAT",
+	"DATABASE_URL",
+}
+
+func isSensitiveExecEnvKey(key string) bool {
+	upper := strings.ToUpper(strings.TrimSpace(key))
+	if upper == "" {
+		return true
+	}
+	if safeExecEnvKeep[upper] {
+		return false
+	}
+	for _, sub := range sensitiveExecEnvSubstrings {
+		if strings.Contains(upper, sub) {
+			return true
+		}
+	}
+	return false
+}
+
+// spillingBuffer captures stdout in memory up to maxBytes; once stdout exceeds maxBytes,
+// it writes the complete stream to <tmpdir>/hermes-exec-stdout-<shorthex>.txt and retains
+// a head/tail preview for the returned JSON payload.
+type spillingBuffer struct {
+	mu           sync.Mutex
+	maxBytes     int
+	maxSpill     int64
+	buf          bytes.Buffer
+	spilled      bool
+	spillFile    *os.File
+	spillPath    string
+	spilledBytes int64
+	spillCapped  bool
+	head         []byte
+	tail         []byte
+	tailCap      int
+	totalBytes   int64
+}
+
+func newSpillingBuffer(maxBytes int) *spillingBuffer {
+	return newSpillingBufferWithCap(maxBytes, maxSpillBytes)
+}
+
+func newSpillingBufferWithCap(maxBytes int, maxSpill int64) *spillingBuffer {
+	if maxBytes <= 0 {
+		maxBytes = defaultMaxOutputBytes
+	}
+	if maxSpill <= 0 {
+		maxSpill = maxSpillBytes
+	}
+	tailCap := maxBytes / 2
+	if tailCap < 16 {
+		tailCap = 16
+	}
+	return &spillingBuffer{
+		maxBytes: maxBytes,
+		maxSpill: maxSpill,
+		tailCap:  tailCap,
+	}
+}
+
+func (s *spillingBuffer) writeSpillLocked(p []byte) {
+	if s.spillFile == nil || len(p) == 0 {
+		return
+	}
+	if s.spillCapped {
+		return
+	}
+	remaining := s.maxSpill - s.spilledBytes
+	if remaining <= 0 {
+		s.spillCapped = true
+		return
+	}
+	if int64(len(p)) > remaining {
+		if n, _ := s.spillFile.Write(p[:remaining]); n > 0 {
+			s.spilledBytes += int64(n)
+		}
+		s.spillCapped = true
+		return
+	}
+	if n, _ := s.spillFile.Write(p); n > 0 {
+		s.spilledBytes += int64(n)
+	}
+}
+
+func (s *spillingBuffer) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	n := len(p)
+	s.totalBytes += int64(n)
+
+	if !s.spilled {
+		if s.buf.Len()+n <= s.maxBytes {
+			_, _ = s.buf.Write(p)
+			return n, nil
+		}
+		// Transition to spill mode.
+		s.spilled = true
+		existing := s.buf.Bytes()
+		headCap := s.maxBytes / 2
+		if headCap < 16 {
+			headCap = 16
+		}
+		combined := make([]byte, 0, len(existing)+n)
+		combined = append(combined, existing...)
+		combined = append(combined, p...)
+		if len(combined) <= headCap {
+			s.head = append([]byte(nil), combined...)
+		} else {
+			s.head = append([]byte(nil), combined[:headCap]...)
+		}
+		s.appendTail(combined)
+
+		spillPath := filepath.Join(os.TempDir(), fmt.Sprintf("hermes-exec-stdout-%s.txt", execShortHex()))
+		if f, err := os.OpenFile(spillPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600); err == nil {
+			s.spillFile = f
+			s.spillPath = spillPath
+			s.writeSpillLocked(existing)
+			s.writeSpillLocked(p)
+		}
+		s.buf.Reset()
+		return n, nil
+	}
+
+	s.writeSpillLocked(p)
+	s.appendTail(p)
+	return n, nil
+}
+
+func (s *spillingBuffer) appendTail(p []byte) {
+	if s.tailCap <= 0 || len(p) == 0 {
+		return
+	}
+	if len(p) >= s.tailCap {
+		s.tail = append(s.tail[:0], p[len(p)-s.tailCap:]...)
+		return
+	}
+	s.tail = append(s.tail, p...)
+	if len(s.tail) > s.tailCap {
+		s.tail = append([]byte(nil), s.tail[len(s.tail)-s.tailCap:]...)
+	}
+}
+
+func (s *spillingBuffer) Close() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.spillFile != nil {
+		_ = s.spillFile.Close()
+		s.spillFile = nil
+	}
+}
+
+func (s *spillingBuffer) Result() (output string, truncated bool, spillPath string, spillCapped bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.spillFile != nil {
+		_ = s.spillFile.Close()
+		s.spillFile = nil
+	}
+	if !s.spilled {
+		return s.buf.String(), false, "", false
+	}
+	var b strings.Builder
+	b.Write(s.head)
+	fmt.Fprintf(&b, "\n... [output truncated] (total %d bytes) ...\n", s.totalBytes)
+	b.Write(s.tail)
+	return b.String(), true, s.spillPath, s.spillCapped
+}
+
+func execShortHex() string {
+	var b [4]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return fmt.Sprintf("%08x", time.Now().UnixNano()&0xffffffff)
+	}
+	return hex.EncodeToString(b[:])
 }

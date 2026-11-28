@@ -350,7 +350,7 @@ func (r *RouteRouter) Resolve(req delegation.SpawnRequest) (delegation.RouteDeci
 
 	// 1. Custom identity profile
 	if id := strings.TrimSpace(req.Identity); id != "" {
-		if prof, ok, err := r.identities.Get(id); err == nil && ok {
+		if prof, ok, err := r.identities.Get(id); err == nil && ok && prof.IsEnabled() {
 			if len(prof.ModelChain) > 0 {
 				head := prof.ModelChain[0]
 				return delegation.RouteDecision{

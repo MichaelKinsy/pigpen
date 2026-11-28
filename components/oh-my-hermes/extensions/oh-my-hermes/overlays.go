@@ -23,12 +23,15 @@ type modelPreset struct {
 }
 
 var omhModelPresets = []modelPreset{
-	{Label: "claude-opus-4-6 (high) — Deep / Ultrabrain", Model: "claude-opus-4-6", Thinking: "high"},
-	{Label: "claude-sonnet-4-6 (medium) — Balanced", Model: "claude-sonnet-4-6", Thinking: "medium"},
-	{Label: "claude-haiku-4-5 (low) — Fast / Quick", Model: "claude-haiku-4-5", Thinking: "low"},
-	{Label: "gpt-5.4 (high) — Architecture / Review", Model: "gpt-5.4", Thinking: "high"},
-	{Label: "gpt-5.4-mini (low) — Fast Utility", Model: "gpt-5.4-mini", Thinking: "low"},
-	{Label: "gemini-2.5-pro (high) — Multimodal / Research", Model: "gemini-2.5-pro", Thinking: "high"},
+	{Label: "claude-opus-5-5 (high) — Deep / Ultrabrain / Architect", Model: "claude-opus-5-5", Thinking: "high"},
+	{Label: "claude-sonnet-5-5 (medium) — Balanced / Deep / Default", Model: "claude-sonnet-5-5", Thinking: "medium"},
+	{Label: "claude-haiku-5-5 (low) — Fast / Quick", Model: "claude-haiku-5-5", Thinking: "low"},
+	{Label: "claude-fable-5-2 (medium) — Artistry / Writing", Model: "claude-fable-5-2", Thinking: "medium"},
+	{Label: "gpt-6.2-astra (high) — Ultrabrain / Reasoning", Model: "gpt-6.2-astra", Thinking: "high"},
+	{Label: "gpt-6.1-sol (high) — Review / Deep", Model: "gpt-6.1-sol", Thinking: "high"},
+	{Label: "gpt-6.2-sol (high) — Forensics", Model: "gpt-6.2-sol", Thinking: "high"},
+	{Label: "gemini-3.1-pro (medium) — Visual / Research", Model: "gemini-3.1-pro", Thinking: "medium"},
+	{Label: "gemini-4-argon (low) — Quick / Utility", Model: "gemini-4-argon", Thinking: "low"},
 }
 
 func selectString(ctx sdk.Context, title string, options []string) (string, bool, error) {
@@ -190,11 +193,17 @@ func (s *surfaceState) editCategoryModelChain(ctx sdk.Context, cat string, isOve
 // --- 2. Interactive /dag ---
 
 // renderDAGWidget renders an upstream-style compact inline folding lane tree
-// (`▾`/`▸`, status glyph, title, `category · model · status`) for a DAG run.
-func renderDAGWidget(run *DAGRun, router *RouteRouter) []string {
+// (`▾`/`▸`, status glyph, title, `category · model · status`) for a DAG run
+// using the active OMH theme palette (defaulting to sky when themeName is empty).
+func renderDAGWidget(run *DAGRun, router *RouteRouter, themeName ...string) []string {
 	if run == nil {
 		return nil
 	}
+	tName := ""
+	if len(themeName) > 0 {
+		tName = themeName[0]
+	}
+	pal := lookupThemeSpec(tName)
 	layers := computeLongestPathFrontiers(run.Nodes)
 	nodeByID := make(map[string]DAGNode, len(run.Nodes))
 	doneCount, runCount, failCount := 0, 0, 0
@@ -210,12 +219,17 @@ func renderDAGWidget(run *DAGRun, router *RouteRouter) []string {
 		}
 	}
 
-	summary := fmt.Sprintf("OMH / DAG · %s [%s] · Done %d/%d", run.Title, run.Status, doneCount, len(run.Nodes))
+	summary := fmt.Sprintf("%s · %s [%s] · %s",
+		ansiBoldHex(pal.Accent, "OMH / DAG"),
+		ansiBoldHex(pal.Text, run.Title),
+		ansiHex(dagStatusColorHex(run.Status, pal), run.Status),
+		ansiHex(pal.Success, fmt.Sprintf("Done %d/%d", doneCount, len(run.Nodes))),
+	)
 	if runCount > 0 {
-		summary += fmt.Sprintf(" · %d running", runCount)
+		summary += " · " + ansiHex(omhStatusRunningHex, fmt.Sprintf("%d running", runCount))
 	}
 	if failCount > 0 {
-		summary += fmt.Sprintf(" · %d failed", failCount)
+		summary += " · " + ansiHex(omhStatusFailedHex, fmt.Sprintf("%d failed", failCount))
 	}
 	lines := []string{summary}
 
@@ -235,12 +249,15 @@ func renderDAGWidget(run *DAGRun, router *RouteRouter) []string {
 		if collapsed {
 			tri = "▸"
 		}
-		layerHdr := fmt.Sprintf("%s layer %d · %d node(s)", tri, li+1, len(layer))
+		layerHdr := fmt.Sprintf("%s %s",
+			ansiHex(pal.Accent, tri),
+			ansiHex(pal.Muted, fmt.Sprintf("layer %d · %d node(s)", li+1, len(layer))),
+		)
 		if layerRunning > 0 {
-			layerHdr += fmt.Sprintf(" · %d running", layerRunning)
+			layerHdr += " · " + ansiHex(omhStatusRunningHex, fmt.Sprintf("%d running", layerRunning))
 		}
 		if layerDone > 0 {
-			layerHdr += fmt.Sprintf(" · %d done", layerDone)
+			layerHdr += " · " + ansiHex(omhStatusCompletedHex, fmt.Sprintf("%d done", layerDone))
 		}
 		lines = append(lines, layerHdr)
 		if collapsed {
@@ -249,6 +266,7 @@ func renderDAGWidget(run *DAGRun, router *RouteRouter) []string {
 		for _, id := range layer {
 			n := nodeByID[id]
 			glyph, statusLabel := dagStatusGlyph(n.Status)
+			statusColor := dagStatusColorHex(n.Status, pal)
 			title := strings.TrimSpace(n.Title)
 			if title == "" {
 				title = n.ID
@@ -273,14 +291,18 @@ func renderDAGWidget(run *DAGRun, router *RouteRouter) []string {
 				meta += " · " + modelName
 			}
 			meta += " · " + statusLabel
-			lines = append(lines, fmt.Sprintf("    %s %s  %s", glyph, title, meta))
+			lines = append(lines, fmt.Sprintf("    %s %s  %s",
+				ansiHex(statusColor, glyph),
+				ansiHex(pal.Text, title),
+				ansiHex(pal.Muted, meta),
+			))
 		}
 	}
 	return lines
 }
 
-func buildDAGBoxWidgetView(run *DAGRun) kit.View {
-	lines := renderDAGWidget(run, nil)
+func buildDAGBoxWidgetView(run *DAGRun, router *RouteRouter, themeName string) kit.View {
+	lines := renderDAGWidget(run, router, themeName)
 	box := kit.NewBox(1, 0,
 		kit.NewDynamicBorder("borderAccent"),
 		kit.NewLines(lines),
@@ -343,7 +365,7 @@ func (s *surfaceState) runInteractiveDAGOverlay(ctx sdk.Context, runID string) e
 		}
 
 		// Pin structured box-frontier view as widget while inspecting this DAG.
-		_ = ctx.SetWidget(omhDAGWidgetKey, buildDAGBoxWidgetView(run))
+		_ = ctx.SetWidget(omhDAGWidgetKey, buildDAGBoxWidgetView(run, s.router, s.currentTheme()), sdk.WidgetOptions{"placement": "belowEditor"})
 
 		if err := s.inspectDAGRunInteractive(ctx, run.RunID); err != nil {
 			return err
@@ -358,7 +380,7 @@ func (s *surfaceState) inspectDAGRunInteractive(ctx sdk.Context, runID string) e
 			ctx.Notify("DAG load error: "+err.Error(), "error")
 			return nil
 		}
-		_ = ctx.SetWidget(omhDAGWidgetKey, buildDAGBoxWidgetView(run))
+		_ = ctx.SetWidget(omhDAGWidgetKey, buildDAGBoxWidgetView(run, s.router, s.currentTheme()), sdk.WidgetOptions{"placement": "belowEditor"})
 
 		ready := ReadyNodes(run)
 		options := make([]string, 0, len(ready)+4)
@@ -402,7 +424,7 @@ func (s *surfaceState) inspectDAGRunInteractive(ctx sdk.Context, runID string) e
 				ctx.Notify("DAG update error: "+err.Error(), "error")
 				continue
 			}
-			_ = ctx.SetWidget(omhDAGWidgetKey, buildDAGBoxWidgetView(updated))
+			_ = ctx.SetWidget(omhDAGWidgetKey, buildDAGBoxWidgetView(updated, s.router, s.currentTheme()), sdk.WidgetOptions{"placement": "belowEditor"})
 			ctx.SetStatus("omh", s.statusText())
 			ctx.Notify(fmt.Sprintf("DAG %s node %s -> %s (DAG=%s)", updated.RunID, nodeID, statusPicked, updated.Status), "info")
 		}

@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
+	"time"
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/config"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/memory"
@@ -37,6 +37,11 @@ type state struct {
 	cwd            string
 	contextPct     int
 	hasContextPct  bool
+	busy           bool
+	busyStarted    time.Time
+	spinnerStop          chan struct{}
+	spinnerDone          chan struct{}
+	runtimeConfigApplied bool
 }
 
 func newState(p paths.ProfilePaths, cfg *config.Config, memStore *memory.Store) *state {
@@ -150,6 +155,7 @@ func Register(ext *sdk.Extension, p paths.ProfilePaths, cfg *config.Config, memS
 	// 4. Lifecycle hooks & Hermes compact tool renderers
 	ext.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
 		st.applySessionFlags(ctx)
+		ApplyRuntimeConfig(ctx, st)
 		st.updateContextMetrics(ctx)
 		if ctx.HasUI() {
 			if agentDir := resolveAgentDir(); agentDir != "" {
@@ -158,6 +164,7 @@ func Register(ext *sdk.Extension, p paths.ProfilePaths, cfg *config.Config, memS
 			_ = ctx.RegisterSprite(HermesSpriteDefinition())
 			_ = ctx.SetLogin(HermesLoginDefinition())
 			_, _ = ctx.SetTheme(HermesThemeName(st.currentSkin().Name))
+			st.installEditorComponent(ctx)
 			st.installFooterRenderer(ctx)
 		}
 		st.updateStatusBar(ctx)
@@ -168,14 +175,13 @@ func Register(ext *sdk.Extension, p paths.ProfilePaths, cfg *config.Config, memS
 		st.turns = 0
 		st.mu.Unlock()
 		st.updateContextMetrics(ctx)
-		if ctx.HasUI() {
-			ctx.SetWorkingMessage(st.nextWorkingMessage())
-		}
+		st.startBusySpinner(ctx)
+		st.installFooterRenderer(ctx)
 		return nil, nil
 	})
 	ext.OnEvent("turn_start", func(ctx sdk.Context, _ map[string]any) (any, error) {
-		if ctx.HasUI() {
-			ctx.SetWorkingMessage(st.nextWorkingMessage())
+		if ctx.HasUI() && !st.isBusy() {
+			st.startBusySpinner(ctx)
 		}
 		return nil, nil
 	})
@@ -195,14 +201,15 @@ func Register(ext *sdk.Extension, p paths.ProfilePaths, cfg *config.Config, memS
 		return nil, nil
 	})
 	ext.OnEvent("agent_end", func(ctx sdk.Context, _ map[string]any) (any, error) {
+		st.stopBusySpinner(ctx)
 		st.updateContextMetrics(ctx)
 		st.installFooterRenderer(ctx)
-		if ctx.HasUI() {
-			ctx.ClearWorkingMessage()
-		}
 		return nil, nil
 	})
-
+	ext.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		st.stopBusySpinner(ctx)
+		return nil, nil
+	})
 	ext.ToolRenderer(st.toolRendererResolver)
 }
 
@@ -260,71 +267,6 @@ func (s *state) applySessionFlags(ctx sdk.Context) {
 	}
 }
 
-func (s *state) toolRendererResolver(toolName string, next func() *sdk.ToolRenderers) *sdk.ToolRenderers {
-	if !isHermesTool(toolName) {
-		return next()
-	}
-	return &sdk.ToolRenderers{
-		Shell: sdk.ToolRenderShellDefault,
-		Call: func(_ sdk.Context, args map[string]any, _ sdk.ToolRenderContext, width int) ([]string, error) {
-			sk := s.currentSkin()
-			summary := summarizeToolArgs(args)
-			line := fmt.Sprintf("%s ├─ %s %s", sk.ToolPrefix, toolName, summary)
-			return []string{truncateLine(strings.TrimSpace(line), width)}, nil
-		},
-		Result: func(_ sdk.Context, result sdk.ToolRenderResult, opts sdk.ToolRenderResultOptions, render sdk.ToolRenderContext, width int) ([]string, error) {
-			sk := s.currentSkin()
-			prefix := sk.ToolPrefix + " └─ "
-			if opts.IsPartial {
-				return []string{truncateLine(prefix+"running...", width)}, nil
-			}
-			text := firstResultLine(result)
-			if render.IsError {
-				line := prefix + "error: " + text
-				return []string{truncateLine(line, width)}, nil
-			}
-			if render.DurationMs != nil && *render.DurationMs > 0 {
-				dur := fmt.Sprintf(" (%.1fs)", float64(*render.DurationMs)/1000.0)
-				return []string{truncateLine(prefix+text+dur, width)}, nil
-			}
-			return []string{truncateLine(prefix+text, width)}, nil
-		},
-	}
-}
-
-func summarizeToolArgs(args map[string]any) string {
-	if len(args) == 0 {
-		return ""
-	}
-	keys := make([]string, 0, len(args))
-	for k := range args {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	parts := make([]string, 0, min(len(keys), 3))
-	for _, k := range keys {
-		if len(parts) >= 3 {
-			break
-		}
-		v := fmt.Sprintf("%v", args[k])
-		v = strings.ReplaceAll(v, "\n", " ")
-		if len(v) > 40 {
-			v = v[:37] + "..."
-		}
-		parts = append(parts, fmt.Sprintf("%s=%s", k, v))
-	}
-	return strings.Join(parts, " ")
-}
-
-func firstResultLine(result sdk.ToolRenderResult) string {
-	for _, block := range result.Content {
-		if t, ok := block["text"].(string); ok && strings.TrimSpace(t) != "" {
-			line := strings.SplitN(strings.TrimSpace(t), "\n", 2)[0]
-			return line
-		}
-	}
-	return "done"
-}
 
 func truncateLine(s string, width int) string {
 	if width <= 0 {
@@ -813,34 +755,8 @@ func mergeSiblingExtensionTools(ctx sdk.Context, hermesTools []string) []string 
 	return out
 }
 
-func (s *state) cmdTools(ctx sdk.Context, _ string) error {
-	allTools, err := ctx.GetAllTools()
-	activeTools, _ := ctx.GetActiveTools()
-
-	if err != nil || len(allTools) == 0 {
-		s.mu.RLock()
-		ts := s.toolset
-		s.mu.RUnlock()
-		resolved := ResolveToolsetTools(ts)
-		s.show(ctx, fmt.Sprintf("Hermes Tools (%d in %s): %s", len(resolved), ts, strings.Join(resolved, ", ")))
-		return nil
-	}
-
-	activeSet := make(map[string]bool, len(activeTools))
-	for _, name := range activeTools {
-		activeSet[name] = true
-	}
-	var b strings.Builder
-	fmt.Fprintf(&b, "Registered Tools (%d active / %d total)\n", len(activeTools), len(allTools))
-	for _, t := range allTools {
-		mark := " "
-		if activeSet[t.Name] {
-			mark = "*"
-		}
-		fmt.Fprintf(&b, "  %s %s\n", mark, t.Name)
-	}
-	s.show(ctx, strings.TrimRight(b.String(), "\n"))
-	return nil
+func (s *state) cmdTools(ctx sdk.Context, args string) error {
+	return RunToolsCommand(ctx, s, args)
 }
 
 func (s *state) cmdCron(ctx sdk.Context, args string) error {
@@ -1064,18 +980,8 @@ func (s *state) cmdYolo(ctx sdk.Context, args string) error {
 	return nil
 }
 
-func (s *state) cmdCompress(ctx sdk.Context, _ string) error {
-	var b strings.Builder
-	fmt.Fprintf(&b, "Use PiG's built-in /compact command to compress conversation context.")
-	if cu, err := ctx.GetContextUsage(); err == nil && cu != nil {
-		if cu.Tokens != nil && cu.Percent != nil {
-			fmt.Fprintf(&b, "\nCurrent context usage: %d / %d tokens (%.1f%%)", *cu.Tokens, cu.ContextWindow, *cu.Percent)
-		} else if cu.ContextWindow > 0 {
-			fmt.Fprintf(&b, "\nContext window: %d tokens (usage unknown)", cu.ContextWindow)
-		}
-	}
-	s.show(ctx, b.String())
-	return nil
+func (s *state) cmdCompress(ctx sdk.Context, args string) error {
+	return RunCompressCommand(ctx, s, args)
 }
 
 func (s *state) cmdTodos(ctx sdk.Context, _ string) error {

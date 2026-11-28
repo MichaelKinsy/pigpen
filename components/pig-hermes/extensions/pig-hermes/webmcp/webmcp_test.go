@@ -593,3 +593,120 @@ func TestExecuteCodeBackgroundChildDoesNotHang(t *testing.T) {
 		t.Fatalf("expected fast-done in output, got: %+v", cr)
 	}
 }
+
+func TestExecuteCodeEnvScrubbingAndStdoutSpill(t *testing.T) {
+	if _, err := exec.LookPath("bash"); err != nil {
+		t.Skip("bash not available")
+	}
+
+	// 1. Env scrubbing: sensitive keys must not leak, safe keys must remain.
+	t.Setenv("OPENAI_API_KEY", "sk-secret-openai")
+	t.Setenv("ANTHROPIC_API_KEY", "sk-ant-secret")
+	t.Setenv("GITHUB_TOKEN", "ghp_secret")
+	t.Setenv("GH_TOKEN", "gho_secret")
+	t.Setenv("AWS_SECRET_ACCESS_KEY", "aws-secret")
+	t.Setenv("CUSTOM_SERVICE_SECRET", "top-secret")
+	t.Setenv("DB_PASSWORD", "pw-secret")
+	t.Setenv("HERMES_PROFILE", "test-profile-keep")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	res := handleExecuteCode(ctx, map[string]any{
+		"language": "bash",
+		"code": `printf "OPENAI=%s|ANTHROPIC=%s|GITHUB=%s|GH=%s|AWS=%s|CUSTOM=%s|DB=%s|PROFILE=%s|PATH_NONEMPTY=%s\n" \
+			"${OPENAI_API_KEY:-}" "${ANTHROPIC_API_KEY:-}" "${GITHUB_TOKEN:-}" "${GH_TOKEN:-}" \
+			"${AWS_SECRET_ACCESS_KEY:-}" "${CUSTOM_SERVICE_SECRET:-}" "${DB_PASSWORD:-}" \
+			"${HERMES_PROFILE:-}" "${PATH:+yes}"`,
+	}, 10, 50000)
+	if res.IsError {
+		t.Fatalf("env scrub test failed: %s", res.Content)
+	}
+	cr := res.StructuredContent.(CodeExecResult)
+	want := "OPENAI=|ANTHROPIC=|GITHUB=|GH=|AWS=|CUSTOM=|DB=|PROFILE=test-profile-keep|PATH_NONEMPTY=yes"
+	if strings.TrimSpace(cr.Output) != want {
+		t.Fatalf("env scrub mismatch:\ngot:  %q\nwant: %q", strings.TrimSpace(cr.Output), want)
+	}
+
+	// 2. Stdout spill: large stdout writes full output to temp spill file and returns head/tail preview.
+	res = handleExecuteCode(ctx, map[string]any{
+		"language": "bash",
+		"code":     `printf 'HEAD_MARKER_'; printf '%0300d' 0; printf '_TAIL_MARKER'`,
+	}, 10, 80)
+	if res.IsError {
+		t.Fatalf("spill test failed: %s", res.Content)
+	}
+	cr = res.StructuredContent.(CodeExecResult)
+	if !cr.Truncated {
+		t.Fatalf("expected Truncated=true")
+	}
+	if cr.StdoutSpillPath == "" {
+		t.Fatalf("expected non-empty StdoutSpillPath")
+	}
+	t.Cleanup(func() { _ = os.Remove(cr.StdoutSpillPath) })
+
+	if !strings.Contains(cr.Output, "HEAD_MARKER_") || !strings.Contains(cr.Output, "_TAIL_MARKER") {
+		t.Fatalf("expected head and tail preview in Output, got: %q", cr.Output)
+	}
+	// Verify JSON payload contains stdout_spill_path key.
+	var raw map[string]any
+	if err := json.Unmarshal([]byte(res.Content), &raw); err != nil {
+		t.Fatalf("decode JSON: %v", err)
+	}
+	if raw["stdout_spill_path"] != cr.StdoutSpillPath {
+		t.Fatalf("expected stdout_spill_path=%q in JSON, got %v", cr.StdoutSpillPath, raw["stdout_spill_path"])
+	}
+	spilledBytes, err := os.ReadFile(cr.StdoutSpillPath)
+	if err != nil {
+		t.Fatalf("read spill file %s: %v", cr.StdoutSpillPath, err)
+	}
+	full := string(spilledBytes)
+	if !strings.HasPrefix(full, "HEAD_MARKER_") || !strings.HasSuffix(full, "_TAIL_MARKER") || len(full) != len("HEAD_MARKER_")+300+len("_TAIL_MARKER") {
+		t.Fatalf("unexpected spill file contents (len=%d)", len(full))
+	}
+}
+
+func TestExecuteCodeSpillCapAndExtendedEnvScrub(t *testing.T) {
+	// 1. Extended sensitive env key blocking (upstream code_execution_env.py substrings).
+	blocked := []string{
+		"SENTRY_DSN",
+		"SLACK_WEBHOOK_URL",
+		"GOOGLE_APPLICATION_CREDENTIALS",
+		"SERVICE_CREDS",
+		"AUTH_HEADER",
+		"BEARER_HEADER",
+		"MY_APIKEY",
+		"SESSION_COOKIE",
+		"GITHUB_PAT",
+		"DATABASE_URL",
+	}
+	for _, k := range blocked {
+		if !isSensitiveExecEnvKey(k) {
+			t.Errorf("expected %q to be blocked by isSensitiveExecEnvKey", k)
+		}
+	}
+	for _, safe := range []string{"PATH", "HOME", "TMPDIR", "HERMES_HOME", "HERMES_PROFILE", "PATHEXT"} {
+		if isSensitiveExecEnvKey(safe) {
+			t.Errorf("expected safe key %q to be kept by isSensitiveExecEnvKey", safe)
+		}
+	}
+
+	// 2. Spill file cap stops writing past cap and reports spillCapped=true.
+	sb := newSpillingBufferWithCap(32, 64)
+	defer sb.Close()
+	_, _ = sb.Write([]byte(strings.Repeat("A", 50)))
+	_, _ = sb.Write([]byte(strings.Repeat("B", 50)))
+	_, trunc, spillPath, capped := sb.Result()
+	if spillPath != "" {
+		t.Cleanup(func() { _ = os.Remove(spillPath) })
+	}
+	if !trunc || !capped || spillPath == "" {
+		t.Fatalf("expected truncated=true capped=true spillPath!=empty, got trunc=%v capped=%v path=%q", trunc, capped, spillPath)
+	}
+	data, err := os.ReadFile(spillPath)
+	if err != nil {
+		t.Fatalf("read capped spill file: %v", err)
+	}
+	if len(data) != 64 {
+		t.Fatalf("expected spill file capped at 64 bytes, got %d", len(data))
+	}
+}

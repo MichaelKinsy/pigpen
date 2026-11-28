@@ -25,6 +25,8 @@ skills: []
 # terminal, process_manage, memory, skills_list, skill_view, skill_manage, session_search,
 # delegate_task, todo_list, clarify, cronjob_manage, web_search, web_extract, execute_code.
 tools: []
+strip:
+  extensions: [tool-search]
 # User and workspace extensions and skills remain available.
 discovery:
   extensions: [user, workspace]

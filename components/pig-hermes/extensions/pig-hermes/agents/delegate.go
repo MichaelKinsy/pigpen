@@ -5,10 +5,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 	"time"
-
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/config"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/delegation"
@@ -168,14 +168,33 @@ type childSessionRunner func(
 	prompt string,
 	onStart func(realChildID string),
 ) childRunOutcome
+// activeChildHandle is the live control surface for an in-flight delegated child session.
+type activeChildHandle interface {
+	Steer(text string, images ...sdk.PromptImage) error
+	Abort() error
+}
+
+type activeChildEntry struct {
+	SubagentID      string
+	TaskID          string
+	ParentSessionID string
+	Goal            string
+	Category        string
+	Model           string
+	StartedAt       time.Time
+	handle          activeChildHandle
+}
+
 // DelegateManager coordinates delegated subagent execution, depth tracking,
-// concurrency limits, route resolution, events, and usage accounting.
+// concurrency limits, live child control (list/steer/stop), route resolution,
+// events, and usage accounting.
 type DelegateManager struct {
 	maxSpawnDepth int
 	maxConcurrent int
 
-	mu            sync.RWMutex
-	sessionDepths map[string]int
+	mu             sync.RWMutex
+	sessionDepths  map[string]int
+	activeChildren map[string]*activeChildEntry
 
 	runner childSessionRunner
 	emit   func(ctx sdk.Context, channel string, payload any)
@@ -194,16 +213,18 @@ func NewDelegateManager(cfg *config.Config) *DelegateManager {
 			maxConc = cfg.MaxConcurrent
 		}
 	}
-	return &DelegateManager{
-		maxSpawnDepth: maxDepth,
-		maxConcurrent: maxConc,
-		sessionDepths: make(map[string]int),
-		runner:        runSDKChildSession,
+	mgr := &DelegateManager{
+		maxSpawnDepth:  maxDepth,
+		maxConcurrent:  maxConc,
+		sessionDepths:  make(map[string]int),
+		activeChildren: make(map[string]*activeChildEntry),
 		emit: func(ctx sdk.Context, channel string, payload any) {
 			_ = ctx.Events().Emit(channel, payload)
 		},
 		ledger: usage.Default(),
 	}
+	mgr.runner = mgr.runSDKChildSession
+	return mgr
 }
 
 // DepthForSession returns the tracked spawn depth for sessionID (0 for root).
@@ -227,15 +248,179 @@ func (m *DelegateManager) SetSessionDepth(sessionID string, depth int) {
 	m.sessionDepths[sessionID] = depth
 }
 
+// registerActiveChild records a running child session handle for list/steer/stop.
+func (m *DelegateManager) registerActiveChild(entry *activeChildEntry) {
+	if entry == nil || strings.TrimSpace(entry.SubagentID) == "" {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.activeChildren == nil {
+		m.activeChildren = make(map[string]*activeChildEntry)
+	}
+	m.activeChildren[entry.SubagentID] = entry
+}
+
+// unregisterActiveChild removes a finished child session handle.
+func (m *DelegateManager) unregisterActiveChild(subagentID string) {
+	if strings.TrimSpace(subagentID) == "" {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.activeChildren, subagentID)
+}
+
+func (m *DelegateManager) findActiveChild(idOrTask string) *activeChildEntry {
+	key := strings.TrimSpace(idOrTask)
+	if key == "" {
+		return nil
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if entry, ok := m.activeChildren[key]; ok {
+		return entry
+	}
+	for _, entry := range m.activeChildren {
+		if entry.TaskID == key {
+			return entry
+		}
+	}
+	return nil
+}
+
+func (m *DelegateManager) executeListAction() sdk.ToolResult {
+	m.mu.RLock()
+	entries := make([]*activeChildEntry, 0, len(m.activeChildren))
+	for _, e := range m.activeChildren {
+		entries = append(entries, e)
+	}
+	m.mu.RUnlock()
+
+	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].StartedAt.Equal(entries[j].StartedAt) {
+			return entries[i].SubagentID < entries[j].SubagentID
+		}
+		return entries[i].StartedAt.Before(entries[j].StartedAt)
+	})
+
+	now := time.Now().UTC()
+	out := make([]map[string]any, 0, len(entries))
+	for _, e := range entries {
+		out = append(out, map[string]any{
+			"subagent_id":       e.SubagentID,
+			"task_id":           e.TaskID,
+			"parent_session_id": e.ParentSessionID,
+			"goal":              e.Goal,
+			"category":          e.Category,
+			"model":             e.Model,
+			"started_at":        e.StartedAt.Format(time.RFC3339),
+			"running_ms":        now.Sub(e.StartedAt).Milliseconds(),
+		})
+	}
+	return jsonResult(map[string]any{
+		"success":   true,
+		"action":    "list",
+		"count":     len(out),
+		"subagents": out,
+	}, false)
+}
+
+func (m *DelegateManager) executeSteerAction(params map[string]any) sdk.ToolResult {
+	id := strings.TrimSpace(paramString(params, "subagent_id"))
+	if id == "" {
+		id = strings.TrimSpace(paramString(params, "task_id"))
+	}
+	if id == "" {
+		return errorResult("delegate_task steer requires 'subagent_id' (or 'task_id')")
+	}
+	msg := strings.TrimSpace(paramString(params, "message"))
+	if msg == "" {
+		return errorResult("delegate_task steer requires a non-empty 'message'")
+	}
+	entry := m.findActiveChild(id)
+	if entry == nil {
+		return errorResult(fmt.Sprintf("active subagent %q not found", id))
+	}
+	if entry.handle == nil {
+		return errorResult(fmt.Sprintf("subagent %q does not support live steering", entry.SubagentID))
+	}
+	if err := entry.handle.Steer(msg); err != nil {
+		return errorResult(fmt.Sprintf("steer subagent %q failed: %v", entry.SubagentID, err))
+	}
+	return jsonResult(map[string]any{
+		"success":     true,
+		"action":      "steer",
+		"subagent_id": entry.SubagentID,
+		"task_id":     entry.TaskID,
+	}, false)
+}
+
+func (m *DelegateManager) executeStopAction(params map[string]any) sdk.ToolResult {
+	id := strings.TrimSpace(paramString(params, "subagent_id"))
+	if id == "" {
+		id = strings.TrimSpace(paramString(params, "task_id"))
+	}
+	if id == "" {
+		return errorResult("delegate_task stop requires 'subagent_id' (or 'task_id')")
+	}
+	entry := m.findActiveChild(id)
+	if entry == nil {
+		return errorResult(fmt.Sprintf("active subagent %q not found", id))
+	}
+	if entry.handle == nil {
+		return errorResult(fmt.Sprintf("subagent %q does not support live stop", entry.SubagentID))
+	}
+	if err := entry.handle.Abort(); err != nil {
+		return errorResult(fmt.Sprintf("stop subagent %q failed: %v", entry.SubagentID, err))
+	}
+	return jsonResult(map[string]any{
+		"success":     true,
+		"action":      "stop",
+		"subagent_id": entry.SubagentID,
+		"task_id":     entry.TaskID,
+	}, false)
+}
+
 func registerDelegateTool(ext *sdk.Extension, mgr *DelegateManager) {
 	ext.RegisterTool(sdk.ToolDefinition{
 		Name:          "delegate_task",
 		Label:         "Delegate Task",
-		Description:   "Spawn one or more isolated child subagent sessions to execute tasks in parallel. Pass either a single 'goal' or a 'tasks' array.",
-		PromptSnippet: "Delegate focused subtasks to isolated child subagents in parallel with delegate_task.",
+		Description:   "Spawn one or more isolated child subagent sessions to execute tasks in parallel, or control active subagents via action ('spawn' default, 'list', 'steer', 'stop'). Pass either a single 'goal' or a 'tasks' array when spawning.",
+		PromptSnippet: "Delegate focused subtasks to isolated child subagents in parallel or list/steer/stop active children with delegate_task.",
 		Parameters: sdk.Schema{
 			"type": "object",
 			"properties": map[string]any{
+				"action": map[string]any{
+					"type":        "string",
+					"enum":        []string{"spawn", "list", "steer", "stop"},
+					"default":     "spawn",
+					"description": "Action to perform: 'spawn' (default), 'list' active subagents, 'steer' an active subagent, or 'stop' an active subagent.",
+				},
+				"subagent_id": map[string]any{
+					"type":        "string",
+					"description": "Target child subagent session ID (or task_id) for 'steer' or 'stop'.",
+				},
+				"message": map[string]any{
+					"type":        "string",
+					"description": "Steering message to send to an active subagent when action is 'steer'.",
+				},
+				"task_id": map[string]any{
+					"type":        "string",
+					"description": "Optional caller-supplied task identifier forwarded in lifecycle events.",
+				},
+				"lane_id": map[string]any{
+					"type":        "string",
+					"description": "Optional caller-supplied lane identifier (used as task_id when task_id is omitted).",
+				},
+				"dag_run_id": map[string]any{
+					"type":        "string",
+					"description": "Optional DAG run identifier for orchestration correlation.",
+				},
+				"dag_node_id": map[string]any{
+					"type":        "string",
+					"description": "Optional DAG node identifier (used as task_id fallback when task_id and lane_id are omitted).",
+				},
 				"goal": map[string]any{
 					"type":        "string",
 					"description": "Goal for a single delegated subagent task (alternative to 'tasks').",
@@ -275,6 +460,22 @@ func registerDelegateTool(ext *sdk.Extension, mgr *DelegateManager) {
 					"items": map[string]any{
 						"type": "object",
 						"properties": map[string]any{
+							"task_id": map[string]any{
+								"type":        "string",
+								"description": "Optional caller-supplied task identifier.",
+							},
+							"lane_id": map[string]any{
+								"type":        "string",
+								"description": "Optional caller-supplied lane identifier.",
+							},
+							"dag_run_id": map[string]any{
+								"type":        "string",
+								"description": "Optional DAG run identifier.",
+							},
+							"dag_node_id": map[string]any{
+								"type":        "string",
+								"description": "Optional DAG node identifier.",
+							},
 							"goal": map[string]any{
 								"type":        "string",
 								"description": "What this child subagent should accomplish.",
@@ -323,6 +524,20 @@ func registerDelegateTool(ext *sdk.Extension, mgr *DelegateManager) {
 // Execute parses params, enforces spawn depth and concurrency limits, resolves routes,
 // executes child sessions in parallel, emits lifecycle events, and records usage.
 func (m *DelegateManager) Execute(ctx sdk.Context, params map[string]any) sdk.ToolResult {
+	action := strings.ToLower(strings.TrimSpace(paramString(params, "action")))
+	switch action {
+	case "", "spawn":
+		// fall through to spawn flow
+	case "list":
+		return m.executeListAction()
+	case "steer":
+		return m.executeSteerAction(params)
+	case "stop":
+		return m.executeStopAction(params)
+	default:
+		return errorResult(fmt.Sprintf("unknown delegate_task action %q (expected spawn, list, steer, or stop)", action))
+	}
+
 	parentSessionID := resolveSessionID(ctx)
 	parentDepth := m.DepthForSession(parentSessionID)
 	if explicitDepth, ok := paramInt(params, "depth"); ok && explicitDepth > parentDepth {
@@ -622,10 +837,10 @@ func buildChildPrompt(req delegation.SpawnRequest) string {
 	return b.String()
 }
 
-func runSDKChildSession(
+func (m *DelegateManager) runSDKChildSession(
 	runCtx context.Context,
 	sdkCtx sdk.Context,
-	_ delegation.SpawnRequest,
+	req delegation.SpawnRequest,
 	opts sdk.CreateAgentSessionOptions,
 	prompt string,
 	onStart func(realChildID string),
@@ -635,7 +850,17 @@ func runSDKChildSession(
 		return childRunOutcome{Err: fmt.Errorf("create child session: %w", err)}
 	}
 	defer session.Dispose()
-
+	m.registerActiveChild(&activeChildEntry{
+		SubagentID:      session.SessionID,
+		TaskID:          req.TaskID,
+		ParentSessionID: resolveSessionID(sdkCtx),
+		Goal:            req.Goal,
+		Category:        req.Category,
+		Model:           req.Model,
+		StartedAt:       time.Now().UTC(),
+		handle:          session,
+	})
+	defer m.unregisterActiveChild(session.SessionID)
 	var (
 		mu           sync.Mutex
 		inTok        int
@@ -756,6 +981,7 @@ func parseDelegateRequests(params map[string]any, depth int) ([]delegation.Spawn
 	sharedThink := strings.TrimSpace(paramString(params, "thinking_level"))
 	sharedToolsets := paramStringSlice(params, "toolsets")
 	sharedMaxIter, _ := paramInt(params, "max_iterations")
+	sharedDagRunID := strings.TrimSpace(paramString(params, "dag_run_id"))
 
 	if rawTasks, ok := params["tasks"]; ok && rawTasks != nil {
 		list, ok := rawTasks.([]any)
@@ -775,10 +1001,15 @@ func parseDelegateRequests(params map[string]any, depth int) ([]delegation.Spawn
 			if goal == "" {
 				return nil, fmt.Errorf("tasks[%d] requires a non-empty 'goal'", i)
 			}
+			taskID := resolveCallerTaskID(m, i+1)
+			taskCtx := firstNonEmpty(strings.TrimSpace(paramString(m, "context")), sharedCtx)
+			dagRunID := firstNonEmpty(strings.TrimSpace(paramString(m, "dag_run_id")), sharedDagRunID)
+			dagNodeID := strings.TrimSpace(paramString(m, "dag_node_id"))
+			taskCtx = appendCorrelationContext(taskCtx, dagRunID, dagNodeID)
 			req := delegation.SpawnRequest{
-				TaskID:        fmt.Sprintf("task-%d-%s", i+1, generateShortHex()),
+				TaskID:        taskID,
 				Goal:          goal,
-				Context:       firstNonEmpty(strings.TrimSpace(paramString(m, "context")), sharedCtx),
+				Context:       taskCtx,
 				Category:      firstNonEmpty(strings.TrimSpace(paramString(m, "category")), sharedCat),
 				Identity:      firstNonEmpty(strings.TrimSpace(paramString(m, "identity")), sharedID),
 				Model:         firstNonEmpty(strings.TrimSpace(paramString(m, "model")), sharedModel),
@@ -802,11 +1033,14 @@ func parseDelegateRequests(params map[string]any, depth int) ([]delegation.Spawn
 	if goal == "" {
 		return nil, fmt.Errorf("delegate_task requires either 'goal' or a non-empty 'tasks' array")
 	}
+	taskID := resolveCallerTaskID(params, 1)
+	dagNodeID := strings.TrimSpace(paramString(params, "dag_node_id"))
+	taskCtx := appendCorrelationContext(sharedCtx, sharedDagRunID, dagNodeID)
 	return []delegation.SpawnRequest{
 		{
-			TaskID:        fmt.Sprintf("task-1-%s", generateShortHex()),
+			TaskID:        taskID,
 			Goal:          goal,
-			Context:       sharedCtx,
+			Context:       taskCtx,
 			Category:      sharedCat,
 			Identity:      sharedID,
 			Model:         sharedModel,
@@ -818,6 +1052,39 @@ func parseDelegateRequests(params map[string]any, depth int) ([]delegation.Spawn
 	}, nil
 }
 
+// resolveCallerTaskID preserves caller-supplied task_id / lane_id / dag_node_id
+// (with precedence task_id > lane_id > dag_node_id) so OMH TeamStore and DAG node
+// latching match live delegated subagent events.
+func resolveCallerTaskID(m map[string]any, index int) string {
+	if id := strings.TrimSpace(paramString(m, "task_id")); id != "" {
+		return id
+	}
+	if id := strings.TrimSpace(paramString(m, "lane_id")); id != "" {
+		return id
+	}
+	if id := strings.TrimSpace(paramString(m, "dag_node_id")); id != "" {
+		return id
+	}
+	return fmt.Sprintf("task-%d-%s", index, generateShortHex())
+}
+
+func appendCorrelationContext(base, dagRunID, dagNodeID string) string {
+	var tags []string
+	if dagRunID != "" {
+		tags = append(tags, "dag_run_id="+dagRunID)
+	}
+	if dagNodeID != "" {
+		tags = append(tags, "dag_node_id="+dagNodeID)
+	}
+	if len(tags) == 0 {
+		return base
+	}
+	tagLine := "[orchestration: " + strings.Join(tags, " ") + "]"
+	if base == "" {
+		return tagLine
+	}
+	return base + "\n" + tagLine
+}
 func firstNonEmpty(a, b string) string {
 	if a != "" {
 		return a

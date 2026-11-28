@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"testing"
@@ -567,5 +568,135 @@ func TestCLIExtended_YAMLIndentlessQuotingAndFileModes(t *testing.T) {
 		if !strings.Contains(envText, want) {
 			t.Errorf("expected %q verbatim in .env, got:\n%s", want, envText)
 		}
+	}
+}
+
+func TestCLIExtended_HermesCompatFlagPreprocessor(t *testing.T) {
+	setupIsolatedHermesEnv(t)
+
+	cases := []struct {
+		name string
+		in   []string
+		want []string
+	}{
+		{
+			name: "chat_query_reasoning_resume_id",
+			in:   []string{"chat", "-q", "explain this", "--reasoning", "high", "-r", "sess-123"},
+			want: []string{"-p", "explain this", "--thinking", "high", "--session", "sess-123"},
+		},
+		{
+			name: "long_query_and_equals_forms",
+			in:   []string{"--query=hello world", "--reasoning=medium", "--resume=latest"},
+			want: []string{"-p", "hello world", "--thinking", "medium", "--session", "latest"},
+		},
+		{
+			name: "long_query_and_resume_spaced",
+			in:   []string{"--query", "hi", "--resume", "abc-99"},
+			want: []string{"-p", "hi", "--session", "abc-99"},
+		},
+		{
+			name: "bare_r_preserved_for_interactive_picker",
+			in:   []string{"-r"},
+			want: []string{"-r"},
+		},
+		{
+			name: "r_followed_by_flag_preserved",
+			in:   []string{"-r", "--yolo"},
+			want: []string{"-r", "--yolo"},
+		},
+		{
+			name: "double_dash_stops_translation",
+			in:   []string{"chat", "--", "-q", "literal", "--reasoning", "high"},
+			want: []string{"--", "-q", "literal", "--reasoning", "high"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, _, errOut := dispatchCLI("", tc.in...)
+			if res.Handled {
+				t.Fatalf("expected Handled=false for flag preprocessing, got Handled=true exit=%d err=%q", res.Exit, errOut)
+			}
+			if !reflect.DeepEqual(res.Args, tc.want) {
+				t.Fatalf("args mismatch: got %v, want %v", res.Args, tc.want)
+			}
+		})
+	}
+}
+
+func TestCLIExtended_StatusToolsMemorySubcommands(t *testing.T) {
+	root := setupIsolatedHermesEnv(t)
+
+	// 1. hermes-status subcommand (bare 'status' is intentionally not shadowed).
+	res, out, errOut := dispatchCLI("", "hermes-status")
+	if !res.Handled || res.Exit != 0 {
+		t.Fatalf("hermes-status failed: handled=%v exit=%d err=%q", res.Handled, res.Exit, errOut)
+	}
+	if !strings.Contains(out, "Profile:") {
+		t.Fatalf("expected Profile info in hermes-status output, got:\n%s", out)
+	}
+	// 2. tools disable / list / enable persisted to config.yaml.
+	res, out, errOut = dispatchCLI("", "tools", "disable", "browser_exec", "web_extract")
+	if !res.Handled || res.Exit != 0 {
+		t.Fatalf("tools disable failed: exit=%d err=%q", res.Exit, errOut)
+	}
+	if !strings.Contains(out, "browser_exec") {
+		t.Fatalf("expected disabled tool in output, got: %q", out)
+	}
+	cfg, err := config.Load(filepath.Join(root, "config.yaml"), filepath.Join(root, ".env"))
+	if err != nil {
+		t.Fatalf("reload config: %v", err)
+	}
+	if !reflect.DeepEqual(cfg.DisabledTools, []string{"browser_exec", "web_extract"}) {
+		t.Fatalf("expected DisabledTools=[browser_exec web_extract], got %v", cfg.DisabledTools)
+	}
+
+	res, out, errOut = dispatchCLI("", "tools", "list")
+	if !res.Handled || res.Exit != 0 {
+		t.Fatalf("tools list failed: exit=%d err=%q", res.Exit, errOut)
+	}
+	if !strings.Contains(out, "- browser_exec") || !strings.Contains(out, "* read_file") {
+		t.Fatalf("unexpected tools list output:\n%s", out)
+	}
+
+	res, out, errOut = dispatchCLI("", "tools", "enable", "browser_exec")
+	if !res.Handled || res.Exit != 0 {
+		t.Fatalf("tools enable failed: exit=%d err=%q", res.Exit, errOut)
+	}
+	cfg, err = config.Load(filepath.Join(root, "config.yaml"), filepath.Join(root, ".env"))
+	if err != nil {
+		t.Fatalf("reload config after enable: %v", err)
+	}
+	if !reflect.DeepEqual(cfg.DisabledTools, []string{"web_extract"}) {
+		t.Fatalf("expected DisabledTools=[web_extract] after enable, got %v", cfg.DisabledTools)
+	}
+
+	// 3. memory add / show / clear for MEMORY.md and USER.md.
+	res, out, errOut = dispatchCLI("", "memory", "add", "Remember Go 1.24 conventions")
+	if !res.Handled || res.Exit != 0 {
+		t.Fatalf("memory add failed: exit=%d err=%q", res.Exit, errOut)
+	}
+	res, out, errOut = dispatchCLI("", "memory", "add", "user", "Prefers concise diffs")
+	if !res.Handled || res.Exit != 0 {
+		t.Fatalf("memory add user failed: exit=%d err=%q", res.Exit, errOut)
+	}
+	res, out, errOut = dispatchCLI("", "memory", "show")
+	if !res.Handled || res.Exit != 0 {
+		t.Fatalf("memory show failed: exit=%d err=%q", res.Exit, errOut)
+	}
+	if !strings.Contains(out, "Remember Go 1.24 conventions") || !strings.Contains(out, "Prefers concise diffs") {
+		t.Fatalf("expected both memory entries in show output, got:\n%s", out)
+	}
+
+	res, out, errOut = dispatchCLI("", "memory", "clear", "memory")
+	if !res.Handled || res.Exit != 0 {
+		t.Fatalf("memory clear failed: exit=%d err=%q", res.Exit, errOut)
+	}
+	res, out, errOut = dispatchCLI("", "memory", "show")
+	if !res.Handled || res.Exit != 0 {
+		t.Fatalf("memory show after clear failed: exit=%d err=%q", res.Exit, errOut)
+	}
+	if strings.Contains(out, "Remember Go 1.24 conventions") || !strings.Contains(out, "Prefers concise diffs") {
+		t.Fatalf("expected memory cleared and user retained, got:\n%s", out)
 	}
 }

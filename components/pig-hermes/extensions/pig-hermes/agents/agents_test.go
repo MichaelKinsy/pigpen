@@ -866,3 +866,172 @@ func TestRegisterWiresAllToolsWithoutPanic(t *testing.T) {
 	}
 	Register(ext, p, config.Default())
 }
+
+type stubActiveChildHandle struct {
+	mu       sync.Mutex
+	steered  []string
+	aborted  int
+	steerErr error
+	abortErr error
+}
+
+func (s *stubActiveChildHandle) Steer(text string, _ ...sdk.PromptImage) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.steerErr != nil {
+		return s.steerErr
+	}
+	s.steered = append(s.steered, text)
+	return nil
+}
+
+func (s *stubActiveChildHandle) Abort() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.abortErr != nil {
+		return s.abortErr
+	}
+	s.aborted++
+	return nil
+}
+
+func TestDelegateCallerTaskAndLaneIDsAndLiveControl(t *testing.T) {
+	cfg := config.Default()
+	cfg.MaxSpawnDepth = 1
+	cfg.MaxConcurrent = 4
+	mgr := NewDelegateManager(cfg)
+	mgr.ledger = usage.NewLedger()
+
+	var (
+		mu            sync.Mutex
+		emittedStarts []events.SubagentStartPayload
+		emittedStops  []events.SubagentStopPayload
+		capturedReqs  []delegation.SpawnRequest
+	)
+	mgr.emit = func(_ sdk.Context, channel string, payload any) {
+		mu.Lock()
+		defer mu.Unlock()
+		switch channel {
+		case events.ChannelSubagentStart:
+			if p, ok := payload.(events.SubagentStartPayload); ok {
+				emittedStarts = append(emittedStarts, p)
+			}
+		case events.ChannelSubagentStop:
+			if p, ok := payload.(events.SubagentStopPayload); ok {
+				emittedStops = append(emittedStops, p)
+			}
+		}
+	}
+	mgr.runner = func(_ context.Context, _ sdk.Context, req delegation.SpawnRequest, _ sdk.CreateAgentSessionOptions, _ string, onStart func(string)) childRunOutcome {
+		if onStart != nil {
+			onStart("child-" + req.TaskID)
+		}
+		mu.Lock()
+		capturedReqs = append(capturedReqs, req)
+		mu.Unlock()
+		return childRunOutcome{ChildSessionID: "child-" + req.TaskID, Summary: "ok"}
+	}
+
+	var zeroCtx sdk.Context
+
+	// 1. Caller-supplied task_id, lane_id, and dag_node_id forwarded as SubagentStartPayload.TaskID.
+	res := mgr.Execute(zeroCtx, map[string]any{
+		"dag_run_id": "run-77",
+		"tasks": []any{
+			map[string]any{"goal": "G1", "task_id": "explicit-task-1", "lane_id": "lane-ignored"},
+			map[string]any{"goal": "G2", "lane_id": "team-lane-2"},
+			map[string]any{"goal": "G3", "dag_node_id": "dag-node-3"},
+		},
+	})
+	if res.IsError {
+		t.Fatalf("batch execute failed: %s", res.Content)
+	}
+	seenStarts := map[string]bool{}
+	for _, s := range emittedStarts {
+		seenStarts[s.TaskID] = true
+	}
+	for _, wantID := range []string{"explicit-task-1", "team-lane-2", "dag-node-3"} {
+		if !seenStarts[wantID] {
+			t.Fatalf("expected SubagentStartPayload.TaskID %q, got %+v", wantID, emittedStarts)
+		}
+	}
+	// Single-task top-level lane_id forwarding.
+	res = mgr.Execute(zeroCtx, map[string]any{
+		"goal":        "Single goal",
+		"lane_id":     "single-lane-9",
+		"dag_run_id":  "run-88",
+		"dag_node_id": "node-9",
+	})
+	if res.IsError {
+		t.Fatalf("single execute failed: %s", res.Content)
+	}
+	foundSingle := false
+	for _, s := range emittedStarts {
+		if s.TaskID == "single-lane-9" {
+			foundSingle = true
+		}
+	}
+	if !foundSingle {
+		t.Fatalf("expected single-task lane_id 'single-lane-9' in start events, got %+v", emittedStarts)
+	}
+
+	// 2. Live control actions: list, steer, stop.
+	stub := &stubActiveChildHandle{}
+	mgr.registerActiveChild(&activeChildEntry{
+		SubagentID:      "sa-live-1",
+		TaskID:          "lane-live-1",
+		ParentSessionID: "parent-1",
+		Goal:            "Long running task",
+		StartedAt:       time.Now().UTC(),
+		handle:          stub,
+	})
+	defer mgr.unregisterActiveChild("sa-live-1")
+
+	listRes := mgr.Execute(zeroCtx, map[string]any{"action": "list"})
+	if listRes.IsError {
+		t.Fatalf("list failed: %s", listRes.Content)
+	}
+	var listPayload struct {
+		Count     int              `json:"count"`
+		Subagents []map[string]any `json:"subagents"`
+	}
+	if err := json.Unmarshal([]byte(listRes.Content), &listPayload); err != nil {
+		t.Fatalf("decode list: %v", err)
+	}
+	if listPayload.Count != 1 || listPayload.Subagents[0]["subagent_id"] != "sa-live-1" || listPayload.Subagents[0]["task_id"] != "lane-live-1" {
+		t.Fatalf("unexpected list payload: %+v", listPayload)
+	}
+
+	steerRes := mgr.Execute(zeroCtx, map[string]any{
+		"action":      "steer",
+		"subagent_id": "sa-live-1",
+		"message":     "focus on tests",
+	})
+	if steerRes.IsError {
+		t.Fatalf("steer failed: %s", steerRes.Content)
+	}
+	if len(stub.steered) != 1 || stub.steered[0] != "focus on tests" {
+		t.Fatalf("expected Steer('focus on tests'), got %v", stub.steered)
+	}
+
+	// Stop by task_id fallback also works.
+	stopRes := mgr.Execute(zeroCtx, map[string]any{
+		"action":      "stop",
+		"subagent_id": "lane-live-1",
+	})
+	if stopRes.IsError {
+		t.Fatalf("stop failed: %s", stopRes.Content)
+	}
+	if stub.aborted != 1 {
+		t.Fatalf("expected Abort() called once, got %d", stub.aborted)
+	}
+
+	// Unknown subagent returns error.
+	missingRes := mgr.Execute(zeroCtx, map[string]any{
+		"action":      "stop",
+		"subagent_id": "does-not-exist",
+	})
+	if !missingRes.IsError {
+		t.Fatalf("expected error stopping unknown subagent")
+	}
+}

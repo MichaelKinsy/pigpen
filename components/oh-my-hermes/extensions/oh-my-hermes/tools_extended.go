@@ -1775,4 +1775,117 @@ func registerExtendedTools(
 			}, false), nil
 		},
 	})
+
+	// 12. omh_interact (chat_interaction/v1 routing envelope)
+	ext.RegisterTool(sdk.ToolDefinition{
+		Name:          "omh_interact",
+		Label:         "OMH Interact",
+		Description:   "Produce a chat_interaction/v1 routing envelope with suggested_route, primary_chain, recommendations, workflow_plan, and optional route_question when confidence is low.",
+		PromptSnippet: "Route and plan a chat message with omh_interact (source, mode, limit).",
+		Parameters: sdk.Schema{
+			"type": "object",
+			"properties": map[string]any{
+				"message": map[string]any{"type": "string", "description": "User message or task description to route"},
+				"source":  map[string]any{"type": "string", "enum": []string{"generic", "discord", "slack", "telegram", "hermes"}},
+				"mode":    map[string]any{"type": "string", "enum": []string{"auto", "route", "plan", "delegate"}},
+				"limit":   map[string]any{"type": "integer", "minimum": 1, "maximum": 10},
+			},
+			"required": []string{"message"},
+		},
+		Execute: func(ctx sdk.Context, params map[string]any) (any, error) {
+			msg := paramString(params, "message")
+			if msg == "" {
+				return errorToolResult("message is required"), nil
+			}
+			source := strings.ToLower(paramString(params, "source"))
+			if source == "" {
+				source = "generic"
+			}
+			switch source {
+			case "generic", "discord", "slack", "telegram", "hermes":
+			default:
+				return errorToolResult(fmt.Sprintf("invalid source %q (valid: generic, discord, slack, telegram, hermes)", source)), nil
+			}
+			mode := strings.ToLower(paramString(params, "mode"))
+			if mode == "" {
+				mode = "auto"
+			}
+			switch mode {
+			case "auto", "route", "plan", "delegate":
+			default:
+				return errorToolResult(fmt.Sprintf("invalid mode %q (valid: auto, route, plan, delegate)", mode)), nil
+			}
+			limit := paramInt(params, "limit", 5)
+			if limit < 1 {
+				limit = 1
+			}
+			if limit > 10 {
+				limit = 10
+			}
+
+			rec := scoreRecommendations(msg, limit, router)
+			topScore := 0.0
+			topSkill := ""
+			for _, item := range rec.Recommendations {
+				if item.Score > topScore {
+					topScore = item.Score
+				}
+				if topSkill == "" && item.Kind == "skill" {
+					topSkill = item.Name
+				}
+			}
+			confidence := "low"
+			if topScore >= 4.0 {
+				confidence = "high"
+			} else if topScore >= 2.0 {
+				confidence = "medium"
+			}
+
+			steps := []string{
+				fmt.Sprintf("Route task through category %q", rec.SuggestedRoute),
+			}
+			if topSkill != "" {
+				steps = append(steps, fmt.Sprintf("Load workflow skill %q", topSkill))
+			}
+			switch mode {
+			case "route":
+				steps = append(steps, "Return selected model chain and wait for caller execution")
+			case "plan":
+				steps = append(steps, "Draft plan with omh_todo (plan_stage=awaiting_acceptance) before mutating workspace")
+			case "delegate":
+				steps = append(steps, "Delegate scoped work via delegate_task using the resolved category/chain")
+			default:
+				steps = append(steps, "Execute or delegate work and record observed verification proof via omh_completion")
+			}
+
+			workflowPlan := map[string]any{
+				"mode":            mode,
+				"primary_skill":   topSkill,
+				"category":        rec.SuggestedRoute,
+				"confidence":      confidence,
+				"steps":           steps,
+			}
+
+			sum := sha256.Sum256([]byte(msg))
+			resp := map[string]any{
+				"ok":              true,
+				"schema":          "chat_interaction/v1",
+				"source":          source,
+				"mode":            mode,
+				"confidence":      confidence,
+				"message_sha256":  hex.EncodeToString(sum[:8]),
+				"suggested_route": rec.SuggestedRoute,
+				"primary_chain":   rec.PrimaryChain,
+				"recommendations": rec.Recommendations,
+				"workflow_plan":   workflowPlan,
+			}
+			if confidence == "low" {
+				resp["route_question"] = fmt.Sprintf(
+					"Intent confidence is low (top score %.1f). Should OMH route this to %q, plan first, or clarify the target domain?",
+					topScore, rec.SuggestedRoute,
+				)
+			}
+			return jsonToolResult(resp, false), nil
+		},
+	})
 }

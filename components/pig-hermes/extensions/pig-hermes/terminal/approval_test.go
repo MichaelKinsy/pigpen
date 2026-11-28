@@ -593,3 +593,177 @@ func TestExactAllowlistMatchingAndWildcardSafety(t *testing.T) {
 		t.Errorf("modal-approved command containing '*' must NOT act as wildcard")
 	}
 }
+
+func TestApprovalPromptComponentRenderPagingHotkeysAndTell(t *testing.T) {
+	// Build a multi-line command with >10 lines to test paging.
+	var cmdLines []string
+	for i := 1; i <= 15; i++ {
+		cmdLines = append(cmdLines, fmt.Sprintf("echo line_%02d_payload", i))
+	}
+	longCmd := strings.Join(cmdLines, "\n")
+
+	comp := newApprovalPromptComponent(longCmd, "recursive delete")
+	invalidations := 0
+	comp.SetInvalidate(func() { invalidations++ })
+
+	rendered := comp.Render(80)
+	if len(rendered) < 18 {
+		t.Fatalf("expected double-bordered modal lines, got %d", len(rendered))
+	}
+	topPlain := approvalStripANSI(rendered[0])
+	botPlain := approvalStripANSI(rendered[len(rendered)-1])
+	if !strings.HasPrefix(topPlain, "╔") || !strings.HasSuffix(topPlain, "╗") {
+		t.Errorf("expected double-bordered top line, got %q", topPlain)
+	}
+	if !strings.Contains(topPlain, "⚠ approval required · recursive delete") {
+		t.Errorf("expected header in top border, got %q", topPlain)
+	}
+	if !strings.HasPrefix(botPlain, "╚") || !strings.HasSuffix(botPlain, "╝") {
+		t.Errorf("expected double-bordered bottom line, got %q", botPlain)
+	}
+	if !strings.Contains(rendered[0], approvalColor(approvalWarnGoldHex)) {
+		t.Errorf("expected warn gold ANSI color in modal border")
+	}
+
+	page1Plain := approvalStripANSI(strings.Join(rendered, "\n"))
+	if !strings.Contains(page1Plain, "Lines 1-10 of 15 · v for more") {
+		t.Errorf("expected page 1 indicator, got:\n%s", page1Plain)
+	}
+	if !strings.Contains(page1Plain, "▸ "+approvalChoiceOnce) {
+		t.Errorf("expected cursor on option 1, got:\n%s", page1Plain)
+	}
+
+	// Press 'v' to cycle to page 2 (lines 11-15).
+	res, err := comp.HandleInput("v")
+	if err != nil || res.Done {
+		t.Fatalf("expected 'v' to page without closing: res=%+v err=%v", res, err)
+	}
+	page2Plain := approvalStripANSI(strings.Join(comp.Render(80), "\n"))
+	if !strings.Contains(page2Plain, "Lines 11-15 of 15 · v for more") || !strings.Contains(page2Plain, "line_15_payload") {
+		t.Errorf("expected page 2 lines after 'v', got:\n%s", page2Plain)
+	}
+
+	// Cursor navigation via j/k and arrow keys.
+	_, _ = comp.HandleInput("j")
+	if comp.cursor != 1 {
+		t.Fatalf("expected cursor=1 after 'j', got %d", comp.cursor)
+	}
+	_, _ = comp.HandleInput("\x1b[A")
+	if comp.cursor != 0 {
+		t.Fatalf("expected cursor=0 after Up arrow, got %d", comp.cursor)
+	}
+	if invalidations == 0 {
+		t.Errorf("expected SetInvalidate callback to be invoked on state changes")
+	}
+
+	// Direct hotkeys 1-4 return expected choices immediately.
+	hotkeyCases := []struct {
+		key  string
+		want string
+	}{
+		{"1", "once"},
+		{"2", "session"},
+		{"3", "always"},
+		{"4", "deny"},
+	}
+	for _, tc := range hotkeyCases {
+		c := newApprovalPromptComponent("rm -rf ./tmp", "recursive delete")
+		r, err := c.HandleInput(tc.key)
+		if err != nil || !r.Done {
+			t.Fatalf("hotkey %q did not complete: res=%+v err=%v", tc.key, r, err)
+		}
+		ar, ok := r.Value.(approvalResult)
+		if !ok || ar.Choice != tc.want {
+			t.Fatalf("hotkey %q value = %#v, want choice %q", tc.key, r.Value, tc.want)
+		}
+	}
+
+	// Esc and Ctrl+C deny.
+	for _, key := range []string{"\x1b", "\x03"} {
+		c := newApprovalPromptComponent("rm -rf ./tmp", "recursive delete")
+		r, err := c.HandleInput(key)
+		if err != nil || !r.Done {
+			t.Fatalf("key %q did not complete: res=%+v err=%v", key, r, err)
+		}
+		ar, _ := r.Value.(approvalResult)
+		if ar.Choice != "deny" {
+			t.Fatalf("key %q choice = %q, want deny", key, ar.Choice)
+		}
+	}
+
+	// Option 5 switches to inline tell input mode; Esc returns to choices; Enter submits tell + reason.
+	tellComp := newApprovalPromptComponent("git reset --hard HEAD~1", "destructive git reset")
+	r, err := tellComp.HandleInput("5")
+	if err != nil || r.Done || !tellComp.tellMode {
+		t.Fatalf("expected '5' to enter tellMode: res=%+v err=%v tellMode=%v", r, err, tellComp.tellMode)
+	}
+	tellRendered := approvalStripANSI(strings.Join(tellComp.Render(80), "\n"))
+	if !strings.Contains(tellRendered, "> ") {
+		t.Errorf("expected inline '> ' prompt in tell mode, got:\n%s", tellRendered)
+	}
+
+	// Esc in tellMode returns to choice list without closing.
+	r, err = tellComp.HandleInput("\x1b")
+	if err != nil || r.Done || tellComp.tellMode {
+		t.Fatalf("expected Esc in tellMode to return to choices: res=%+v err=%v tellMode=%v", r, err, tellComp.tellMode)
+	}
+
+	// Re-enter tell mode, type instruction with backspace, then Enter.
+	_, _ = tellComp.HandleInput("5")
+	_, _ = tellComp.HandleInput("use git statusx")
+	_, _ = tellComp.HandleInput("\x7f")
+	r, err = tellComp.HandleInput("\r")
+	if err != nil || !r.Done {
+		t.Fatalf("expected Enter in tellMode to submit: res=%+v err=%v", r, err)
+	}
+	ar, ok := r.Value.(approvalResult)
+	if !ok || ar.Choice != "tell" || ar.Reason != "use git status" {
+		t.Fatalf("unexpected tell result: %#v", r.Value)
+	}
+}
+
+func TestApprovalPromptSanitizationAndKittyKeys(t *testing.T) {
+	// Control characters / CSI / CR / C1 in command must be sanitized to visible escapes.
+	malicious := "echo safe\r\x1b[2Krm -rf /\t\x07\u009b31m"
+	comp := newApprovalPromptComponent(malicious, "danger\x1b[31m")
+	lines := comp.Render(80)
+	joined := approvalStripANSI(strings.Join(lines, "\n"))
+	if strings.Contains(comp.command, "\x1b") || strings.Contains(comp.command, "\r") || strings.Contains(comp.command, "\t") || strings.Contains(comp.command, "\x07") || strings.Contains(comp.command, "\u009b") {
+		t.Fatalf("unsanitized control chars remained in command: %q", comp.command)
+	}
+	if !strings.Contains(joined, "␛[2K") || !strings.Contains(joined, "\\x0d") || !strings.Contains(joined, "\\x07") || !strings.Contains(joined, "\\x9b") {
+		t.Errorf("expected visible escape replacements in rendered modal, got:\n%s", joined)
+	}
+	for i, line := range lines {
+		if w := approvalVisibleWidth(line); w != 80 {
+			t.Errorf("row %d visible width = %d, want 80 (%q)", i, w, approvalStripANSI(line))
+		}
+	}
+
+	// Kitty-protocol sequences for Escape (\x1b[27u), Ctrl+C (\x1b[99;5u), Enter (\x1b[13u),
+	// Backspace (\x1b[127u), and Ctrl+U (\x1b[117;5u).
+	cEsc := newApprovalPromptComponent("rm -rf ./tmp", "danger")
+	if r, err := cEsc.HandleInput("\x1b[27u"); err != nil || !r.Done || r.Value.(approvalResult).Choice != "deny" {
+		t.Fatalf("Kitty Escape did not deny: res=%+v err=%v", r, err)
+	}
+	cCtrlC := newApprovalPromptComponent("rm -rf ./tmp", "danger")
+	if r, err := cCtrlC.HandleInput("\x1b[99;5u"); err != nil || !r.Done || r.Value.(approvalResult).Choice != "deny" {
+		t.Fatalf("Kitty Ctrl+C did not deny: res=%+v err=%v", r, err)
+	}
+	cTell := newApprovalPromptComponent("rm -rf ./tmp", "danger")
+	_, _ = cTell.HandleInput("5")
+	_, _ = cTell.HandleInput("hello")
+	_, _ = cTell.HandleInput("\x1b[117;5u") // Kitty Ctrl+U clears line
+	if cTell.tellInput != "" {
+		t.Fatalf("Kitty Ctrl+U did not clear tellInput: %q", cTell.tellInput)
+	}
+	_, _ = cTell.HandleInput("fixx")
+	_, _ = cTell.HandleInput("\x1b[127u") // Kitty Backspace
+	r, err := cTell.HandleInput("\x1b[13u") // Kitty Enter
+	if err != nil || !r.Done {
+		t.Fatalf("Kitty Enter in tellMode failed: res=%+v err=%v", r, err)
+	}
+	if ar := r.Value.(approvalResult); ar.Choice != "tell" || ar.Reason != "fix" {
+		t.Fatalf("unexpected Kitty tell result: %+v", ar)
+	}
+}

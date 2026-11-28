@@ -33,9 +33,9 @@ type OMHTheme struct {
 }
 
 var builtinThemes = []OMHTheme{
-	{Name: "sky", Accent: "#38BDF8", Surface: "#0B1E28", Summary: "Sky turquoise on deep teal (OMH default)."},
+	{Name: "sky", Accent: "#00CED1", Surface: "#0B1E28", Summary: "Sky turquoise on deep teal (OMH default)."},
 	{Name: "amber", Accent: "#F59E0B", Surface: "#1F160A", Summary: "Amber gold on deep bronze."},
-	{Name: "crimson", Accent: "#F43F5E", Surface: "#220D10", Summary: "Ember rose-crimson on deep garnet."},
+	{Name: "crimson", Accent: "#FF6A3D", Surface: "#220D10", Summary: "Ember orange-crimson on deep garnet."},
 	{Name: "mono", Accent: "#D4D4D8", Surface: "#111111", Summary: "Neutral grayscale with crisp zinc accents."},
 	{Name: "kanagawa", Accent: "#7E9CD8", Surface: "#1F1F28", Summary: "Kanagawa Wave: indigo, warm ivory, muted blue and violet."},
 }
@@ -69,13 +69,15 @@ type themeFile struct {
 }
 
 type surfaceState struct {
-	mu      sync.RWMutex
-	paths   func() OMHPaths
-	router  *RouteRouter
-	dags    *DAGStore
-	teams   *TeamStore
-	loops   *LoopStore
-	theme   string
+	mu       sync.RWMutex
+	paths    func() OMHPaths
+	router   *RouteRouter
+	dags     *DAGStore
+	teams    *TeamStore
+	loops    *LoopStore
+	memProv  *OmhMemoryProvider
+	children *childSessionRegistry
+	theme    string
 }
 
 func newSurfaceState(pathsFn func() OMHPaths, router *RouteRouter, dags *DAGStore, teams *TeamStore, loops *LoopStore) *surfaceState {
@@ -121,6 +123,21 @@ func (s *surfaceState) setTheme(name string) (OMHTheme, error) {
 	return th, nil
 }
 
+func themeAccentANSI(theme string) string {
+	switch strings.ToLower(strings.TrimSpace(theme)) {
+	case "amber":
+		return "\x1b[38;5;214m"
+	case "crimson":
+		return "\x1b[38;5;203m"
+	case "mono":
+		return "\x1b[38;5;250m"
+	case "kanagawa":
+		return "\x1b[38;5;110m"
+	default: // sky
+		return "\x1b[38;5;75m"
+	}
+}
+
 func (s *surfaceState) statusText() string {
 	dagList, _ := s.dags.List()
 	activeDAGs := 0
@@ -136,7 +153,9 @@ func (s *surfaceState) statusText() string {
 			activeTeams++
 		}
 	}
-	return fmt.Sprintf("OMH[%s] dags:%d teams:%d", s.currentTheme(), activeDAGs, activeTeams)
+	th := s.currentTheme()
+	accent := themeAccentANSI(th)
+	return fmt.Sprintf("%s⚚\x1b[0m OMH[%s] dags:%d teams:%d", accent, th, activeDAGs, activeTeams)
 }
 
 func (s *surfaceState) show(ctx sdk.Context, text string) {
@@ -237,6 +256,96 @@ func (s *surfaceState) renderModelChains() string {
 	return strings.TrimRight(b.String(), "\n")
 }
 
+func (s *surfaceState) renderULWRecommendation(task string) string {
+	query := strings.TrimSpace(task)
+	res := scoreRecommendations(query, 5, s.router)
+	var topSkill *RecommendationItem
+	for i := range res.Recommendations {
+		if res.Recommendations[i].Kind == "skill" {
+			topSkill = &res.Recommendations[i]
+			break
+		}
+	}
+	var b strings.Builder
+	if query == "" {
+		b.WriteString("OMH /ulw Workflow Router (default recommendations):\n")
+	} else {
+		fmt.Fprintf(&b, "OMH /ulw Workflow Router for %q:\n", query)
+	}
+	if topSkill != nil {
+		fmt.Fprintf(&b, "  Skill:    %s (%s) — %s\n", topSkill.Name, topSkill.ID, topSkill.Summary)
+	}
+	chainStr := "default"
+	if len(res.PrimaryChain) > 0 {
+		hops := make([]string, 0, len(res.PrimaryChain))
+		for _, c := range res.PrimaryChain {
+			if c.ThinkingLevel != "" {
+				hops = append(hops, c.Model+"("+c.ThinkingLevel+")")
+			} else {
+				hops = append(hops, c.Model)
+			}
+		}
+		chainStr = strings.Join(hops, " -> ")
+	}
+	fmt.Fprintf(&b, "  Route:    %s -> %s\n", res.SuggestedRoute, chainStr)
+	if topSkill != nil {
+		fmt.Fprintf(&b, "  Next:     load skill %s and route subagents via category %q", topSkill.Name, res.SuggestedRoute)
+	} else {
+		fmt.Fprintf(&b, "  Next:     route work via category %q or run /dag to decompose tasks", res.SuggestedRoute)
+	}
+	return b.String()
+}
+
+func (s *surfaceState) renderOMHStatusCard() string {
+	dagList, _ := s.dags.List()
+	activeDAGs := 0
+	for _, d := range dagList {
+		if d.Status == "active" {
+			activeDAGs++
+		}
+	}
+	teamList, _ := s.teams.List()
+	activeTeams := 0
+	for _, t := range teamList {
+		if t.Status == "active" {
+			activeTeams++
+		}
+	}
+	loopList, _ := s.loops.List()
+	activeLoops := 0
+	for _, l := range loopList {
+		if l.Status == "active" {
+			activeLoops++
+		}
+	}
+	notesCount := 0
+	if s.memProv != nil {
+		if notes, err := s.memProv.Recall("", 100); err == nil {
+			notesCount = len(notes)
+		}
+	}
+	recStore := newOMHMemoryRecordStore(s.paths)
+	recs, _ := recStore.list()
+	chains, overridden, _ := s.router.AllChains()
+	overrideCount := 0
+	for _, ov := range overridden {
+		if ov {
+			overrideCount++
+		}
+	}
+	inTok, outTok, cost, turns, toolCalls := usage.Default().Totals()
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "⚚ OMH Status Card | theme=%s | home=%s\n", s.currentTheme(), s.paths().Home)
+	fmt.Fprintf(&b, "  DAGs:        %d total (%d active)\n", len(dagList), activeDAGs)
+	fmt.Fprintf(&b, "  Teams:       %d total (%d active) | Delegations: %d\n", len(teamList), activeTeams, len(s.teams.Delegations()))
+	fmt.Fprintf(&b, "  Loops:       %d total (%d active)\n", len(loopList), activeLoops)
+	fmt.Fprintf(&b, "  Memory:      %d episodic notes | %d durable records\n", notesCount, len(recs))
+	fmt.Fprintf(&b, "  Routing:     %d categories (%d overridden)\n", len(chains), overrideCount)
+	fmt.Fprintf(&b, "  Usage:       in=%d out=%d cost=$%.4f turns=%d tools=%d", inTok, outTok, cost, turns, toolCalls)
+	return b.String()
+}
+
 // --- Slash Commands & Lifecycle Hooks ---
 
 func registerSurfaceAndHooks(ext *sdk.Extension, st *surfaceState) {
@@ -312,17 +421,43 @@ func registerSurfaceAndHooks(ext *sdk.Extension, st *surfaceState) {
 		Handler: func(ctx sdk.Context, args string) error {
 			arg := strings.TrimSpace(args)
 			if arg == "" {
-				var b strings.Builder
-				fmt.Fprintf(&b, "Active OMH theme: %s\n", st.currentTheme())
-				for _, th := range BuiltinThemes() {
-					mark := "  "
-					if th.Name == st.currentTheme() {
-						mark = "* "
+				if ctx.HasUI() {
+					themes := BuiltinThemes()
+					opts := make([]string, 0, len(themes))
+					cur := st.currentTheme()
+					for _, th := range themes {
+						prefix := "  "
+						if th.Name == cur {
+							prefix = "* "
+						}
+						opts = append(opts, fmt.Sprintf("%s%s — %s (%s)", prefix, th.Name, th.Summary, th.Accent))
 					}
-					fmt.Fprintf(&b, "%s%-10s %s (%s)\n", mark, th.Name, th.Summary, th.Accent)
+					picked, ok, err := selectString(ctx, "Select OMH Theme", opts)
+					if err != nil {
+						return err
+					}
+					if !ok || strings.TrimSpace(picked) == "" {
+						return nil
+					}
+					trimmed := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(picked), "*"))
+					fields := strings.Fields(trimmed)
+					if len(fields) == 0 {
+						return nil
+					}
+					arg = fields[0]
+				} else {
+					var b strings.Builder
+					fmt.Fprintf(&b, "Active OMH theme: %s\n", st.currentTheme())
+					for _, th := range BuiltinThemes() {
+						mark := "  "
+						if th.Name == st.currentTheme() {
+							mark = "* "
+						}
+						fmt.Fprintf(&b, "%s%-10s %s (%s)\n", mark, th.Name, th.Summary, th.Accent)
+					}
+					st.show(ctx, strings.TrimRight(b.String(), "\n"))
+					return nil
 				}
-				st.show(ctx, strings.TrimRight(b.String(), "\n"))
-				return nil
 			}
 			th, err := st.setTheme(arg)
 			if err != nil {
@@ -339,15 +474,30 @@ func registerSurfaceAndHooks(ext *sdk.Extension, st *surfaceState) {
 		},
 	})
 
-	// Keyboard shortcut: Ctrl+S opens the /bots board in TUI mode.
-	ext.Shortcut("ctrl+s", "Open the OMH multi-profile /bots board", func(ctx sdk.Context) error {
+	ext.RegisterCommand("ulw", sdk.CommandOptions{
+		Description: "Recommend the best pigpen-omh-* workflow skill and category route (/ulw [task])",
+		Handler: func(ctx sdk.Context, args string) error {
+			st.show(ctx, st.renderULWRecommendation(args))
+			return nil
+		},
+	})
+
+	ext.RegisterCommand("omh-status", sdk.CommandOptions{
+		Description: "Display the full OMH DAG, team, loop, memory, and routing status card",
+		Handler: func(ctx sdk.Context, args string) error {
+			st.show(ctx, st.renderOMHStatusCard())
+			return nil
+		},
+	})
+
+	// Keyboard shortcut: Ctrl+Alt+B opens the /bots board in TUI mode (avoids PiG's built-in Ctrl+S and Alt+B).
+	ext.Shortcut("ctrl+alt+b", "Open the OMH multi-profile /bots board", func(ctx sdk.Context) error {
 		if ctx.HasUI() {
 			return st.runInteractiveBotsOverlay(ctx)
 		}
 		st.show(ctx, st.renderBotsBoard())
 		return nil
 	})
-
 	// OnSessionStart: ensure OMH theme files, register sprite & login branding, and set status bar item.
 	ext.OnSessionStart(func(ctx sdk.Context, data map[string]any) (any, error) {
 		_ = EnsureOMHThemeFiles("")
@@ -369,7 +519,7 @@ func registerSurfaceAndHooks(ext *sdk.Extension, st *surfaceState) {
 		}
 		sections.Set(SectionOMHAwareness, omhAwarenessPrompt)
 		sections.Set(SectionOMHDelegationProtocol, omhDelegationProtocolPrompt)
-		if isChildAgentContext(data) {
+		if st.isChildAgentContext(ctx, data) {
 			sections.Set(SectionOMHChildCalibration, omhChildCalibrationPrompt)
 		} else {
 			sections.Set(SectionOMHMainCalibration, omhMainCalibrationPrompt)
@@ -417,16 +567,36 @@ func extractOMHPromptSections(data map[string]any) *sdk.SystemPromptSections {
 	return sec
 }
 
-func isChildAgentContext(data map[string]any) bool {
-	if data == nil {
-		return false
-	}
-	if b, ok := data["isSubagent"].(bool); ok && b {
+func (s *surfaceState) isChildAgentContext(ctx sdk.Context, data map[string]any) bool {
+	if isChildAgentContext(ctx, data) {
 		return true
 	}
-	if p, ok := data["platform"].(string); ok && strings.EqualFold(strings.TrimSpace(p), "subagent") {
-		return true
+	if s != nil && s.children != nil {
+		if sid, err := ctx.GetSessionID(); err == nil && s.children.has(sid) {
+			return true
+		}
+		if data != nil {
+			if sid, ok := data["sessionId"].(string); ok && s.children.has(sid) {
+				return true
+			}
+			if sid, ok := data["childSessionId"].(string); ok && s.children.has(sid) {
+				return true
+			}
+		}
 	}
+	return false
+}
+
+func isChildAgentContext(ctx sdk.Context, data map[string]any) bool {
+	if data != nil {
+		if b, ok := data["isSubagent"].(bool); ok && b {
+			return true
+		}
+		if p, ok := data["platform"].(string); ok && strings.EqualFold(strings.TrimSpace(p), "subagent") {
+			return true
+		}
+	}
+	_ = ctx
 	return false
 }
 

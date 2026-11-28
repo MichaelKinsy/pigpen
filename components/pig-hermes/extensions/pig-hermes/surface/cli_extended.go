@@ -19,7 +19,9 @@ import (
 	"time"
 
 	"github.com/MichaelKinsy/PiG/extensions/sdk/clihook"
+	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/cli"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/config"
+	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/memory"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/paths"
 	"github.com/MichaelKinsy/pigpen/pig-hermes/sessions"
 )
@@ -2693,4 +2695,335 @@ func runLogsSubcommand(env clihook.Env, args []string) int {
 		fmt.Fprintln(out, line)
 	}
 	return 0
+}
+
+// ── 8. Hermes CLI flag preprocessor & parity subcommands (tools, memory) ────────
+
+func init() {
+	cli.RegisterFlagPreprocessor(hermesCompatFlagPreprocessor)
+	cli.RegisterSubcommand("tools", "List, enable, or disable Hermes tools/toolsets in config.yaml", runToolsSubcommand)
+	cli.RegisterSubcommand("memory", "Inspect or modify Hermes MEMORY.md and USER.md (show, add, clear)", runMemorySubcommand)
+}
+
+// hermesCompatFlagPreprocessor translates Hermes-native CLI flags and the leading
+// `chat` subcommand into their PiG equivalents before PiG parses arguments:
+//   - leading `chat` -> stripped (`pig-hermes chat -q "..."` == `hermes chat -q "..."`)
+//   - `-q <prompt>` / `--query <prompt>` / `--query=<prompt>` -> `-p <prompt>`
+//   - `--reasoning <level>` / `--reasoning=<level>` -> `--thinking <level>`
+//   - `-r <id>` / `--resume <id>` / `--resume=<id>` (when <id> is a non-flag value) -> `--session <id>`
+//     (leaving bare `-r` / `--resume` untouched for PiG's interactive resume picker).
+func hermesCompatFlagPreprocessor(_ clihook.Env, args []string) ([]string, bool, int) {
+	if len(args) == 0 {
+		return args, false, 0
+	}
+	start := 0
+	if args[0] == "chat" {
+		start = 1
+	}
+	out := make([]string, 0, len(args)-start)
+	for i := start; i < len(args); i++ {
+		arg := args[i]
+		if arg == "--" {
+			out = append(out, args[i:]...)
+			break
+		}
+		switch {
+		case arg == "-q" || arg == "--query":
+			if i+1 < len(args) {
+				out = append(out, "-p", args[i+1])
+				i++
+				continue
+			}
+			out = append(out, "-p")
+		case strings.HasPrefix(arg, "--query="):
+			out = append(out, "-p", strings.TrimPrefix(arg, "--query="))
+		case arg == "--reasoning":
+			explicitThinkingFlag.Store(true)
+			if i+1 < len(args) {
+				out = append(out, "--thinking", args[i+1])
+				i++
+				continue
+			}
+			out = append(out, "--thinking")
+		case strings.HasPrefix(arg, "--reasoning="):
+			explicitThinkingFlag.Store(true)
+			out = append(out, "--thinking", strings.TrimPrefix(arg, "--reasoning="))
+		case arg == "--thinking":
+			explicitThinkingFlag.Store(true)
+			if i+1 < len(args) {
+				out = append(out, "--thinking", args[i+1])
+				i++
+				continue
+			}
+			out = append(out, "--thinking")
+		case strings.HasPrefix(arg, "--thinking="):
+			explicitThinkingFlag.Store(true)
+			out = append(out, arg)
+		case arg == "-r" || arg == "--resume":
+			if i+1 < len(args) && args[i+1] != "" && !strings.HasPrefix(args[i+1], "-") {
+				out = append(out, "--session", args[i+1])
+				i++
+				continue
+			}
+			out = append(out, arg)
+		case strings.HasPrefix(arg, "--resume="):
+			val := strings.TrimPrefix(arg, "--resume=")
+			if val != "" {
+				out = append(out, "--session", val)
+				continue
+			}
+			out = append(out, "--resume")
+		default:
+			out = append(out, arg)
+		}
+	}
+	return out, false, 0
+}
+
+// ── 9. tools subcommand ───────────────────────────────────────────────────────
+
+func runToolsSubcommand(env clihook.Env, args []string) int {
+	out := envOut(env)
+	errOut := envErr(env)
+	p := paths.ResolveProfilePaths("")
+	cfg, err := config.Load(p.ConfigFile, p.EnvFile)
+	if err != nil {
+		fmt.Fprintf(errOut, "tools: load config: %v\n", err)
+		return 1
+	}
+
+	sub := "list"
+	if len(args) > 0 {
+		sub = strings.ToLower(strings.TrimSpace(args[0]))
+	}
+
+	switch sub {
+	case "list", "show", "":
+		disabledSet := make(map[string]bool, len(cfg.DisabledTools))
+		for _, d := range cfg.DisabledTools {
+			if trimmed := strings.TrimSpace(d); trimmed != "" {
+				disabledSet[trimmed] = true
+			}
+		}
+		ts := cfg.Toolset
+		if strings.TrimSpace(ts) == "" {
+			ts = "hermes-cli"
+		}
+		all := ResolveToolsetTools(ts)
+		fmt.Fprintf(out, "Hermes Tools (profile: %s, toolset: %s)\n", p.ProfileName, ts)
+		for _, name := range all {
+			mark := "*"
+			if disabledSet[name] {
+				mark = "-"
+			}
+			fmt.Fprintf(out, "  %s %s\n", mark, name)
+		}
+		if len(cfg.DisabledTools) > 0 {
+			fmt.Fprintf(out, "Disabled in config.yaml: %s\n", strings.Join(cfg.DisabledTools, ", "))
+		} else {
+			fmt.Fprintf(out, "Disabled in config.yaml: (none)\n")
+		}
+		return 0
+
+	case "disable", "off":
+		targets := args[1:]
+		if len(targets) == 0 {
+			fmt.Fprintf(errOut, "usage: tools disable <name...>\n")
+			return 2
+		}
+		doc, loadErr := loadYAMLDoc(p.ConfigFile)
+		if loadErr != nil {
+			fmt.Fprintf(errOut, "tools: load %s: %v\n", p.ConfigFile, loadErr)
+			return 1
+		}
+		existing := existingDisabledTools(doc, cfg)
+		seen := make(map[string]bool, len(existing))
+		for _, item := range existing {
+			seen[item] = true
+		}
+		var added []string
+		for _, raw := range targets {
+			name := strings.TrimSpace(raw)
+			if name == "" || seen[name] {
+				continue
+			}
+			seen[name] = true
+			existing = append(existing, name)
+			added = append(added, name)
+		}
+		doc.setListPath("disabled_toolsets", existing)
+		if saveErr := saveYAMLDoc(p.ConfigFile, doc); saveErr != nil {
+			fmt.Fprintf(errOut, "tools: save %s: %v\n", p.ConfigFile, saveErr)
+			return 1
+		}
+		if len(added) > 0 {
+			fmt.Fprintf(out, "Disabled: %s\n", strings.Join(added, ", "))
+		} else {
+			fmt.Fprintf(out, "Already disabled: %s\n", strings.Join(targets, ", "))
+		}
+		return 0
+
+	case "enable", "on":
+		targets := args[1:]
+		if len(targets) == 0 {
+			fmt.Fprintf(errOut, "usage: tools enable <name...>\n")
+			return 2
+		}
+		doc, loadErr := loadYAMLDoc(p.ConfigFile)
+		if loadErr != nil {
+			fmt.Fprintf(errOut, "tools: load %s: %v\n", p.ConfigFile, loadErr)
+			return 1
+		}
+		existing := existingDisabledTools(doc, cfg)
+		removeSet := make(map[string]bool, len(targets))
+		for _, raw := range targets {
+			if name := strings.TrimSpace(raw); name != "" {
+				removeSet[name] = true
+			}
+		}
+		next := make([]string, 0, len(existing))
+		var removed []string
+		for _, item := range existing {
+			if removeSet[item] {
+				removed = append(removed, item)
+				continue
+			}
+			next = append(next, item)
+		}
+		if len(next) == 0 {
+			doc.deletePath("disabled_toolsets")
+		} else {
+			doc.setListPath("disabled_toolsets", next)
+		}
+		if saveErr := saveYAMLDoc(p.ConfigFile, doc); saveErr != nil {
+			fmt.Fprintf(errOut, "tools: save %s: %v\n", p.ConfigFile, saveErr)
+			return 1
+		}
+		if len(removed) > 0 {
+			fmt.Fprintf(out, "Enabled: %s\n", strings.Join(removed, ", "))
+		} else {
+			fmt.Fprintf(out, "Already enabled: %s\n", strings.Join(targets, ", "))
+		}
+		return 0
+
+	default:
+		fmt.Fprintf(errOut, "usage: tools [list | enable <name...> | disable <name...>]\n")
+		return 2
+	}
+}
+
+func existingDisabledTools(doc *yamlNode, cfg *config.Config) []string {
+	if doc != nil {
+		if node, ok := doc.getPath("disabled_toolsets"); ok && node.Kind == yamlList {
+			out := make([]string, len(node.Items))
+			copy(out, node.Items)
+			return out
+		}
+	}
+	if cfg != nil && len(cfg.DisabledTools) > 0 {
+		out := make([]string, len(cfg.DisabledTools))
+		copy(out, cfg.DisabledTools)
+		return out
+	}
+	return nil
+}
+
+// ── 10. memory subcommand ─────────────────────────────────────────────────────
+
+func runMemorySubcommand(env clihook.Env, args []string) int {
+	out := envOut(env)
+	errOut := envErr(env)
+	p := paths.ResolveProfilePaths("")
+	cfg, err := config.Load(p.ConfigFile, p.EnvFile)
+	if err != nil {
+		cfg = config.Default()
+	}
+	store := memory.NewStore(p.MemoriesDir, cfg.MemoryLimit, cfg.UserLimit)
+
+	sub := "show"
+	if len(args) > 0 {
+		sub = strings.ToLower(strings.TrimSpace(args[0]))
+	}
+
+	switch sub {
+	case "show", "list", "status", "":
+		memEntries, memChars, memLimit, _ := store.ReadLive(memory.TargetMemory)
+		userEntries, userChars, userLimit, _ := store.ReadLive(memory.TargetUser)
+		fmt.Fprintf(out, "Hermes Memory (profile: %s)\n", p.ProfileName)
+		fmt.Fprintf(out, "  MEMORY.md: %d/%d chars (%d%%, %d entries)\n", memChars, memLimit, calcPercent(memChars, memLimit), len(memEntries))
+		for i, e := range memEntries {
+			fmt.Fprintf(out, "    %d. %s\n", i+1, e)
+		}
+		fmt.Fprintf(out, "  USER.md:   %d/%d chars (%d%%, %d entries)\n", userChars, userLimit, calcPercent(userChars, userLimit), len(userEntries))
+		for i, e := range userEntries {
+			fmt.Fprintf(out, "    %d. %s\n", i+1, e)
+		}
+		return 0
+
+	case "add":
+		rest := args[1:]
+		if len(rest) == 0 {
+			fmt.Fprintf(errOut, "usage: memory add [memory|user] <text>\n")
+			return 2
+		}
+		target := memory.TargetMemory
+		if len(rest) >= 2 && (strings.EqualFold(rest[0], "memory") || strings.EqualFold(rest[0], "user")) {
+			if strings.EqualFold(rest[0], "user") {
+				target = memory.TargetUser
+			}
+			rest = rest[1:]
+		}
+		text := strings.TrimSpace(strings.Join(rest, " "))
+		if text == "" {
+			fmt.Fprintf(errOut, "usage: memory add [memory|user] <text>\n")
+			return 2
+		}
+		res, applyErr := store.Apply(context.Background(), target, []memory.Operation{
+			{Action: "add", Content: text},
+		})
+		if applyErr != nil {
+			fmt.Fprintf(errOut, "memory add failed: %v\n", applyErr)
+			return 1
+		}
+		fmt.Fprintf(out, "Added to %s (%d/%d chars, %d%%)\n", target, res.CharsUsed, res.CharsLimit, res.Percent)
+		return 0
+
+	case "clear":
+		target := memory.TargetMemory
+		if len(args) >= 2 {
+			switch strings.ToLower(strings.TrimSpace(args[1])) {
+			case "memory":
+				target = memory.TargetMemory
+			case "user":
+				target = memory.TargetUser
+			default:
+				fmt.Fprintf(errOut, "usage: memory clear [memory|user]\n")
+				return 2
+			}
+		}
+		entries, _, _, readErr := store.ReadLive(target)
+		if readErr != nil {
+			fmt.Fprintf(errOut, "memory clear failed: %v\n", readErr)
+			return 1
+		}
+		if len(entries) == 0 {
+			fmt.Fprintf(out, "%s is already empty.\n", target)
+			return 0
+		}
+		ops := make([]memory.Operation, 0, len(entries))
+		for _, e := range entries {
+			ops = append(ops, memory.Operation{Action: "remove", OldText: e})
+		}
+		res, applyErr := store.Apply(context.Background(), target, ops)
+		if applyErr != nil {
+			fmt.Fprintf(errOut, "memory clear failed: %v\n", applyErr)
+			return 1
+		}
+		fmt.Fprintf(out, "Cleared %s (%d/%d chars, %d%%)\n", target, res.CharsUsed, res.CharsLimit, res.Percent)
+		return 0
+
+	default:
+		fmt.Fprintf(errOut, "usage: memory [show | add [memory|user] <text> | clear [memory|user]]\n")
+		return 2
+	}
 }

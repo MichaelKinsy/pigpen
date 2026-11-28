@@ -349,16 +349,57 @@ func (s *state) guardCommand(ctx sdk.Context, command string) error {
 		return nil
 	}
 	if safeHasUI(ctx) {
-		title := fmt.Sprintf("Approve dangerous command (%s): %s", reason, strings.TrimSpace(command))
-		choiceRaw, ok, err := ctx.Select(title, hermesApprovalChoices)
-		if err != nil {
-			return fmt.Errorf("dangerous command (%s): approval prompt failed: %v", reason, err)
+		comp := newApprovalPromptComponent(command, reason)
+		customRaw, customErr := ctx.Custom(comp, sdk.RemoteOverlayOptions{
+			Title:          "Approval Required",
+			Overlay:        true,
+			WidthFraction:  0.86,
+			HeightFraction: 0.75,
+			Blocked: &sdk.RemoteOverlayBlocked{
+				Kind:    "permission",
+				Message: reason,
+			},
+		})
+
+		var action, tellInstruction string
+		var hasTellInstruction bool
+		if customErr == nil {
+			if ch, rs, ok := decodeApprovalResult(customRaw); ok {
+				action = ch
+				if ch == "tell" {
+					tellInstruction = strings.TrimSpace(rs)
+					hasTellInstruction = true
+				}
+			} else if customRaw == nil {
+				// Overlay dismissed without value (or unsupported host returned empty result);
+				// if the host never delivered a structured choice, fall back to ctx.Select.
+				title := fmt.Sprintf("Approve dangerous command (%s): %s", reason, strings.TrimSpace(command))
+				choiceRaw, ok, err := ctx.Select(title, hermesApprovalChoices)
+				if err != nil {
+					return fmt.Errorf("dangerous command (%s): approval prompt failed: %v", reason, err)
+				}
+				if !ok {
+					return fmt.Errorf("dangerous command (%s) denied by user", reason)
+				}
+				choice, _ := choiceRaw.(string)
+				action = parseApprovalChoice(choice)
+			} else {
+				return fmt.Errorf("dangerous command (%s) denied by user", reason)
+			}
+		} else {
+			title := fmt.Sprintf("Approve dangerous command (%s): %s", reason, strings.TrimSpace(command))
+			choiceRaw, ok, err := ctx.Select(title, hermesApprovalChoices)
+			if err != nil {
+				return fmt.Errorf("dangerous command (%s): approval prompt failed: %v", reason, err)
+			}
+			if !ok {
+				return fmt.Errorf("dangerous command (%s) denied by user", reason)
+			}
+			choice, _ := choiceRaw.(string)
+			action = parseApprovalChoice(choice)
 		}
-		if !ok {
-			return fmt.Errorf("dangerous command (%s) denied by user", reason)
-		}
-		choice, _ := choiceRaw.(string)
-		switch parseApprovalChoice(choice) {
+
+		switch action {
 		case "once":
 			return nil
 		case "session":
@@ -376,14 +417,16 @@ func (s *state) guardCommand(ctx sdk.Context, command string) error {
 			}
 			return nil
 		case "tell":
-			val, inputOK, inputErr := ctx.Input("Tell Hermes what to do instead", "")
-			if inputErr != nil {
-				return fmt.Errorf("dangerous command (%s) denied by user (steering input failed: %v)", reason, inputErr)
-			}
-			instruction := ""
-			if inputOK {
-				instruction, _ = val.(string)
-				instruction = strings.TrimSpace(instruction)
+			instruction := tellInstruction
+			if !hasTellInstruction {
+				val, inputOK, inputErr := ctx.Input("Tell Hermes what to do instead", "")
+				if inputErr != nil {
+					return fmt.Errorf("dangerous command (%s) denied by user (steering input failed: %v)", reason, inputErr)
+				}
+				if inputOK {
+					instruction, _ = val.(string)
+					instruction = strings.TrimSpace(instruction)
+				}
 			}
 			if instruction == "" {
 				return fmt.Errorf("BLOCKED by user: do not run this command (%s)", reason)

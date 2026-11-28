@@ -39,12 +39,21 @@ type IdentityModelEntry struct {
 // IdentityProfile represents a user-defined OMH identity profile stored in
 // $OMH_HOME/routing/identities.json.
 type IdentityProfile struct {
-	Name        string               `json:"name"`
-	Role        string               `json:"role,omitempty"`
-	Category    string               `json:"category,omitempty"`
-	Prompt      string               `json:"prompt,omitempty"`
-	ModelChain  []IdentityModelEntry `json:"model_chain,omitempty"`
-	UpdatedAt   string               `json:"updated_at"`
+	Name       string               `json:"name"`
+	Role       string               `json:"role,omitempty"`
+	Category   string               `json:"category,omitempty"`
+	Prompt     string               `json:"prompt,omitempty"`
+	ModelChain []IdentityModelEntry `json:"model_chain,omitempty"`
+	Enabled    *bool                `json:"enabled,omitempty"`
+	UpdatedAt  string               `json:"updated_at"`
+}
+
+// IsEnabled reports whether the custom identity profile is enabled (default true when nil).
+func (p IdentityProfile) IsEnabled() bool {
+	if p.Enabled == nil {
+		return true
+	}
+	return *p.Enabled
 }
 
 // IdentityStoreFile is the on-disk JSON envelope for routing/identities.json.
@@ -310,10 +319,40 @@ func (s *IdentityStore) Set(prof IdentityProfile) (IdentityProfile, error) {
 	if err != nil {
 		return IdentityProfile{}, err
 	}
+	if prof.Enabled == nil {
+		if existing, exists := doc.Profiles[prof.Name]; exists && existing.Enabled != nil {
+			v := *existing.Enabled
+			prof.Enabled = &v
+		}
+	}
 	doc.Schema = IdentityContractVersion
 	doc.Profiles[prof.Name] = prof
 	if err := atomicWriteJSON(s.paths().IdentitiesFile, doc); err != nil {
 		return IdentityProfile{}, err
 	}
 	return prof, nil
+}
+
+// SetEnabled toggles the enabled state of an existing custom identity profile atomically.
+func (s *IdentityStore) SetEnabled(name string, enabled bool) error {
+	key := strings.ToLower(strings.TrimSpace(strings.TrimPrefix(name, "custom:")))
+	if key == "" {
+		return fmt.Errorf("identity name is required")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	doc, err := s.loadLocked()
+	if err != nil {
+		return err
+	}
+	prof, ok := doc.Profiles[key]
+	if !ok {
+		return fmt.Errorf("identity %q not found", key)
+	}
+	val := enabled
+	prof.Enabled = &val
+	prof.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	doc.Schema = IdentityContractVersion
+	doc.Profiles[key] = prof
+	return atomicWriteJSON(s.paths().IdentitiesFile, doc)
 }

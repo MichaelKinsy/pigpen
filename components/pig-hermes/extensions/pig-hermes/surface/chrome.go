@@ -7,8 +7,10 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"unicode/utf8"
+	"time"
+
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/PiG/extensions/sdk/tui"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/config"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/usage"
 )
@@ -128,6 +130,139 @@ func FormatWorkingMessage(style string, step int) string {
 	return fmt.Sprintf("%s %s…", strings.TrimSpace(frame), verb)
 }
 
+func framesForStyle(style string) []string {
+	return IndicatorFrames(style)
+}
+
+func intervalForStyle(style string) int {
+	norm, ok := NormalizeIndicatorStyle(style)
+	if !ok {
+		norm = IndicatorKaomoji
+	}
+	switch norm {
+	case IndicatorKaomoji:
+		return 250
+	case IndicatorEmoji:
+		return 220
+	case IndicatorUnicode:
+		return 80
+	case IndicatorASCII:
+		return 120
+	default:
+		return 250
+	}
+}
+
+func formatLiveWorkingMessage(style string, elapsed time.Duration) string {
+	if elapsed < 0 {
+		elapsed = 0
+	}
+	elapsedSec := int(elapsed / time.Second)
+	norm, ok := NormalizeIndicatorStyle(style)
+	if !ok {
+		norm = IndicatorKaomoji
+	}
+	if norm == IndicatorUnicode {
+		return fmt.Sprintf("· %ds", elapsedSec)
+	}
+	verbIdx := int(elapsed/(2500*time.Millisecond)) % len(hermesBusyVerbs)
+	verb := hermesBusyVerbs[verbIdx]
+	return fmt.Sprintf("%s · %ds", verb, elapsedSec)
+}
+
+func (s *state) isBusy() bool {
+	s.mu.RLock()
+	busy := s.busy
+	s.mu.RUnlock()
+	return busy
+}
+
+func (s *state) busyBadgeText() string {
+	s.mu.RLock()
+	started := s.busyStarted
+	style := s.indicatorStyle
+	s.mu.RUnlock()
+	if started.IsZero() {
+		return formatLiveWorkingMessage(style, 0)
+	}
+	return formatLiveWorkingMessage(style, time.Since(started))
+}
+
+func (s *state) startBusySpinner(ctx sdk.Context) {
+	s.stopBusySpinner(ctx)
+
+	stopCh := make(chan struct{})
+	doneCh := make(chan struct{})
+	started := time.Now()
+
+	s.mu.Lock()
+	style := s.indicatorStyle
+	if style == "" {
+		style = IndicatorKaomoji
+	}
+	s.busy = true
+	s.busyStarted = started
+	s.spinnerStop = stopCh
+	s.spinnerDone = doneCh
+	s.mu.Unlock()
+
+	if !safeHasUI(ctx) {
+		close(doneCh)
+		return
+	}
+
+	_ = ctx.SetWorkingIndicator(sdk.WorkingIndicatorOptions{
+		"frames":     framesForStyle(style),
+		"intervalMs": intervalForStyle(style),
+	})
+	ctx.SetWorkingMessage(formatLiveWorkingMessage(style, 0))
+
+	go func() {
+		defer close(doneCh)
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-stopCh:
+				return
+			case <-ticker.C:
+				curStyle := s.currentIndicatorStyle()
+				ctx.SetWorkingMessage(formatLiveWorkingMessage(curStyle, time.Since(started)))
+			}
+		}
+	}()
+}
+
+func (s *state) stopBusySpinner(ctx sdk.Context) {
+	s.mu.Lock()
+	stopCh := s.spinnerStop
+	doneCh := s.spinnerDone
+	s.spinnerStop = nil
+	s.spinnerDone = nil
+	s.busy = false
+	s.busyStarted = time.Time{}
+	s.mu.Unlock()
+
+	if stopCh != nil {
+		close(stopCh)
+	}
+	if doneCh != nil {
+		<-doneCh
+	}
+	if safeHasUI(ctx) {
+		ctx.ClearWorkingMessage()
+	}
+}
+
+func safeHasUI(ctx sdk.Context) (ok bool) {
+	defer func() {
+		if recover() != nil {
+			ok = false
+		}
+	}()
+	return ctx.HasUI()
+}
+
 // ── ANSI Truecolor & Display Width Helpers ───────────────────────────────────
 
 const ansiReset = "\x1b[0m"
@@ -155,86 +290,24 @@ func colorize(hex, text string) string {
 }
 
 func stripANSI(s string) string {
-	var b strings.Builder
-	b.Grow(len(s))
-	for i := 0; i < len(s); {
-		if s[i] == '\x1b' && i+1 < len(s) && s[i+1] == '[' {
-			j := i + 2
-			for j < len(s) && !((s[j] >= 'A' && s[j] <= 'Z') || (s[j] >= 'a' && s[j] <= 'z')) {
-				j++
-			}
-			if j < len(s) {
-				i = j + 1
-				continue
-			}
-		}
-		b.WriteByte(s[i])
-		i++
-	}
-	return b.String()
-}
-
-func runeWidth(r rune) int {
-	if r < 0x20 || r == 0x7f {
-		return 0
-	}
-	// Combining marks
-	if (r >= 0x0300 && r <= 0x036F) || (r >= 0x1AB0 && r <= 0x1AFF) ||
-		(r >= 0x1DC0 && r <= 0x1DFF) || (r >= 0x20D0 && r <= 0x20FF) ||
-		(r >= 0xFE00 && r <= 0xFE0F) || (r >= 0xFE20 && r <= 0xFE2F) {
-		return 0
-	}
-	// Wide emoji / CJK ranges
-	if (r >= 0x1100 && r <= 0x115F) ||
-		(r >= 0x2E80 && r <= 0xA4CF) ||
-		(r >= 0xAC00 && r <= 0xD7A3) ||
-		(r >= 0xF900 && r <= 0xFAFF) ||
-		(r >= 0xFE10 && r <= 0xFE6F) ||
-		(r >= 0xFF00 && r <= 0xFF60) ||
-		(r >= 0xFFE0 && r <= 0xFFE6) ||
-		(r >= 0x1F300 && r <= 0x1FAFF) {
-		return 2
-	}
-	return 1
+	return tui.StripTerminalSequences(s)
 }
 
 func visibleWidth(s string) int {
-	plain := stripANSI(s)
-	w := 0
-	for _, r := range plain {
-		w += runeWidth(r)
-	}
-	return w
+	return tui.VisibleWidth(s)
 }
 
 func truncatePlain(s string, maxWidth int) string {
 	if maxWidth <= 0 {
 		return ""
 	}
-	if visibleWidth(s) <= maxWidth {
+	if tui.VisibleWidth(s) <= maxWidth {
 		return s
 	}
 	if maxWidth == 1 {
-		for _, r := range s {
-			if runeWidth(r) <= 1 {
-				return string(r)
-			}
-			break
-		}
-		return "…"
+		return tui.TruncateToWidth(s, 1, "", false)
 	}
-	var b strings.Builder
-	w := 0
-	for _, r := range s {
-		rw := runeWidth(r)
-		if w+rw > maxWidth-1 {
-			break
-		}
-		b.WriteRune(r)
-		w += rw
-	}
-	b.WriteRune('…')
-	return b.String()
+	return tui.TruncateToWidth(s, maxWidth, "…", false)
 }
 
 func padPlainRight(s string, targetWidth int) string {
@@ -242,7 +315,7 @@ func padPlainRight(s string, targetWidth int) string {
 		return ""
 	}
 	plain := truncatePlain(s, targetWidth)
-	pad := targetWidth - visibleWidth(plain)
+	pad := targetWidth - tui.VisibleWidth(plain)
 	if pad > 0 {
 		return plain + strings.Repeat(" ", pad)
 	}
@@ -253,42 +326,13 @@ func truncateANSI(s string, maxWidth int) string {
 	if maxWidth <= 0 {
 		return ""
 	}
-	if visibleWidth(s) <= maxWidth {
+	if tui.VisibleWidth(s) <= maxWidth {
 		return s
 	}
-	var b strings.Builder
-	w := 0
-	hasANSI := false
-	for i := 0; i < len(s); {
-		if s[i] == '\x1b' && i+1 < len(s) && s[i+1] == '[' {
-			j := i + 2
-			for j < len(s) && !((s[j] >= 'A' && s[j] <= 'Z') || (s[j] >= 'a' && s[j] <= 'z')) {
-				j++
-			}
-			if j < len(s) {
-				b.WriteString(s[i : j+1])
-				hasANSI = true
-				i = j + 1
-				continue
-			}
-		}
-		r, size := utf8.DecodeRuneInString(s[i:])
-		rw := runeWidth(r)
-		if maxWidth > 1 && w+rw > maxWidth-1 {
-			b.WriteRune('…')
-			break
-		}
-		if maxWidth == 1 && w+rw > maxWidth {
-			break
-		}
-		b.WriteRune(r)
-		w += rw
-		i += size
+	if maxWidth == 1 {
+		return tui.TruncateToWidth(s, 1, "", false)
 	}
-	if hasANSI {
-		b.WriteString(ansiReset)
-	}
-	return b.String()
+	return tui.TruncateToWidth(s, maxWidth, "…", false)
 }
 
 // ── Meter & Formatting Helpers ───────────────────────────────────────────────
@@ -568,12 +612,24 @@ func renderHermesHeader(st *state, width int) []string {
 
 // ── 2. Hermes Dynamic Footer with Context-Usage Meter ────────────────────────
 
+// footerOptions carries host-supplied runtime details for renderHermesFooter.
+type footerOptions struct {
+	Model     string
+	GitBranch string
+}
+
 // renderHermesFooter renders the Hermes dynamic footer for the given width.
 // Width tiers:
-//   - < 52:   compact `☤ {profile} │ [█████░░░░░] {pct}%`
-//   - 52-75:  `☤ {profile} │ {skin} │ [█████░░░░░] {pct}% │ Σ{tokens}[ │ YOLO]`
-//   - >= 76:  full left status + right-aligned key hints (`/` cmds · `@` files · `!` shell)
+//   - < 52:   compact `{symbol} {profile} │ [█████░░░░░] {pct}%`
+//   - 52-75:  `{symbol} {profile} │ {skin} │ [█████░░░░░] {pct}% │ Σ{tokens}[ │ YOLO]`
+//   - >= 76:  includes model, optional cwd (git-branch) when width >= 88, sorted extension statuses,
+//             and context-sensitive right-aligned hints (`enter steer · ctrl+c stop` when busy,
+//             `/ cmds · @ files · ! shell` when idle).
 func renderHermesFooter(st *state, width int, extStatuses map[string]string) []string {
+	return renderHermesFooterWithOpts(st, width, extStatuses, footerOptions{})
+}
+
+func renderHermesFooterWithOpts(st *state, width int, extStatuses map[string]string, opts footerOptions) []string {
 	if width <= 0 {
 		width = 80
 	}
@@ -583,15 +639,26 @@ func renderHermesFooter(st *state, width int, extStatuses map[string]string) []s
 	dimHex := sk.Color("status_bar_dim", "#8A7A4A")
 	warnHex := sk.Color("ui_warn", "#ffa726")
 
+	symbol := strings.TrimSpace(sk.Symbol)
+	if symbol == "" {
+		symbol = "☤"
+	}
+
 	st.mu.RLock()
 	profile := st.paths.ProfileName
 	skinName := st.skin
+	busy := st.busy
 	st.mu.RUnlock()
 	if profile == "" {
 		profile = "default"
 	}
 	if skinName == "" {
 		skinName = sk.Name
+	}
+
+	model := strings.TrimSpace(opts.Model)
+	if model == "" && st.cfg != nil {
+		model = strings.TrimSpace(st.cfg.Model)
 	}
 
 	pct, hasCtx := st.snapshotContextPct()
@@ -609,8 +676,9 @@ func renderHermesFooter(st *state, width int, extStatuses map[string]string) []s
 	yolo := st.cfg != nil && st.cfg.IsYolo()
 
 	div := colorize(dimHex, " │ ")
-	profileSeg := colorize(strongHex, fmt.Sprintf("☤ %s", profile))
+	profileSeg := colorize(strongHex, fmt.Sprintf("%s %s", symbol, profile))
 	skinSeg := colorize(textHex, skinName)
+	modelSeg := colorize(textHex, model)
 	meterSeg := colorize(meterHex, meterText)
 	tokSeg := colorize(textHex, tokenText)
 	yoloSeg := colorize(warnHex, "YOLO")
@@ -641,7 +709,48 @@ func renderHermesFooter(st *state, width int, extStatuses map[string]string) []s
 		return []string{truncateANSI(line, width)}
 	}
 
-	left := profileSeg + div + skinSeg + div + meterSeg + div + tokSeg
+	if width < 76 {
+		left := profileSeg + div + skinSeg + div + meterSeg + div + tokSeg
+		if yolo {
+			left += div + yoloSeg
+		}
+		for _, stText := range extraStatuses {
+			left += div + stText
+		}
+		return []string{truncateANSI(left, width)}
+	}
+
+	hintsPlain := "/ cmds · @ files · ! shell"
+	if busy {
+		hintsPlain = "enter steer · ctrl+c stop"
+	}
+	hintsSeg := colorize(dimHex, hintsPlain)
+	hintsW := visibleWidth(hintsPlain)
+
+	left := profileSeg
+	if model != "" {
+		left += div + modelSeg
+	} else {
+		left += div + skinSeg
+	}
+	left += div + meterSeg
+
+	if width >= 88 {
+		cwdBase := filepath.Base(shortenCwd(st.snapshotCwd()))
+		if cwdBase == "" || cwdBase == "." || cwdBase == string(filepath.Separator) {
+			cwdBase = shortenCwd(st.snapshotCwd())
+		}
+		locText := cwdBase
+		if br := strings.TrimSpace(opts.GitBranch); br != "" {
+			locText = fmt.Sprintf("%s (%s)", cwdBase, br)
+		}
+		candidate := left + div + colorize(dimHex, locText)
+		if visibleWidth(candidate)+visibleWidth(div)+visibleWidth(tokSeg)+2+hintsW <= width {
+			left = candidate
+		}
+	}
+
+	left += div + tokSeg
 	if yolo {
 		left += div + yoloSeg
 	}
@@ -649,14 +758,7 @@ func renderHermesFooter(st *state, width int, extStatuses map[string]string) []s
 		left += div + stText
 	}
 
-	if width < 76 {
-		return []string{truncateANSI(left, width)}
-	}
-
-	hintsPlain := "/ cmds · @ files · ! shell"
-	hintsSeg := colorize(dimHex, hintsPlain)
 	leftW := visibleWidth(left)
-	hintsW := visibleWidth(hintsPlain)
 	gap := width - leftW - hintsW
 	if gap >= 2 {
 		return []string{left + strings.Repeat(" ", gap) + hintsSeg}
@@ -669,7 +771,12 @@ func (s *state) installFooterRenderer(ctx sdk.Context) {
 		return
 	}
 	_ = ctx.SetFooterRenderer(func(width int) []string {
-		return renderHermesFooter(s, width, ctx.FooterData().ExtensionStatuses())
+		fd := ctx.FooterData()
+		branch, _ := fd.GitBranch()
+		return renderHermesFooterWithOpts(s, width, fd.ExtensionStatuses(), footerOptions{
+			Model:     ctx.Model(),
+			GitBranch: branch,
+		})
 	})
 }
 

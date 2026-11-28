@@ -503,9 +503,9 @@ func TestOMHThemeFilesAndSetTheme(t *testing.T) {
 	}
 
 	expectedThemes := map[string]string{
-		"omh-sky":      "#38BDF8",
+		"omh-sky":      "#00CED1",
 		"omh-amber":    "#F59E0B",
-		"omh-crimson":  "#F43F5E",
+		"omh-crimson":  "#FF6A3D",
 		"omh-mono":     "#D4D4D8",
 		"omh-kanagawa": "#7E9CD8",
 	}

@@ -497,7 +497,7 @@ func TestChromeLifecycleAndIndicatorCommand(t *testing.T) {
 	calls := append([]struct{ method string; args map[string]any }(nil), host.calls...)
 	host.mu.Unlock()
 
-	var sawHeader, sawLogin, sawWorkingSet, sawWorkingClear, sawIndicatorMsg, sawBannerMsg, sawBannerWidget bool
+	var sawHeader, sawLogin, sawWorkingIndicator, sawWorkingSet, sawWorkingClear, sawIndicatorMsg, sawBannerMsg, sawBannerWidget bool
 	footerCalls := 0
 	for _, c := range calls {
 		switch c.method {
@@ -511,10 +511,14 @@ func TestChromeLifecycleAndIndicatorCommand(t *testing.T) {
 			if key, _ := c.args["key"].(string); key == "hermes_banner" {
 				sawBannerWidget = true
 			}
+		case "ui.setWorkingIndicator":
+			if frames, ok := c.args["frames"].([]any); ok && len(frames) == 10 {
+				sawWorkingIndicator = true
+			}
 		case "ui.setWorkingMessage":
 			if msg, ok := c.args["message"].(string); ok && msg != "" {
-				// Should use unicode braille frame after /indicator unicode
-				if strings.ContainsAny(msg, "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏") {
+				// Unicode style emits bare "· <N>s" while native loader spins braille frames.
+				if strings.Contains(msg, "· ") && strings.HasSuffix(msg, "s") {
 					sawWorkingSet = true
 				}
 			} else if _, hasMsg := c.args["message"]; !hasMsg {
@@ -539,7 +543,7 @@ func TestChromeLifecycleAndIndicatorCommand(t *testing.T) {
 	if !sawLogin {
 		t.Errorf("expected OnSessionStart to preserve winged-pig login via ui.setLogin")
 	}
-	// Expect footer pushed on session_start, /indicator, /skin, /yolo, turn_end, agent_end (>= 6)
+	// Expect footer pushed on session_start, /indicator, /skin, /yolo, agent_start, turn_end, agent_end (>= 6)
 	if footerCalls < 6 {
 		t.Errorf("expected ui.setFooter to be re-pushed on lifecycle and commands (>=6), got %d", footerCalls)
 	}
@@ -549,13 +553,272 @@ func TestChromeLifecycleAndIndicatorCommand(t *testing.T) {
 	if !sawBannerWidget {
 		t.Errorf("expected /banner pin to set hermes_banner widget")
 	}
+	if !sawWorkingIndicator {
+		t.Errorf("expected agent_start to configure native working indicator with unicode frames")
+	}
 	if !sawWorkingSet {
-		t.Errorf("expected agent_start/turn_start to call SetWorkingMessage with unicode indicator")
+		t.Errorf("expected agent_start to set live working message with elapsed seconds")
 	}
 	if !sawWorkingClear {
 		t.Errorf("expected agent_end to clear working message")
 	}
 	if !sawIndicatorMsg {
 		t.Errorf("expected /indicator status to report active unicode indicator")
+	}
+}
+
+func TestToolRenderShellSelfAndExpandedDiff(t *testing.T) {
+	st, _ := newTestChromeState(t)
+
+	tr := st.toolRendererResolver("read_file", func() *sdk.ToolRenderers { return nil })
+	if tr == nil || tr.Shell != sdk.ToolRenderShellSelf {
+		t.Fatalf("expected ToolRenderShellSelf for read_file, got %+v", tr)
+	}
+	callLines, err := tr.Call(sdk.Context{}, map[string]any{"path": "main.go", "offset": 10, "limit": 20}, sdk.ToolRenderContext{}, 100)
+	if err != nil || len(callLines) != 1 {
+		t.Fatalf("unexpected call lines: %v (err=%v)", callLines, err)
+	}
+	callPlain := stripANSI(callLines[0])
+	if !strings.Contains(callPlain, "├─ 📖 read main.go (10+20)") {
+		t.Errorf("unexpected read_file call render: %q", callPlain)
+	}
+	if !strings.Contains(callLines[0], "\x1b[38;2;") {
+		t.Errorf("expected ANSI truecolor in call line: %q", callLines[0])
+	}
+
+	// Check all mapped Hermes tools render their upstream glyph + verb.
+	mapped := map[string]string{
+		"write_file":     "✏️ write",
+		"patch":          "🔧 patch",
+		"search_files":   "🔍 search",
+		"terminal":       "💻 $",
+		"process_manage": "⚙️ proc",
+		"memory":         "🧠 memory",
+		"skills_list":    "⚡ skill",
+		"delegate_task":  "⛓ delegate",
+		"web_search":     "🌐 web",
+		"execute_code":   "🐍 exec",
+		"cronjob_manage": "⏰ cron",
+		"todo_list":      "☑ todo",
+		"browser_exec":   "🌍 browser",
+		"vision_analyze": "👁 vision",
+		"image_generate": "🎨 image",
+		"text_to_speech": "🔊 tts",
+		"tool_search":    "🔎 tools",
+		"clarify":        "☤ clarify",
+	}
+	for name, want := range mapped {
+		r := st.toolRendererResolver(name, func() *sdk.ToolRenderers { return nil })
+		if r == nil || r.Shell != sdk.ToolRenderShellSelf {
+			t.Fatalf("tool %s missing ToolRenderShellSelf", name)
+		}
+		lines, err := r.Call(sdk.Context{}, map[string]any{}, sdk.ToolRenderContext{}, 80)
+		if err != nil || len(lines) != 1 || !strings.Contains(stripANSI(lines[0]), want) {
+			t.Errorf("tool %s call render = %v (err=%v), want substring %q", name, lines, err, want)
+		}
+	}
+
+	// Patch tool renders ✓ summary + │-guttered unified diff with green (+) and red (-) lines.
+	patchR := st.toolRendererResolver("patch", func() *sdk.ToolRenderers { return nil })
+	diffPayload := "--- a/foo.go\n+++ b/foo.go\n@@ -1,2 +1,2 @@\n-oldLine()\n+newLine()"
+	resLines, err := patchR.Result(
+		sdk.Context{},
+		sdk.ToolRenderResult{
+			Content: []map[string]any{{"type": "text", "text": "patched foo.go"}},
+			Details: map[string]any{"diff": diffPayload},
+		},
+		sdk.ToolRenderResultOptions{Expanded: true},
+		sdk.ToolRenderContext{},
+		100,
+	)
+	if err != nil {
+		t.Fatalf("patch Result error: %v", err)
+	}
+	if len(resLines) < 5 {
+		t.Fatalf("expected summary + diff lines, got %d: %v", len(resLines), resLines)
+	}
+	if !strings.Contains(stripANSI(resLines[0]), "✓ patched foo.go") {
+		t.Errorf("expected ✓ summary line, got %q", stripANSI(resLines[0]))
+	}
+	joined := strings.Join(resLines[1:], "\n")
+	joinedPlain := stripANSI(joined)
+	if !strings.Contains(joinedPlain, "│ -oldLine()") || !strings.Contains(joinedPlain, "│ +newLine()") {
+		t.Errorf("expected guttered diff lines, got:\n%s", joinedPlain)
+	}
+	sk := st.currentSkin()
+	if !strings.Contains(joined, hexToANSI(sk.Color("ui_ok", "#4caf50"))) {
+		t.Errorf("expected green ANSI on '+' diff line")
+	}
+	if !strings.Contains(joined, hexToANSI(sk.Color("ui_error", "#ef5350"))) {
+		t.Errorf("expected red ANSI on '-' diff line")
+	}
+
+	// Error result renders ✗ glyph.
+	errLines, err := patchR.Result(
+		sdk.Context{},
+		sdk.ToolRenderResult{Content: []map[string]any{{"type": "text", "text": "hunk failed"}}},
+		sdk.ToolRenderResultOptions{},
+		sdk.ToolRenderContext{IsError: true},
+		80,
+	)
+	if err != nil || len(errLines) == 0 || !strings.Contains(stripANSI(errLines[0]), "✗ hunk failed") {
+		t.Errorf("expected ✗ error summary, got %v (err=%v)", errLines, err)
+	}
+}
+
+type fakeEditorBase struct {
+	text          string
+	lastInput     string
+	lastWidth     int
+	lastMouseEv   sdk.EditorMouseEvent
+	mouseHandled  bool
+	lines         []string
+}
+
+func (f *fakeEditorBase) HandleInput(data string) error            { f.lastInput = data; return nil }
+func (f *fakeEditorBase) HandleMouse(ev sdk.EditorMouseEvent) error { f.lastMouseEv = ev; f.mouseHandled = true; return nil }
+func (f *fakeEditorBase) Render(width int) ([]string, error)       { f.lastWidth = width; return f.lines, nil }
+func (f *fakeEditorBase) SetText(text string) error                { f.text = text; return nil }
+func (f *fakeEditorBase) InsertTextAtCursor(text string) error     { f.text += text; return nil }
+func (f *fakeEditorBase) AddToHistory(string) error                { return nil }
+func (f *fakeEditorBase) GetText() (string, error)                 { return f.text, nil }
+
+func TestHermesEditorComponentChromeAndPromptGlyph(t *testing.T) {
+	st, _ := newTestChromeState(t)
+	cursorLine := "hello \x1b_pi:c\x07world"
+	baseBottom := strings.Repeat("─", 72)
+	base := &fakeEditorBase{lines: []string{strings.Repeat("─", 72), cursorLine, "second line", baseBottom}}
+	ed := newHermesEditorComponent(st, base)
+
+	if err := ed.SetText("draft"); err != nil {
+		t.Fatalf("SetText: %v", err)
+	}
+	if got, err := ed.GetText(); err != nil || got != "draft" {
+		t.Fatalf("GetText = %q, %v; want draft", got, err)
+	}
+	if err := ed.HandleInput("x"); err != nil || base.lastInput != "x" {
+		t.Fatalf("HandleInput did not forward to base: err=%v got=%q", err, base.lastInput)
+	}
+	ev := sdk.EditorMouseEvent{X: 4, Y: 2}
+	if err := ed.HandleMouse(ev); err != nil || !base.mouseHandled || base.lastMouseEv.Y != 2 || base.lastMouseEv.X != 4 {
+		t.Fatalf("HandleMouse did not pass through unchanged: err=%v ev=%+v", err, base.lastMouseEv)
+	}
+	if err := ed.Invalidate(); err != nil {
+		t.Fatalf("Invalidate: %v", err)
+	}
+
+	lines, err := ed.Render(72)
+	if err != nil {
+		t.Fatalf("Render: %v", err)
+	}
+	if base.lastWidth != 72 {
+		t.Fatalf("expected base.Render called with full width 72, got %d", base.lastWidth)
+	}
+	if len(lines) != 4 {
+		t.Fatalf("expected same row count (4) as base, got %d", len(lines))
+	}
+	topPlain := stripANSI(lines[0])
+	if !strings.Contains(topPlain, "─") || !strings.Contains(topPlain, "☤ hermes · work") {
+		t.Errorf("unexpected top rule: %q", topPlain)
+	}
+	if w := visibleWidth(lines[0]); w != 72 {
+		t.Errorf("expected top rule visible width 72, got %d", w)
+	}
+	// Content, APC cursor marker, and bottom border rows must be untouched verbatim.
+	if lines[1] != cursorLine {
+		t.Errorf("expected APC cursor line preserved verbatim, got %q", lines[1])
+	}
+	if lines[2] != "second line" {
+		t.Errorf("expected second content line preserved verbatim, got %q", lines[2])
+	}
+	if lines[3] != baseBottom {
+		t.Errorf("expected base bottom border preserved verbatim, got %q", lines[3])
+	}
+
+	// Switching skin updates top rule symbol; busy state shows live badge in top rule.
+	st.mu.Lock()
+	st.skin = "ares"
+	st.busy = true
+	st.busyStarted = time.Now()
+	st.mu.Unlock()
+
+	busyLines, err := ed.Render(72)
+	if err != nil {
+		t.Fatalf("busy Render: %v", err)
+	}
+	if !strings.Contains(stripANSI(busyLines[0]), "⚔") || !strings.Contains(stripANSI(busyLines[0]), "· 0s") {
+		t.Errorf("expected ares symbol and busy badge in top rule, got %q", stripANSI(busyLines[0]))
+	}
+	if busyLines[1] != cursorLine {
+		t.Errorf("expected content line still untouched in busy mode, got %q", busyLines[1])
+	}
+}
+
+func TestBusySpinnerStartStopTeardown(t *testing.T) {
+	st, _ := newTestChromeState(t)
+	// Headless start/stop must not leak or block.
+	st.startBusySpinner(sdk.Context{})
+	if !st.isBusy() {
+		t.Fatalf("expected state to be busy after startBusySpinner")
+	}
+	st.stopBusySpinner(sdk.Context{})
+	if st.isBusy() {
+		t.Fatalf("expected state to be idle after stopBusySpinner")
+	}
+	// Repeated stop is idempotent.
+	st.stopBusySpinner(sdk.Context{})
+
+	// Live message formatting across styles.
+	if got := formatLiveWorkingMessage(IndicatorKaomoji, 0); got != "pondering · 0s" {
+		t.Errorf("kaomoji 0s = %q, want 'pondering · 0s'", got)
+	}
+	if got := formatLiveWorkingMessage(IndicatorKaomoji, 3*time.Second); got != "contemplating · 3s" {
+		t.Errorf("kaomoji 3s = %q, want 'contemplating · 3s'", got)
+	}
+	if got := formatLiveWorkingMessage(IndicatorUnicode, 5*time.Second); got != "· 5s" {
+		t.Errorf("unicode 5s = %q, want '· 5s'", got)
+	}
+}
+
+func TestRichFooterBusyIdleHintsModelAndGitBranch(t *testing.T) {
+	st, _ := newTestChromeState(t)
+	st.contextPct = 42
+	st.hasContextPct = true
+
+	idle := renderHermesFooterWithOpts(st, 120, nil, footerOptions{
+		Model:     "gpt-5.4",
+		GitBranch: "feat/pig-hermes",
+	})
+	idlePlain := stripANSI(idle[0])
+	for _, want := range []string{
+		"☤ work",
+		"gpt-5.4",
+		"42%",
+		"project-hermes (feat/pig-hermes)",
+		"/ cmds · @ files · ! shell",
+	} {
+		if !strings.Contains(idlePlain, want) {
+			t.Errorf("idle rich footer missing %q: %q", want, idlePlain)
+		}
+	}
+
+	st.mu.Lock()
+	st.busy = true
+	st.skin = "poseidon"
+	st.mu.Unlock()
+
+	busy := renderHermesFooterWithOpts(st, 120, nil, footerOptions{
+		Model:     "gpt-5.4",
+		GitBranch: "feat/pig-hermes",
+	})
+	busyPlain := stripANSI(busy[0])
+	if !strings.Contains(busyPlain, "Ψ work") {
+		t.Errorf("expected poseidon skin symbol in busy footer: %q", busyPlain)
+	}
+	if !strings.Contains(busyPlain, "enter steer · ctrl+c stop") {
+		t.Errorf("expected busy hints in busy footer: %q", busyPlain)
+	}
+	if strings.Contains(busyPlain, "/ cmds · @ files · ! shell") {
+		t.Errorf("busy footer should not show idle hints: %q", busyPlain)
 	}
 }

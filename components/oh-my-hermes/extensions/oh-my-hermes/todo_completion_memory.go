@@ -356,22 +356,64 @@ func (p *OmhMemoryProvider) Recall(query string, limit int) ([]EpisodicNote, err
 	return out, nil
 }
 
-// Prefetch returns a compact recall block for query (implements memory.Provider).
+// Prefetch returns a compact recall block for query (implements memory.Provider),
+// merging episodic notes from notes.jsonl and structured records from records.json
+// deduplicated by normalized summary.
 func (p *OmhMemoryProvider) Prefetch(ctx context.Context, sessionID, query string) (string, error) {
-	notes, err := p.Recall(query, 5)
-	if err != nil || len(notes) == 0 {
-		return "", err
+	notes, notesErr := p.Recall(query, 5)
+	recStore := newOMHMemoryRecordStore(p.paths)
+	recs, recsErr := recStore.recall(query, 5)
+	if notesErr != nil && recsErr != nil {
+		return "", notesErr
 	}
+
+	type recallEntry struct {
+		tags []string
+		text string
+	}
+	seen := make(map[string]bool)
+	var entries []recallEntry
+
+	addEntry := func(tags []string, text string) {
+		clean := strings.TrimSpace(text)
+		if clean == "" {
+			return
+		}
+		norm := strings.ToLower(strings.Join(strings.Fields(clean), " "))
+		if seen[norm] {
+			return
+		}
+		seen[norm] = true
+		entries = append(entries, recallEntry{tags: tags, text: clean})
+	}
+
+	for _, n := range notes {
+		addEntry(n.Tags, n.Content)
+	}
+	for _, r := range recs {
+		tags := append([]string{}, r.Tags...)
+		if r.RecordType != "" {
+			tags = append([]string{r.RecordType}, tags...)
+		}
+		addEntry(dedupeStrings(tags), r.Summary)
+	}
+	if len(entries) == 0 {
+		return "", nil
+	}
+	if len(entries) > 8 {
+		entries = entries[:8]
+	}
+
 	var b strings.Builder
 	b.WriteString("[OMH Episodic Recall]\n")
-	for _, n := range notes {
+	for _, e := range entries {
 		b.WriteString("- ")
-		if len(n.Tags) > 0 {
+		if len(e.tags) > 0 {
 			b.WriteString("[")
-			b.WriteString(strings.Join(n.Tags, ","))
+			b.WriteString(strings.Join(e.tags, ","))
 			b.WriteString("] ")
 		}
-		b.WriteString(n.Content)
+		b.WriteString(e.text)
 		b.WriteString("\n")
 	}
 	return strings.TrimRight(b.String(), "\n"), nil
@@ -421,9 +463,11 @@ func registerTodoCompletionMemoryRoleTools(
 	completions *CompletionStore,
 	identities *IdentityStore,
 	memProvider *OmhMemoryProvider,
+	todoMeta *todoMetaStore,
 ) {
-	todoMeta := newTodoMetaStore()
-
+	if todoMeta == nil {
+		todoMeta = newTodoMetaStore()
+	}
 	// Observe native todo_list updates and memory writes via EventBus.
 	_, _ = ext.Events().On(events.ChannelTodoUpdated, func(ctx sdk.Context, data any) error {
 		if m, ok := data.(map[string]any); ok {
@@ -787,79 +831,89 @@ func registerTodoCompletionMemoryRoleTools(
 		},
 	})
 
-	// 8. omh_roles
+	// 8. omh_roles + omh_role (upstream canonical singular alias)
+	rolesSchema := sdk.Schema{
+		"type": "object",
+		"properties": map[string]any{
+			"action":   map[string]any{"type": "string", "enum": []string{"list", "get", "set_identity"}},
+			"role":     map[string]any{"type": "string"},
+			"name":     map[string]any{"type": "string"},
+			"category": map[string]any{"type": "string"},
+			"prompt":   map[string]any{"type": "string"},
+			"model_chain": map[string]any{
+				"type": "array",
+				"items": map[string]any{
+					"type": "object",
+					"properties": map[string]any{
+						"model_id":         map[string]any{"type": "string"},
+						"reasoning_effort": map[string]any{"type": "string"},
+					},
+					"required": []string{"model_id"},
+				},
+			},
+		},
+		"required": []string{"action"},
+	}
+	rolesExecute := func(ctx sdk.Context, params map[string]any) (any, error) {
+		action := strings.ToLower(paramString(params, "action"))
+		switch action {
+		case "list":
+			customs, err := identities.List()
+			if err != nil {
+				return errorToolResult(err.Error()), nil
+			}
+			return jsonToolResult(map[string]any{
+				"ok":         true,
+				"schema":     RoleContractVersion,
+				"roles":      BuiltinRoles(),
+				"identities": customs,
+			}, false), nil
+		case "get":
+			target := paramString(params, "role")
+			if target == "" {
+				target = paramString(params, "name")
+			}
+			if r, ok := LookupBuiltinRole(target); ok {
+				return jsonToolResult(map[string]any{"ok": true, "kind": "builtin", "role": r}, false), nil
+			}
+			if prof, ok, err := identities.Get(target); err == nil && ok {
+				return jsonToolResult(map[string]any{"ok": true, "kind": "custom", "identity": prof}, false), nil
+			} else if err != nil {
+				return errorToolResult(err.Error()), nil
+			}
+			return errorToolResult(fmt.Sprintf("role or identity %q not found", target)), nil
+		case "set_identity":
+			prof := IdentityProfile{
+				Name:       paramString(params, "name"),
+				Role:       paramString(params, "role"),
+				Category:   paramString(params, "category"),
+				Prompt:     paramString(params, "prompt"),
+				ModelChain: parseIdentityModelChain(params["model_chain"]),
+			}
+			saved, err := identities.Set(prof)
+			if err != nil {
+				return errorToolResult(err.Error()), nil
+			}
+			return jsonToolResult(map[string]any{"ok": true, "identity": saved}, false), nil
+		default:
+			return errorToolResult(fmt.Sprintf("unsupported omh_roles action %q", action)), nil
+		}
+	}
 	ext.RegisterTool(sdk.ToolDefinition{
 		Name:          "omh_roles",
 		Label:         "OMH Roles",
 		Description:   "Inspect the 9 built-in OMH roles and manage custom identity profiles persisted under $OMH_HOME/routing/identities.json.",
 		PromptSnippet: "Inspect OMH roles and custom identity profiles with omh_roles (list, get, set_identity).",
-		Parameters: sdk.Schema{
-			"type": "object",
-			"properties": map[string]any{
-				"action":   map[string]any{"type": "string", "enum": []string{"list", "get", "set_identity"}},
-				"role":     map[string]any{"type": "string"},
-				"name":     map[string]any{"type": "string"},
-				"category": map[string]any{"type": "string"},
-				"prompt":   map[string]any{"type": "string"},
-				"model_chain": map[string]any{
-					"type": "array",
-					"items": map[string]any{
-						"type": "object",
-						"properties": map[string]any{
-							"model_id":         map[string]any{"type": "string"},
-							"reasoning_effort": map[string]any{"type": "string"},
-						},
-						"required": []string{"model_id"},
-					},
-				},
-			},
-			"required": []string{"action"},
-		},
-		Execute: func(ctx sdk.Context, params map[string]any) (any, error) {
-			action := strings.ToLower(paramString(params, "action"))
-			switch action {
-			case "list":
-				customs, err := identities.List()
-				if err != nil {
-					return errorToolResult(err.Error()), nil
-				}
-				return jsonToolResult(map[string]any{
-					"ok":         true,
-					"schema":     RoleContractVersion,
-					"roles":      BuiltinRoles(),
-					"identities": customs,
-				}, false), nil
-			case "get":
-				target := paramString(params, "role")
-				if target == "" {
-					target = paramString(params, "name")
-				}
-				if r, ok := LookupBuiltinRole(target); ok {
-					return jsonToolResult(map[string]any{"ok": true, "kind": "builtin", "role": r}, false), nil
-				}
-				if prof, ok, err := identities.Get(target); err == nil && ok {
-					return jsonToolResult(map[string]any{"ok": true, "kind": "custom", "identity": prof}, false), nil
-				} else if err != nil {
-					return errorToolResult(err.Error()), nil
-				}
-				return errorToolResult(fmt.Sprintf("role or identity %q not found", target)), nil
-			case "set_identity":
-				prof := IdentityProfile{
-					Name:       paramString(params, "name"),
-					Role:       paramString(params, "role"),
-					Category:   paramString(params, "category"),
-					Prompt:     paramString(params, "prompt"),
-					ModelChain: parseIdentityModelChain(params["model_chain"]),
-				}
-				saved, err := identities.Set(prof)
-				if err != nil {
-					return errorToolResult(err.Error()), nil
-				}
-				return jsonToolResult(map[string]any{"ok": true, "identity": saved}, false), nil
-			default:
-				return errorToolResult(fmt.Sprintf("unsupported omh_roles action %q", action)), nil
-			}
-		},
+		Parameters:    rolesSchema,
+		Execute:       rolesExecute,
+	})
+	ext.RegisterTool(sdk.ToolDefinition{
+		Name:          "omh_role",
+		Label:         "OMH Role",
+		Description:   "Canonical singular alias for omh_roles: inspect the 9 built-in OMH roles and manage custom identity profiles.",
+		PromptSnippet: "Inspect OMH roles and custom identity profiles with omh_role (list, get, set_identity).",
+		Parameters:    rolesSchema,
+		Execute:       rolesExecute,
 	})
 }
 
