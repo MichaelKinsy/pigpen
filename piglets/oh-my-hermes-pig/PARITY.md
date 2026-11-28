@@ -12,11 +12,11 @@
 | Go unit + fakehost tests (`-race`) | `go test -race -count=1 ./...` (`oh-my-hermes`, `pig-hermes`, `pig-hermes-core`) | **PASS** (all 10 packages green, 0 races) |
 | Cross-platform static check | `GOOS=linux\|darwin\|windows go vet ./...` | **PASS** |
 | Go SDK & fuse-hazard scan | `pigeq gaps --go components/oh-my-hermes/extensions/oh-my-hermes` | **PASS** (`0` gaps, `0` fuse hazards) |
-| Fused Piglet binary build | `npm run build:piglet -- oh-my-hermes-pig` | **PASS** (`~/.local/bin/oh-my-hermes-pig`, 62.6 MB fused binary) |
-| Hermetic `pigeq llm` oracle proof | `PIG_HERMES_BIN=~/.local/bin/oh-my-hermes-pig python3 -B piglets/oh-my-hermes-pig/proof/oracle.py` | **PASS** (`1/1` case, 7 turns, 6 tool calls, 0 net, 0 leaked PIDs; proves live `omh_todo`↔`todo_list` state sharing across fused extensions) |
-| Pigpen repo gates | `npm run check` | **PASS** (46 Packages, 72 provenance records, 92 components) |
-
-| Live PTY/ANSI visual proof | `OH_MY_HERMES_BIN=~/.local/bin/oh-my-hermes-pig python3 -B piglets/oh-my-hermes-pig/proof/ansi.py` | **PASS** (`truecolor=1123`, `sgr=2423`, custom crowned winged-pig login banner + 5 real `omh-*.json` themes, `exit=0`, `0` net, `0` leaked PIDs) |
+| Fused Piglet binary build | `npm run build:piglet -- oh-my-hermes-pig` | **PASS** (`~/.local/bin/oh-my-hermes-pig`, 63.9 MB fused binary) |
+| Mutation proof | `pigeq mutate --unit-only --go components/oh-my-hermes/extensions/oh-my-hermes --mutations components/oh-my-hermes/port/mutations.json` | **PASS** (`3/3` KILLED) |
+| Hermetic `pigeq llm` oracle proof | `OH_MY_HERMES_BIN=~/.local/bin/oh-my-hermes-pig python3 -B piglets/oh-my-hermes-pig/proof/oracle.py` | **PASS** (`1/1` case, 7 turns, 6 tool calls, 0 net, 0 leaked PIDs; proves live `omh_todo`↔`todo_list` state sharing across fused extensions) |
+| Pigpen repo gates | `npm run check` | **PASS** (42 skills, 46 Packages, 72 provenance records, 102 components) |
+| Live PTY/ANSI visual proof | `OH_MY_HERMES_BIN=~/.local/bin/oh-my-hermes-pig python3 -B piglets/oh-my-hermes-pig/proof/ansi.py` | **PASS** (`truecolor=1141`, `sgr=2465`, classic PiG emerald-green crowned winged-pig login + 5 `omh-*.json` themes, `exit=0`, `0` net, `0` leaked PIDs) |
 
 ## Wave 2 Look, Feel & Interactive Overlay Additions
 - **OMH Crowned Winged-Pig branding:** `ui.registerSprite("omh-pig")` + `ui.setLogin(...)` (`41x5` `OH-MY-HERMES` brand, `32x14` hero, `16x14` mascot).
@@ -27,3 +27,11 @@
 - **10 Flagship OMH Workflow Skills (`components/oh-my-hermes/skills/pigpen-omh-*/SKILL.md`):** `ulw-context`, `ulw-interview`, `ulw-research`, `ulw-plan`, `ulw-work`, `dag-ulw`, `ulw-maestro`, `ulw-loop`, `ulw-qa`, and `ulw-perf` bundled into `oh-my-hermes-pig/piglet.yaml` (all passing Pigpen `quality-gates.mjs`).
 - **4 Opt-In `lsp_*` Tools + `omh_maestro` (`lsp_maestro.go`):** `lsp_definition`, `lsp_references`, `lsp_rename` (UTF-16 column conversion), and `lsp_diagnostics` over pure-Go JSON-RPC 2.0 stdio gated behind `OMH_LSP_TOOLS=1`, plus `omh_maestro` (`coding_executor_handoff/v1` prepare/dispatch/list/get).
 - **Inherits Live Hermes Plugin Runtime:** `oh-my-hermes-pig` automatically inherits `pig-hermes`'s full runtime Hermes plugin loader/translator (`/plugins`, `plugins` CLI, Python NDJSON bridge).
+
+## Wave 4 Fullscreen TUI Views, Onboarding/CLI & 11 Additional `omh_*` Tools
+- **3 Fullscreen `sdk.RemoteComponent` Interactive TUI Views (`fullscreen_views.go`, `overlays.go`):**
+  - `/dag [run_id]`: fullscreen box-frontier graph pager (`╭─╮│╰─╯`, `│`/`─`/`▼`, `[-]`/`[+]` fold, `d` details, `e` evidence, `[`/`]` run cycle, `r` refresh) + upgraded inline folding lane tree widget (`▾`/`▸`).
+  - `/bots` (`Ctrl+S`): 3-level live multi-profile board (Profiles with 24-cell `▁▂▃▄▅▆▇█` sparklines & 10-cell `▰`/`▱` memory gauges → Sessions/Teams table → Session Messages).
+  - `/omh-model`: single-screen arrow-key table (`↑/↓` category, `←/→` head model ring, `-/+` effort bar, `d` reset default, `Enter` atomic save, `Esc` cancel).
+- **OMH Onboarding & 4 Additional CLI Subcommands (`cli_extended.go`):** `omh-setup`, `quickstart`, `recommend`, `probe`, plus `--onboard model-setup` flag preprocessor and `OnSessionStart` guided onboarding card (total: **8 OMH CLI subcommands**).
+- **11 Additional `omh_*` Tools (`tools_extended.go`):** `omh_status`, `omh_hud`, `omh_context`, `omh_recommend`, `omh_probe`, `omh_capabilities`, `omh_memory`, `omh_resume`, `omh_gather_evidence` (session-cwd confinement, per-prefix flag allowlist, process-group timeout), `omh_document_plan` (mutex-guarded chunk persistence), and `omh_source_trust` (fail-closed ceiling) — total **21 `omh_*` + 4 opt-in `lsp_*` = 25 OMH tools** layered on top of all 25 inherited Hermes tools.

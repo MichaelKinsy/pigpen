@@ -18,8 +18,8 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/config"
+	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/paths"
 )
-
 const (
 	defaultTimeoutSec  = 180
 	maxForegroundSec   = 600
@@ -28,12 +28,30 @@ const (
 	cwdSentinelPrefix  = "__PIG_HERMES_CWD__:"
 )
 
-type state struct {
-	cfg      *config.Config
-	registry *processRegistry
+const (
+	approvalChoiceOnce    = "1. Allow once"
+	approvalChoiceSession = "2. Allow this session"
+	approvalChoiceAlways  = "3. Always allow"
+	approvalChoiceDeny    = "4. Deny"
+	approvalChoiceTell    = "5. No, and tell Hermes what to do instead"
+)
 
-	mu  sync.RWMutex
-	cwd string
+var hermesApprovalChoices = []string{
+	approvalChoiceOnce,
+	approvalChoiceSession,
+	approvalChoiceAlways,
+	approvalChoiceDeny,
+	approvalChoiceTell,
+}
+
+type state struct {
+	cfg        *config.Config
+	registry   *processRegistry
+	configFile string
+
+	mu              sync.RWMutex
+	cwd             string
+	sessionApproved map[string]bool
 }
 
 func newState(cfg *config.Config) *state {
@@ -41,9 +59,42 @@ func newState(cfg *config.Config) *state {
 		cfg = config.Default()
 	}
 	return &state{
-		cfg:      cfg,
-		registry: newProcessRegistry(),
+		cfg:             cfg,
+		registry:        newProcessRegistry(),
+		sessionApproved: make(map[string]bool),
 	}
+}
+
+func (s *state) resolveConfigFile() string {
+	if strings.TrimSpace(s.configFile) != "" {
+		return s.configFile
+	}
+	return paths.ResolveProfilePaths("").ConfigFile
+}
+
+func (s *state) isApproved(command string) bool {
+	s.mu.RLock()
+	snap := make(map[string]bool, len(s.sessionApproved))
+	for k, v := range s.sessionApproved {
+		if v {
+			snap[k] = true
+		}
+	}
+	s.mu.RUnlock()
+	return isCommandAllowlisted(command, snap, s.resolveConfigFile())
+}
+
+func (s *state) recordSessionApproval(command string) {
+	pat := normalizeApprovalPattern(command)
+	if pat == "" {
+		return
+	}
+	s.mu.Lock()
+	if s.sessionApproved == nil {
+		s.sessionApproved = make(map[string]bool)
+	}
+	s.sessionApproved[pat] = true
+	s.mu.Unlock()
 }
 
 func (s *state) maxOutputBytes() int {
@@ -178,6 +229,10 @@ func (s *state) executeTerminal(ctx sdk.Context, params map[string]any) (any, er
 	}
 
 	if err := s.guardCommand(ctx, command); err != nil {
+		msg := err.Error()
+		if strings.HasPrefix(msg, "BLOCKED by user:") {
+			return errResult(msg), nil
+		}
 		return errResult(fmt.Sprintf("terminal: %v", err)), nil
 	}
 
@@ -290,20 +345,71 @@ func (s *state) guardCommand(ctx sdk.Context, command string) error {
 	if s.cfg != nil && s.cfg.IsYolo() {
 		return nil
 	}
+	if s.isApproved(command) {
+		return nil
+	}
 	if safeHasUI(ctx) {
-		confirmed, err := ctx.Confirm(
-			"Confirm dangerous command",
-			fmt.Sprintf("Allow command (%s)?\n\n%s", reason, command),
-		)
+		title := fmt.Sprintf("Approve dangerous command (%s): %s", reason, strings.TrimSpace(command))
+		choiceRaw, ok, err := ctx.Select(title, hermesApprovalChoices)
 		if err != nil {
-			return fmt.Errorf("dangerous command (%s): confirmation failed: %v", reason, err)
+			return fmt.Errorf("dangerous command (%s): approval prompt failed: %v", reason, err)
 		}
-		if ok, _ := confirmed.(bool); ok {
+		if !ok {
+			return fmt.Errorf("dangerous command (%s) denied by user", reason)
+		}
+		choice, _ := choiceRaw.(string)
+		switch parseApprovalChoice(choice) {
+		case "once":
 			return nil
+		case "session":
+			s.recordSessionApproval(command)
+			return nil
+		case "always":
+			if hasCompoundShellOperators(command) {
+				s.recordSessionApproval(command)
+				ctx.Notify("Compound shell commands cannot be persisted to command_allowlist; downgraded to session.", "warning")
+				return nil
+			}
+			s.recordSessionApproval(command)
+			if err := appendCommandAllowlist(s.resolveConfigFile(), escapeAllowlistGlob(normalizeApprovalPattern(command))); err != nil {
+				return fmt.Errorf("approved for session, but failed to persist command_allowlist: %v", err)
+			}
+			return nil
+		case "tell":
+			val, inputOK, inputErr := ctx.Input("Tell Hermes what to do instead", "")
+			if inputErr != nil {
+				return fmt.Errorf("dangerous command (%s) denied by user (steering input failed: %v)", reason, inputErr)
+			}
+			instruction := ""
+			if inputOK {
+				instruction, _ = val.(string)
+				instruction = strings.TrimSpace(instruction)
+			}
+			if instruction == "" {
+				return fmt.Errorf("BLOCKED by user: do not run this command (%s)", reason)
+			}
+			return fmt.Errorf("BLOCKED by user: %s", instruction)
+		default:
+			return fmt.Errorf("dangerous command (%s) denied by user", reason)
 		}
-		return fmt.Errorf("dangerous command (%s) denied by user", reason)
 	}
 	return fmt.Errorf("blocked dangerous command (%s); enable yolo mode or interactive approval to run", reason)
+}
+
+func parseApprovalChoice(choice string) string {
+	c := strings.ToLower(strings.TrimSpace(choice))
+	switch {
+	case c == "once" || strings.HasPrefix(c, "1.") || strings.Contains(c, "allow once"):
+		return "once"
+	case c == "session" || strings.HasPrefix(c, "2.") || strings.Contains(c, "this session"):
+		return "session"
+	case c == "always" || strings.HasPrefix(c, "3.") || strings.Contains(c, "always allow"):
+		return "always"
+	case c == "tell" || strings.HasPrefix(c, "5.") || strings.Contains(c, "tell hermes"):
+		return "tell"
+	default:
+		return "deny"
+	}
 }
 
 func (s *state) runForeground(ctx sdk.Context, command, workdir string, timeout time.Duration, trackCwd bool) (sdk.ToolResult, error) {

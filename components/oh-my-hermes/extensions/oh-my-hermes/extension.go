@@ -43,6 +43,8 @@ func Extension() *sdk.Extension {
 	registerTodoCompletionMemoryRoleTools(ext, dags, teams, completions, identities, memProv)
 	registerMaestroTool(ext, maestro)
 	registerLSPTools(ext)
+	registerExtendedTools(ext, pathsFn, router, dags, teams, loops, completions, memProv)
+	registerExtendedCLI(pathsFn)
 
 	// Register 5 interactive slash commands, status bar, and OMH system prompt sections.
 	surf := newSurfaceState(pathsFn, router, dags, teams, loops)

@@ -444,6 +444,14 @@ func resolveConfinedPath(root, rel string) (string, error) {
 	if err != nil || r == ".." || strings.HasPrefix(r, ".."+string(filepath.Separator)) {
 		return "", fmt.Errorf("path %q escapes workspace root %q", rel, absRoot)
 	}
+	if realRoot, err := filepath.EvalSymlinks(absRoot); err == nil {
+		if realCand, err := filepath.EvalSymlinks(candidate); err == nil {
+			rr, relErr := filepath.Rel(realRoot, realCand)
+			if relErr != nil || rr == ".." || strings.HasPrefix(rr, ".."+string(filepath.Separator)) {
+				return "", fmt.Errorf("path %q resolves via symlink outside workspace root %q", rel, absRoot)
+			}
+		}
+	}
 	return candidate, nil
 }
 

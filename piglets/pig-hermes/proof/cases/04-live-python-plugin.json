@@ -1,0 +1,33 @@
+{
+  "name": "04-live-python-plugin",
+  "prompt": "Call oracle_plugin_ping with target='hermes-oracle' and report the result.",
+  "files": {
+    "README.md": "Plugin oracle test workspace.\n"
+  },
+  "hermesFiles": {
+    "plugins/oracle-demo/plugin.yaml": "name: oracle-demo\nversion: \"0.1.0\"\ndescription: Live Python plugin oracle test\n",
+    "config.yaml": "plugins:\n  enabled:\n    - oracle-demo\n",
+    "plugins/oracle-demo/__init__.py": "def register(ctx):\n    ctx.register_system_prompt_section(\"oracle_section\", \"ORACLE_PLUGIN_SECTION_ACTIVE\")\n    ctx.register_tool(\n        name=\"oracle_plugin_ping\",\n        toolset=\"plugins\",\n        schema={\"type\": \"object\", \"properties\": {\"target\": {\"type\": \"string\"}}, \"required\": [\"target\"]},\n        handler=lambda args: f\"PONG_FROM_PY_PLUGIN:{args.get('target', '')}\",\n        description=\"Live Python plugin ping tool\",\n    )\n"
+  },
+  "llm": [
+    {
+      "toolCalls": [
+        {"name": "oracle_plugin_ping", "arguments": {"target": "hermes-oracle"}}
+      ]
+    },
+    {
+      "text": "Plugin replied with PONG_FROM_PY_PLUGIN:hermes-oracle."
+    }
+  ],
+  "expectTools": [
+    "oracle_plugin_ping",
+    "read_file", "patch", "terminal", "memory"
+  ],
+  "forbidTools": ["read", "write", "edit", "bash"],
+  "expectSystemContains": [
+    "ORACLE_PLUGIN_SECTION_ACTIVE"
+  ],
+  "expectToolResults": [
+    {"tool": "oracle_plugin_ping", "index": 0, "isError": false, "contains": ["PONG_FROM_PY_PLUGIN:hermes-oracle"]}
+  ]
+}

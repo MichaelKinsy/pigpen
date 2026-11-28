@@ -25,8 +25,9 @@ import (
 func parseToolJSON(t *testing.T, raw json.RawMessage) (map[string]any, bool) {
 	t.Helper()
 	var parsed struct {
-		IsError bool            `json:"isError"`
-		Content json.RawMessage `json:"content"`
+		IsError     bool            `json:"isError"`
+		IsErrorWire bool            `json:"is_error"`
+		Content     json.RawMessage `json:"content"`
 	}
 	if err := json.Unmarshal(raw, &parsed); err != nil {
 		t.Fatalf("unmarshal tool result %s: %v", string(raw), err)
@@ -45,7 +46,7 @@ func parseToolJSON(t *testing.T, raw json.RawMessage) (map[string]any, bool) {
 	if err := json.Unmarshal([]byte(text), &out); err != nil {
 		t.Fatalf("unmarshal tool payload JSON %q: %v", text, err)
 	}
-	return out, parsed.IsError
+	return out, parsed.IsError || parsed.IsErrorWire
 }
 
 func setupTempOMH(t *testing.T) string {
@@ -957,6 +958,9 @@ func TestBundledOMHSkillsFrontmatterAndNames(t *testing.T) {
 	}
 	nameRe := regexp.MustCompile(`^pigpen-[a-z0-9]+(?:-[a-z0-9]+)*$`)
 	skillsRoot := filepath.Join("..", "..", "skills")
+	if _, err := os.Stat(skillsRoot); os.IsNotExist(err) {
+		t.Skipf("skills directory %q not present in isolated copy", skillsRoot)
+	}
 
 	for _, skillName := range expectedSkills {
 		if len(skillName) > 64 || !nameRe.MatchString(skillName) {
@@ -991,5 +995,23 @@ func TestBundledOMHSkillsFrontmatterAndNames(t *testing.T) {
 		if strings.TrimSpace(foundDesc) == "" {
 			t.Errorf("%s: frontmatter description must be non-empty", skillFile)
 		}
+	}
+}
+
+func TestLoopEnforcesMaxIterations(t *testing.T) {
+	setupTempOMH(t)
+	ls := ohmyhermes.NewLoopStore(func() ohmyhermes.OMHPaths { return ohmyhermes.ResolvePaths("") })
+	if _, err := ls.Create("sess-1", "loop-too-big", "cap check", "read-only", ohmyhermes.MaxLoopIterations+1); err == nil {
+		t.Fatalf("expected Create above MaxLoopIterations to fail")
+	}
+	rec, err := ls.Create("sess-1", "loop-cap", "bound check", "read-only", 1)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	if _, err := ls.Step(rec.LoopID, "step 1"); err != nil {
+		t.Fatalf("first Step: %v", err)
+	}
+	if _, err := ls.Step(rec.LoopID, "step 2"); err == nil {
+		t.Fatalf("expected second Step on exhausted loop to fail")
 	}
 }

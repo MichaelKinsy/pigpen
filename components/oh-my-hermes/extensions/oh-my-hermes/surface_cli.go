@@ -245,8 +245,8 @@ func registerSurfaceAndHooks(ext *sdk.Extension, st *surfaceState) {
 		Description: "Inspect OMH DAG runs and dependency frontiers (/dag [run_id])",
 		Handler: func(ctx sdk.Context, args string) error {
 			runID := strings.TrimSpace(args)
-			if runID == "" && ctx.HasUI() {
-				return st.runInteractiveDAGOverlay(ctx)
+			if ctx.HasUI() {
+				return st.runInteractiveDAGOverlay(ctx, runID)
 			}
 			st.show(ctx, st.renderDAGView(runID))
 			return nil
@@ -337,6 +337,15 @@ func registerSurfaceAndHooks(ext *sdk.Extension, st *surfaceState) {
 			st.show(ctx, fmt.Sprintf("OMH theme set to %s (%s)", th.Name, th.Summary))
 			return nil
 		},
+	})
+
+	// Keyboard shortcut: Ctrl+S opens the /bots board in TUI mode.
+	ext.Shortcut("ctrl+s", "Open the OMH multi-profile /bots board", func(ctx sdk.Context) error {
+		if ctx.HasUI() {
+			return st.runInteractiveBotsOverlay(ctx)
+		}
+		st.show(ctx, st.renderBotsBoard())
+		return nil
 	})
 
 	// OnSessionStart: ensure OMH theme files, register sprite & login branding, and set status bar item.

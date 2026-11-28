@@ -2,8 +2,8 @@
   {
     "name": "omh_dag_detects_cycles",
     "file": "dag_team_loop.go",
-    "find": "if visited != len(nodes) {",
-    "replace": "if false && visited != len(nodes) {"
+    "find": "if remaining > 0 {",
+    "replace": "if false && remaining > 0 {"
   },
   {
     "name": "omh_completion_requires_observed_evidence",
@@ -14,7 +14,7 @@
   {
     "name": "omh_loop_enforces_max_iterations",
     "file": "dag_team_loop.go",
-    "find": "if l.Iteration >= l.MaxIterations {",
-    "replace": "if false && l.Iteration >= l.MaxIterations {"
+    "find": "if maxIter > MaxLoopIterations {",
+    "replace": "if false && maxIter > MaxLoopIterations {"
   }
 ]

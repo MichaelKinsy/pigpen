@@ -310,7 +310,7 @@ def run_case(pigeq_bin, pig_hermes_bin, case_path):
 def main():
     repo = Path(__file__).resolve().parents[3]
     pigeq_bin = os.environ.get("PIGEQ_BIN", str(repo / "dist/bin/pigeq"))
-    pig_hermes_bin = os.environ.get("PIG_HERMES_BIN", str(repo / "dist/bin/pig-hermes"))
+    pig_hermes_bin = os.environ.get("OH_MY_HERMES_BIN", os.environ.get("PIG_HERMES_BIN", str(repo / "dist/bin/oh-my-hermes-pig")))
     cases_dir = Path(__file__).resolve().parent / "cases"
     case_files = sorted(cases_dir.glob("*.json"))
     if not case_files:

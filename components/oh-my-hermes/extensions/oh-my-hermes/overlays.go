@@ -51,7 +51,34 @@ func inputString(ctx sdk.Context, title, placeholder string) (string, bool, erro
 
 // --- 1. Interactive /omh-model ---
 
+func (s *surfaceState) launchFullscreenOverlay(ctx sdk.Context, title string, comp sdk.RemoteComponent) (bool, error) {
+	if !ctx.HasUI() {
+		return false, nil
+	}
+	val, err := ctx.Custom(comp, sdk.RemoteOverlayOptions{
+		Title:          title,
+		Overlay:        true,
+		WidthFraction:  0.94,
+		HeightFraction: 0.9,
+	})
+	if err != nil {
+		return false, err
+	}
+	// A real host returns a non-nil value or completes the interactive overlay;
+	// a stub host answering `{}` to ui.custom returns (nil, nil) without running the component.
+	if val == nil {
+		return false, nil
+	}
+	return true, nil
+}
+
 func (s *surfaceState) runInteractiveModelOverlay(ctx sdk.Context) error {
+	if ctx.HasUI() {
+		comp := newModelTableComponent(s)
+		if handled, err := s.launchFullscreenOverlay(ctx, "OMH · Model chains", comp); err == nil && handled {
+			return nil
+		}
+	}
 	for {
 		chains, overridden, err := s.router.AllChains()
 		if err != nil {
@@ -162,42 +189,98 @@ func (s *surfaceState) editCategoryModelChain(ctx sdk.Context, cat string, isOve
 
 // --- 2. Interactive /dag ---
 
-func buildDAGBoxWidgetView(run *DAGRun) kit.View {
-	ready := ReadyNodes(run)
-	readySet := make(map[string]bool, len(ready))
-	for _, id := range ready {
-		readySet[id] = true
+// renderDAGWidget renders an upstream-style compact inline folding lane tree
+// (`▾`/`▸`, status glyph, title, `category · model · status`) for a DAG run.
+func renderDAGWidget(run *DAGRun, router *RouteRouter) []string {
+	if run == nil {
+		return nil
 	}
-
-	var lines []string
-	header := fmt.Sprintf("OMH DAG %s [%s] — %s", run.RunID, run.Status, run.Title)
-	lines = append(lines, header)
-	if len(ready) > 0 {
-		lines = append(lines, "Ready frontier: "+strings.Join(ready, ", "))
-	} else {
-		lines = append(lines, "Ready frontier: (none)")
-	}
+	layers := computeLongestPathFrontiers(run.Nodes)
+	nodeByID := make(map[string]DAGNode, len(run.Nodes))
+	doneCount, runCount, failCount := 0, 0, 0
 	for _, n := range run.Nodes {
-		badge := "[ ]"
+		nodeByID[n.ID] = n
 		switch n.Status {
 		case "completed":
-			badge = "[✓]"
+			doneCount++
 		case "running":
-			badge = "[▶]"
+			runCount++
 		case "failed":
-			badge = "[✗]"
-		case "pending":
-			if readySet[n.ID] {
-				badge = "[★]"
-			}
+			failCount++
 		}
-		deps := "-"
-		if len(n.DependsOn) > 0 {
-			deps = strings.Join(n.DependsOn, ",")
-		}
-		lines = append(lines, fmt.Sprintf("  %s %-14s (%s)  deps=[%s]", badge, n.ID, n.Status, deps))
 	}
 
+	summary := fmt.Sprintf("OMH / DAG · %s [%s] · Done %d/%d", run.Title, run.Status, doneCount, len(run.Nodes))
+	if runCount > 0 {
+		summary += fmt.Sprintf(" · %d running", runCount)
+	}
+	if failCount > 0 {
+		summary += fmt.Sprintf(" · %d failed", failCount)
+	}
+	lines := []string{summary}
+
+	for li, layer := range layers {
+		layerDone := 0
+		layerRunning := 0
+		for _, id := range layer {
+			switch nodeByID[id].Status {
+			case "completed":
+				layerDone++
+			case "running":
+				layerRunning++
+			}
+		}
+		collapsed := layerDone == len(layer) && len(layer) > 1
+		tri := "▾"
+		if collapsed {
+			tri = "▸"
+		}
+		layerHdr := fmt.Sprintf("%s layer %d · %d node(s)", tri, li+1, len(layer))
+		if layerRunning > 0 {
+			layerHdr += fmt.Sprintf(" · %d running", layerRunning)
+		}
+		if layerDone > 0 {
+			layerHdr += fmt.Sprintf(" · %d done", layerDone)
+		}
+		lines = append(lines, layerHdr)
+		if collapsed {
+			continue
+		}
+		for _, id := range layer {
+			n := nodeByID[id]
+			glyph, statusLabel := dagStatusGlyph(n.Status)
+			title := strings.TrimSpace(n.Title)
+			if title == "" {
+				title = n.ID
+			}
+			cat := strings.TrimSpace(n.Category)
+			if cat == "" && n.Role != "" {
+				if role, ok := LookupBuiltinRole(n.Role); ok {
+					cat = role.DefaultCategory
+				}
+			}
+			if cat == "" {
+				cat = "default"
+			}
+			modelName := ""
+			if router != nil {
+				if chain, _, err := router.ChainForCategory(cat); err == nil && len(chain) > 0 {
+					modelName = chain[0].Model
+				}
+			}
+			meta := cat
+			if modelName != "" {
+				meta += " · " + modelName
+			}
+			meta += " · " + statusLabel
+			lines = append(lines, fmt.Sprintf("    %s %s  %s", glyph, title, meta))
+		}
+	}
+	return lines
+}
+
+func buildDAGBoxWidgetView(run *DAGRun) kit.View {
+	lines := renderDAGWidget(run, nil)
 	box := kit.NewBox(1, 0,
 		kit.NewDynamicBorder("borderAccent"),
 		kit.NewLines(lines),
@@ -206,7 +289,16 @@ func buildDAGBoxWidgetView(run *DAGRun) kit.View {
 	return kit.View{Root: box}
 }
 
-func (s *surfaceState) runInteractiveDAGOverlay(ctx sdk.Context) error {
+func (s *surfaceState) runInteractiveDAGOverlay(ctx sdk.Context, runID string) error {
+	if ctx.HasUI() {
+		runs, err := s.dags.List()
+		if err == nil && len(runs) > 0 {
+			comp := newDAGPagerComponent(s, runID)
+			if handled, err := s.launchFullscreenOverlay(ctx, "OMH / DAG", comp); err == nil && handled {
+				return nil
+			}
+		}
+	}
 	for {
 		runs, err := s.dags.List()
 		if err != nil {
@@ -393,6 +485,12 @@ func memoryFileFillPercent(path string, limit int) int {
 }
 
 func (s *surfaceState) runInteractiveBotsOverlay(ctx sdk.Context) error {
+	if ctx.HasUI() {
+		comp := newBotsBoardComponent(s)
+		if handled, err := s.launchFullscreenOverlay(ctx, "Hermes bots", comp); err == nil && handled {
+			return nil
+		}
+	}
 	// Level 1: Profiles
 	for {
 		profiles := s.collectProfileSummaries()

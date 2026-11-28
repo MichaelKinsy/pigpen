@@ -35,6 +35,13 @@ func registerCLI() {
 	cli.RegisterSubcommand("cron", "List and remove scheduled Hermes cron jobs (list, remove)", runCronSubcommand)
 	cli.RegisterSubcommand("hermes-status", "Show active Hermes profile, paths, memory usage, toolset, and skin", runStatusSubcommand)
 	cli.RegisterSubcommand("doctor", "Check Hermes config, memories, skills, cron store, and external tools", runDoctorSubcommand)
+	cli.RegisterSubcommand("setup", "Interactive or scripted Hermes setup wizard (model, tts, terminal, tools, telemetry, agent)", runSetupSubcommand)
+	cli.RegisterSubcommand("config", "Inspect and edit Hermes config.yaml and .env (show, get, set, unset, path, env-path, check)", runConfigSubcommand)
+	cli.RegisterSubcommand("model", "View or change the default Hermes provider, model, and reasoning effort", runModelSubcommand)
+	cli.RegisterSubcommand("mcp", "Manage MCP servers in config.yaml (list, add, remove, test)", runMCPSubcommand)
+	cli.RegisterSubcommand("sessions", "List, inspect, export, pin, rename, and delete Hermes/PiG sessions", runSessionsSubcommand)
+	cli.RegisterSubcommand("insights", "Show session usage analytics, model breakdown, top tools, and activity chart", runInsightsSubcommand)
+	cli.RegisterSubcommand("logs", "Inspect Hermes log files (agent, errors, gateway, mcp, update, list)", runLogsSubcommand)
 }
 
 func envOut(env clihook.Env) io.Writer {

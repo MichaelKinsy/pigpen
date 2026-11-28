@@ -148,12 +148,31 @@ func StartWorker(pythonBin, pluginKey, workdir string, env []string) (*Worker, e
 }
 
 func findPython3() (string, error) {
-	for _, candidate := range []string{"python3", "python"} {
-		if path, err := exec.LookPath(candidate); err == nil {
-			return path, nil
+	candidates := make([]string, 0, 8)
+	for _, name := range []string{"python3", "python"} {
+		if p, err := exec.LookPath(name); err == nil {
+			candidates = append(candidates, p)
 		}
 	}
-	return "", errors.New("python3 not found on PATH")
+	for _, fallback := range []string{"/opt/homebrew/bin/python3", "/usr/local/bin/python3", "/usr/bin/python3"} {
+		if info, err := os.Stat(fallback); err == nil && !info.IsDir() {
+			candidates = append(candidates, fallback)
+		}
+	}
+	seen := make(map[string]bool, len(candidates))
+	for _, p := range candidates {
+		if seen[p] {
+			continue
+		}
+		seen[p] = true
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		err := exec.CommandContext(ctx, p, "-c", "import sys; sys.exit(0 if sys.version_info[0] >= 3 else 1)").Run()
+		cancel()
+		if err == nil {
+			return p, nil
+		}
+	}
+	return "", errors.New("working python3 interpreter not found on PATH")
 }
 
 func (w *Worker) readLoop() {

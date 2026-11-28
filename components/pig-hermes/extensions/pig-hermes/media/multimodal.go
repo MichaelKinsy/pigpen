@@ -279,6 +279,9 @@ func handleVisionAnalyze(ctx context.Context, params map[string]any, cfg *config
 		}
 		sizeBytes = int64(len(raw))
 		mimeType = detectImageMIME(localPath, raw)
+		if !strings.HasPrefix(mimeType, "image/") {
+			return toolErrorResult(fmt.Sprintf("vision_analyze: %q is not a recognized image file (detected %s)", imageRef, mimeType))
+		}
 		encoded := base64.StdEncoding.EncodeToString(raw)
 		imageURLForAPI = fmt.Sprintf("data:%s;base64,%s", mimeType, encoded)
 	}

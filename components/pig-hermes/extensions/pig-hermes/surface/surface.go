@@ -24,14 +24,19 @@ import (
 const statusMessageType = "hermes-surface"
 
 type state struct {
-	mu       sync.RWMutex
-	paths    paths.ProfilePaths
-	cfg      *config.Config
-	memStore *memory.Store
-	skin     string
-	toolset  string
-	maxTurns int
-	turns    int
+	mu             sync.RWMutex
+	paths          paths.ProfilePaths
+	cfg            *config.Config
+	memStore       *memory.Store
+	skin           string
+	toolset        string
+	maxTurns       int
+	turns          int
+	indicatorStyle string
+	indicatorStep  int
+	cwd            string
+	contextPct     int
+	hasContextPct  bool
 }
 
 func newState(p paths.ProfilePaths, cfg *config.Config, memStore *memory.Store) *state {
@@ -52,12 +57,21 @@ func newState(p paths.ProfilePaths, cfg *config.Config, memStore *memory.Store) 
 	if strings.TrimSpace(toolset) == "" {
 		toolset = "hermes-cli"
 	}
+	indicatorStyle := IndicatorKaomoji
+	if cfg.Raw != nil {
+		if rawStyle := strings.TrimSpace(cfg.Raw["display.indicator_style"]); rawStyle != "" {
+			if norm, ok := NormalizeIndicatorStyle(rawStyle); ok {
+				indicatorStyle = norm
+			}
+		}
+	}
 	return &state{
-		paths:    p,
-		cfg:      cfg,
-		memStore: memStore,
-		skin:     skin,
-		toolset:  toolset,
+		paths:          p,
+		cfg:            cfg,
+		memStore:       memStore,
+		skin:           skin,
+		toolset:        toolset,
+		indicatorStyle: indicatorStyle,
 	}
 }
 
@@ -136,6 +150,7 @@ func Register(ext *sdk.Extension, p paths.ProfilePaths, cfg *config.Config, memS
 	// 4. Lifecycle hooks & Hermes compact tool renderers
 	ext.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
 		st.applySessionFlags(ctx)
+		st.updateContextMetrics(ctx)
 		if ctx.HasUI() {
 			if agentDir := resolveAgentDir(); agentDir != "" {
 				_ = EnsureThemeFiles(agentDir)
@@ -143,14 +158,25 @@ func Register(ext *sdk.Extension, p paths.ProfilePaths, cfg *config.Config, memS
 			_ = ctx.RegisterSprite(HermesSpriteDefinition())
 			_ = ctx.SetLogin(HermesLoginDefinition())
 			_, _ = ctx.SetTheme(HermesThemeName(st.currentSkin().Name))
+			st.installFooterRenderer(ctx)
 		}
 		st.updateStatusBar(ctx)
 		return nil, nil
 	})
-	ext.OnEvent("agent_start", func(_ sdk.Context, _ map[string]any) (any, error) {
+	ext.OnEvent("agent_start", func(ctx sdk.Context, _ map[string]any) (any, error) {
 		st.mu.Lock()
 		st.turns = 0
 		st.mu.Unlock()
+		st.updateContextMetrics(ctx)
+		if ctx.HasUI() {
+			ctx.SetWorkingMessage(st.nextWorkingMessage())
+		}
+		return nil, nil
+	})
+	ext.OnEvent("turn_start", func(ctx sdk.Context, _ map[string]any) (any, error) {
+		if ctx.HasUI() {
+			ctx.SetWorkingMessage(st.nextWorkingMessage())
+		}
 		return nil, nil
 	})
 	ext.OnEvent("turn_end", func(ctx sdk.Context, _ map[string]any) (any, error) {
@@ -159,10 +185,20 @@ func Register(ext *sdk.Extension, p paths.ProfilePaths, cfg *config.Config, memS
 		turns := st.turns
 		maxTurns := st.maxTurns
 		st.mu.Unlock()
+		st.updateContextMetrics(ctx)
 		st.updateStatusBar(ctx)
+		st.installFooterRenderer(ctx)
 		if maxTurns > 0 && turns >= maxTurns {
 			ctx.Notify(fmt.Sprintf("Hermes max-turns limit reached (%d/%d); aborting.", turns, maxTurns), "warning")
 			ctx.Abort()
+		}
+		return nil, nil
+	})
+	ext.OnEvent("agent_end", func(ctx sdk.Context, _ map[string]any) (any, error) {
+		st.updateContextMetrics(ctx)
+		st.installFooterRenderer(ctx)
+		if ctx.HasUI() {
+			ctx.ClearWorkingMessage()
 		}
 		return nil, nil
 	})
@@ -348,6 +384,31 @@ func registerSlashCommands(ext *sdk.Extension, st *state) {
 			return filterCompletions(prefix, items), nil
 		},
 		Handler: st.cmdSkin,
+	})
+
+	ext.RegisterCommand("indicator", sdk.CommandOptions{
+		Description: "View or switch Hermes busy indicator style (kaomoji, emoji, unicode, ascii)",
+		GetArgumentCompletions: func(prefix string) ([]sdk.AutocompleteItem, error) {
+			return filterCompletions(prefix, []sdk.AutocompleteItem{
+				{Value: "status", Description: "Show active busy indicator style"},
+				{Value: "kaomoji", Description: "Kaomoji faces + Hermes verbs (default)"},
+				{Value: "emoji", Description: "Hermes emoji frames"},
+				{Value: "unicode", Description: "Braille spinner frames"},
+				{Value: "ascii", Description: "Classic ASCII spinner frames"},
+			}), nil
+		},
+		Handler: st.cmdIndicator,
+	})
+
+	ext.RegisterCommand("banner", sdk.CommandOptions{
+		Description: "Display or pin the 2-column Hermes summary banner (/banner [pin|off])",
+		GetArgumentCompletions: func(prefix string) ([]sdk.AutocompleteItem, error) {
+			return filterCompletions(prefix, []sdk.AutocompleteItem{
+				{Value: "pin", Description: "Pin the 2-column Hermes summary banner as a widget"},
+				{Value: "off", Description: "Hide the pinned Hermes summary banner"},
+			}), nil
+		},
+		Handler: st.cmdBanner,
 	})
 
 	ext.RegisterCommand("toolsets", sdk.CommandOptions{
@@ -685,6 +746,7 @@ func (s *state) cmdSkin(ctx sdk.Context, args string) error {
 	_, _ = ctx.SetTheme(HermesThemeName(sk.Name))
 	_ = config.SetKey(s.paths.ConfigFile, "display.skin", sk.Name)
 	s.updateStatusBar(ctx)
+	s.installFooterRenderer(ctx)
 	s.show(ctx, fmt.Sprintf("Switched skin to %s (%s)", sk.Name, sk.Description))
 	return nil
 }
@@ -993,6 +1055,7 @@ func (s *state) cmdYolo(ctx sdk.Context, args string) error {
 		_ = os.Unsetenv("HERMES_YOLO_MODE")
 	}
 	s.updateStatusBar(ctx)
+	s.installFooterRenderer(ctx)
 	if enabled {
 		s.show(ctx, "YOLO mode: ON (command approvals bypassed for this session)")
 	} else {
