@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,6 +15,8 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/gate"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/intent"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/jobs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
 )
 
@@ -30,9 +33,11 @@ const (
 )
 
 // Setting retrieves an omp setting value for the active session (e.g.
-// "eval.py", "eval.js", "python.interpreter", "python.kernelMode",
-// "tools.maxTimeout"). Assigned by the integrator from internal/settings.Any;
-// when nil, readSessionSettings falls back to ctx.GetSettings() and env vars.
+// "eval.py", "eval.js", "eval.autoBackground.enabled",
+// "eval.autoBackground.thresholdMs", "python.interpreter",
+// "python.kernelMode", "tools.maxTimeout"). Assigned by the integrator from
+// internal/settings.Any; when nil, readSessionSettings falls back to
+// ctx.GetSettings() and env vars.
 var Setting func(ctx sdk.Context, key string) any
 
 // WriteSpill persists oversized eval output and returns an artifact URL or ID
@@ -43,21 +48,37 @@ var Setting func(ctx sdk.Context, key string) any
 var WriteSpill func(ctx sdk.Context, label, content string) string
 
 // SessionSettings holds resolved eval-related settings for one call.
+// upstream: packages/coding-agent/src/eval/settings.ts:8-90
 type SessionSettings struct {
-	AllowPy           bool
-	AllowJS           bool
-	EvalToolsEnabled  bool
-	PythonInterpreter string
-	PythonKernelMode  string // "session" | "per-call"
-	MaxTimeout        float64
+	AllowPy                   bool
+	AllowJS                   bool
+	EvalToolsEnabled          bool
+	AutoBackgroundEnabled     bool
+	AutoBackgroundThresholdMs int
+	PythonInterpreter         string
+	PythonKernelMode          string // "session" | "per-call"
+	MaxTimeout                float64
+}
+
+func clampAutoBackgroundThresholdMs(raw float64) int {
+	if math.IsNaN(raw) || math.IsInf(raw, 0) {
+		return DefaultAutoBackgroundThresholdMs
+	}
+	v := int(math.Floor(raw))
+	if v < 0 {
+		return 0
+	}
+	return v
 }
 
 func readSessionSettings(ctx sdk.Context) SessionSettings {
 	s := SessionSettings{
-		AllowPy:          true,
-		AllowJS:          true,
-		EvalToolsEnabled: IsEvalToolsEnabled(ctx),
-		PythonKernelMode: "session",
+		AllowPy:                   true,
+		AllowJS:                   true,
+		EvalToolsEnabled:          IsEvalToolsEnabled(ctx),
+		AutoBackgroundEnabled:     false,
+		AutoBackgroundThresholdMs: DefaultAutoBackgroundThresholdMs,
+		PythonKernelMode:          "session",
 	}
 	if Setting != nil {
 		if v, ok := settingAsBool(Setting(ctx, "eval.py")); ok {
@@ -65,6 +86,12 @@ func readSessionSettings(ctx sdk.Context) SessionSettings {
 		}
 		if v, ok := settingAsBool(Setting(ctx, "eval.js")); ok {
 			s.AllowJS = v
+		}
+		if v, ok := settingAsBool(Setting(ctx, "eval.autoBackground.enabled")); ok {
+			s.AutoBackgroundEnabled = v
+		}
+		if v, ok := settingAsFloat(Setting(ctx, "eval.autoBackground.thresholdMs")); ok {
+			s.AutoBackgroundThresholdMs = clampAutoBackgroundThresholdMs(v)
 		}
 		if v, ok := settingAsString(Setting(ctx, "python.interpreter")); ok {
 			s.PythonInterpreter = strings.TrimSpace(v)
@@ -92,6 +119,12 @@ func readSessionSettings(ctx sdk.Context) SessionSettings {
 	}
 	if v, ok := lookupBoolSetting(cfg, "eval.js"); ok && os.Getenv("PI_JS") == "" {
 		s.AllowJS = v
+	}
+	if v, ok := lookupBoolSetting(cfg, "eval.autoBackground.enabled"); ok {
+		s.AutoBackgroundEnabled = v
+	}
+	if v, ok := lookupFloatSetting(cfg, "eval.autoBackground.thresholdMs"); ok {
+		s.AutoBackgroundThresholdMs = clampAutoBackgroundThresholdMs(v)
 	}
 	if v, ok := lookupStringSetting(cfg, "python.interpreter"); ok {
 		s.PythonInterpreter = strings.TrimSpace(v)
@@ -176,6 +209,7 @@ type Manager struct {
 	pySessions         map[string]*pySessionSlot
 	jsSessions         map[string]*jsSessionSlot
 	firstCallGuideSent map[string]map[string]bool
+	evalJobs           *evalJobRegistry
 	toolFallback       ToolExecutor
 
 	// overrideTimeoutForTest lets unit tests use sub-second timeouts without changing the 1s schema clamp.
@@ -232,7 +266,17 @@ func NewManager() *Manager {
 		pySessions:         make(map[string]*pySessionSlot),
 		jsSessions:         make(map[string]*jsSessionSlot),
 		firstCallGuideSent: make(map[string]map[string]bool),
+		evalJobs:           newEvalJobRegistry(),
 	}
+}
+
+func (m *Manager) jobRegistry() *evalJobRegistry {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.evalJobs == nil {
+		m.evalJobs = newEvalJobRegistry()
+	}
+	return m.evalJobs
 }
 
 func (m *Manager) pySlot(key string) *pySessionSlot {
@@ -283,6 +327,9 @@ func (m *Manager) ShutdownSession(sessionID string) {
 	if sessionID == "" {
 		return
 	}
+	if reg := m.jobRegistry(); reg != nil {
+		reg.cancelSession(sessionID)
+	}
 	prefixPy := "python:" + sessionID + "\x00"
 	keyJS := "js:" + sessionID
 
@@ -323,6 +370,9 @@ func (m *Manager) ShutdownSession(sessionID string) {
 
 // ShutdownAll stops every live kernel managed by m (for process teardown and tests only).
 func (m *Manager) ShutdownAll() {
+	if reg := m.jobRegistry(); reg != nil {
+		reg.cancelAll()
+	}
 	m.mu.Lock()
 	var pyToStop []*pySessionSlot
 	for k, slot := range m.pySessions {
@@ -545,307 +595,386 @@ func (m *Manager) Execute(ctx sdk.Context, params map[string]any) (sdk.ToolResul
 	localRoots := resolveEvalLocalRoots(ctx, cwd)
 	enabledPreludes := EnabledPreludes(ctx)
 
-	// Arm IdleTimeout watchdog if timeout > 0.
-	var idle *IdleTimeout
-	runCtx := reqCtx
-	if cellTimeout > 0 {
-		idle = NewIdleTimeout(reqCtx, cellTimeout)
-		defer idle.Dispose()
-		runCtx = idle.Context()
+	type cellOutcome struct {
+		result sdk.ToolResult
+		err    error
 	}
 
-	cellResult := EvalCellResult{
-		Index:    0,
-		Title:    title,
-		Code:     code,
-		Language: cellLanguage,
-		Status:   "running",
-	}
-
-	var statusMu sync.Mutex
-	liveBuf := newBoundedOutputBuffer(DefaultOutputMaxBytes)
-	var replies []string
-	var images []EvalImageDetail
-	var views []EvalViewEntry
-
-	// Throttled live updates (upstream: tools/eval.ts:181, 837-855).
-	// updateSendMu serializes in-flight ctx.OnUpdate calls against stopUpdates so no
-	// live update can be sent after the final tool result returns.
-	var updateTimer *time.Timer
-	var updatesStopped bool
-	var updateSendMu sync.Mutex
-	buildSnapshot := func() (string, EvalToolDetails) {
-		text := liveBuf.TailText()
-		cellCopy := cellResult
-		cellCopy.Output = text
-		if len(cellResult.StatusEvents) > 0 {
-			cellCopy.StatusEvents = append([]EvalStatusEvent(nil), cellResult.StatusEvents...)
-		}
-		det := EvalToolDetails{
-			Language:  cellLanguage,
-			Languages: []EvalLanguage{cellLanguage},
-			Cells:     []EvalCellResult{cellCopy},
-			Notice:    notice,
-		}
-		if len(images) > 0 {
-			det.Images = append([]EvalImageDetail(nil), images...)
-		}
-		if len(replies) > 0 {
-			det.Replies = append([]string(nil), replies...)
-		}
-		fullText := text
-		if notice != "" {
-			fullText = notice + "\n\n" + text
-		}
-		return fullText, det
-	}
-	sendUpdate := func() {
-		updateSendMu.Lock()
-		defer updateSendMu.Unlock()
-		statusMu.Lock()
-		if updatesStopped {
-			statusMu.Unlock()
-			return
-		}
-		updateTimer = nil
-		text, det := buildSnapshot()
-		statusMu.Unlock()
-		_ = ctx.OnUpdate(sdk.ToolResult{Content: text, Details: det})
-	}
-	scheduleUpdate := func() {
-		statusMu.Lock()
-		if updatesStopped || updateTimer != nil {
-			statusMu.Unlock()
-			return
-		}
-		updateTimer = time.AfterFunc(liveUpdateInterval, sendUpdate)
-		statusMu.Unlock()
-	}
-	stopUpdates := func() {
-		updateSendMu.Lock()
-		defer updateSendMu.Unlock()
-		statusMu.Lock()
-		updatesStopped = true
-		if updateTimer != nil {
-			updateTimer.Stop()
-			updateTimer = nil
-		}
-		statusMu.Unlock()
-	}
-	defer stopUpdates()
-
-	onUpdate := func(partial any) {
-		updateSendMu.Lock()
-		defer updateSendMu.Unlock()
-		statusMu.Lock()
-		stopped := updatesStopped
-		statusMu.Unlock()
-		if stopped {
-			return
-		}
-		_ = ctx.OnUpdate(partial)
-	}
-	emitStatus := func(ev EvalStatusEvent) {
-		if ev == nil {
-			return
-		}
-		op, _ := ev["op"].(string)
-		if op == EvalTimeoutPauseOp {
-			if idle != nil {
-				idle.Pause()
+	runCell := func(
+		cellBaseCtx context.Context,
+		onProgress func(text string, det EvalToolDetails),
+		onRawChunk func(chunk string),
+		onRawUpdate func(partial any),
+	) (sdk.ToolResult, error) {
+		// Arm IdleTimeout watchdog lazily via armTimeout so queued cells
+		// do not time out while waiting on slot.mu.
+		var idleMu sync.Mutex
+		var idle *IdleTimeout
+		var timedOut atomic.Bool
+		armTimeout := func(base context.Context) (context.Context, func()) {
+			if cellTimeout <= 0 {
+				return base, func() {}
 			}
-			return
-		}
-		if op == EvalTimeoutResumeOp {
-			if idle != nil {
-				idle.Resume()
+			it := NewIdleTimeout(base, cellTimeout)
+			idleMu.Lock()
+			idle = it
+			idleMu.Unlock()
+			return it.Context(), func() {
+				if it.TimedOut() {
+					timedOut.Store(true)
+				}
+				idleMu.Lock()
+				if idle == it {
+					idle = nil
+				}
+				idleMu.Unlock()
+				it.Dispose()
 			}
-			return
 		}
-		statusMu.Lock()
-		recordStatusEvent(&cellResult, ev)
-		statusMu.Unlock()
-		scheduleUpdate()
-	}
+		runCtx := cellBaseCtx
 
-	onChunk := func(chunk string) {
-		liveBuf.Append(chunk)
-		scheduleUpdate()
-	}
+		cellResult := EvalCellResult{
+			Index:    0,
+			Title:    title,
+			Code:     code,
+			Language: cellLanguage,
+			Status:   "running",
+		}
 
-	onDisplay := func(d DisplayOutput) {
-		switch d.Type {
-		case "status":
-			emitStatus(d.Status)
-		case "image":
-			if d.Image != nil {
-				statusMu.Lock()
-				images = append(images, *d.Image)
-				statusMu.Unlock()
-				scheduleUpdate()
+		var statusMu sync.Mutex
+		liveBuf := newBoundedOutputBuffer(DefaultOutputMaxBytes)
+		var replies []string
+		var images []EvalImageDetail
+		var views []EvalViewEntry
+
+		// Throttled live updates (upstream: tools/eval.ts:181, 837-855).
+		// updateSendMu serializes in-flight callbacks against stopUpdates so no
+		// live update can be emitted after the cell settles.
+		var updateTimer *time.Timer
+		var updatesStopped bool
+		var updateSendMu sync.Mutex
+		buildSnapshot := func() (string, EvalToolDetails) {
+			text := liveBuf.TailText()
+			cellCopy := cellResult
+			cellCopy.Output = text
+			if len(cellResult.StatusEvents) > 0 {
+				cellCopy.StatusEvents = append([]EvalStatusEvent(nil), cellResult.StatusEvents...)
 			}
-		case "view":
+			det := EvalToolDetails{
+				Language:  cellLanguage,
+				Languages: []EvalLanguage{cellLanguage},
+				Cells:     []EvalCellResult{cellCopy},
+				Notice:    notice,
+			}
+			if len(images) > 0 {
+				det.Images = append([]EvalImageDetail(nil), images...)
+			}
+			if len(replies) > 0 {
+				det.Replies = append([]string(nil), replies...)
+			}
+			fullText := text
+			if notice != "" {
+				fullText = notice + "\n\n" + text
+			}
+			return fullText, det
+		}
+		sendUpdate := func() {
+			updateSendMu.Lock()
+			defer updateSendMu.Unlock()
 			statusMu.Lock()
-			if len(views) < MaxViewsPerCell {
-				if raw, err := json.Marshal(d.View); err == nil && len(raw) <= MaxViewJSONChars {
-					txt := strings.TrimSpace(sanitizeText(d.Text))
-					if txt != "" {
-						views = append(views, EvalViewEntry{Text: txt, View: d.View})
+			if updatesStopped {
+				statusMu.Unlock()
+				return
+			}
+			updateTimer = nil
+			text, det := buildSnapshot()
+			statusMu.Unlock()
+			if onProgress != nil {
+				onProgress(text, det)
+			}
+		}
+		scheduleUpdate := func() {
+			statusMu.Lock()
+			if updatesStopped || updateTimer != nil {
+				statusMu.Unlock()
+				return
+			}
+			updateTimer = time.AfterFunc(liveUpdateInterval, sendUpdate)
+			statusMu.Unlock()
+		}
+		stopUpdates := func() {
+			updateSendMu.Lock()
+			defer updateSendMu.Unlock()
+			statusMu.Lock()
+			updatesStopped = true
+			if updateTimer != nil {
+				updateTimer.Stop()
+				updateTimer = nil
+			}
+			statusMu.Unlock()
+		}
+		defer stopUpdates()
+
+		onUpdate := func(partial any) {
+			updateSendMu.Lock()
+			defer updateSendMu.Unlock()
+			statusMu.Lock()
+			stopped := updatesStopped
+			statusMu.Unlock()
+			if stopped {
+				return
+			}
+			if onRawUpdate != nil {
+				onRawUpdate(partial)
+			}
+		}
+		emitStatus := func(ev EvalStatusEvent) {
+			if ev == nil {
+				return
+			}
+			op, _ := ev["op"].(string)
+			if op == EvalTimeoutPauseOp {
+				idleMu.Lock()
+				it := idle
+				idleMu.Unlock()
+				if it != nil {
+					it.Pause()
+				}
+				return
+			}
+			if op == EvalTimeoutResumeOp {
+				idleMu.Lock()
+				it := idle
+				idleMu.Unlock()
+				if it != nil {
+					it.Resume()
+				}
+				return
+			}
+			statusMu.Lock()
+			recordStatusEvent(&cellResult, ev)
+			statusMu.Unlock()
+			scheduleUpdate()
+		}
+
+		onChunk := func(chunk string) {
+			liveBuf.Append(chunk)
+			if onRawChunk != nil {
+				onRawChunk(chunk)
+			}
+			scheduleUpdate()
+		}
+
+		onDisplay := func(d DisplayOutput) {
+			switch d.Type {
+			case "status":
+				emitStatus(d.Status)
+			case "image":
+				if d.Image != nil {
+					statusMu.Lock()
+					images = append(images, *d.Image)
+					statusMu.Unlock()
+					scheduleUpdate()
+				}
+			case "view":
+				statusMu.Lock()
+				if len(views) < MaxViewsPerCell {
+					if raw, err := json.Marshal(d.View); err == nil && len(raw) <= MaxViewJSONChars {
+						txt := strings.TrimSpace(sanitizeText(d.Text))
+						if txt != "" {
+							views = append(views, EvalViewEntry{Text: txt, View: d.View})
+						}
+					}
+				}
+				statusMu.Unlock()
+			}
+		}
+		// Collect preludes with FirstCallDocumentation called during this cell so we can inject
+		// omp's hidden `<system-notice id="prelude-guide">` once per conversation after the cell runs.
+		// upstream: packages/coding-agent/src/eval/preludes.ts:219, session/session-tools.ts:2070-2141
+		var firstCallMu sync.Mutex
+		var firstCallCalled []Prelude
+		firstCallSeen := map[string]bool{}
+		onFirstCallPrelude := func(p Prelude) {
+			if strings.TrimSpace(p.FirstCallDocumentation) == "" {
+				return
+			}
+			firstCallMu.Lock()
+			if !firstCallSeen[p.Name] {
+				firstCallSeen[p.Name] = true
+				firstCallCalled = append(firstCallCalled, p)
+			}
+			firstCallMu.Unlock()
+		}
+
+		start := time.Now()
+		var kRes kernelResult
+		var execErr error
+		var restartNotice string
+
+		switch cellLanguage {
+		case LangPython:
+			kRes, restartNotice, execErr = m.runPythonCell(
+				runCtx, ctx, cwd, sessionID, sessionFile, artifactsDir,
+				settings, localRoots, bridge, enabledPreludes,
+				prepared, reset, int(cellTimeout/time.Millisecond),
+				armTimeout, emitStatus, onUpdate, onFirstCallPrelude, onChunk, onDisplay,
+			)
+		case LangJS:
+			kRes, restartNotice, execErr = m.runJSCell(
+				runCtx, ctx, cwd, sessionID,
+				localRoots, bridge, enabledPreludes,
+				prepared, reset, int(cellTimeout/time.Millisecond),
+				armTimeout, emitStatus, onUpdate, onFirstCallPrelude, onChunk, onDisplay,
+			)
+		}
+		stopUpdates()
+		m.emitFirstCallPreludeGuides(ctx, sessionID, firstCallCalled)
+		durationMs := time.Since(start).Milliseconds()
+
+		if execErr != nil {
+			return sdk.ToolResult{}, execErr
+		}
+
+		if timedOut.Load() {
+			kRes.TimedOut = true
+			kRes.Cancelled = true
+		}
+
+		outputText := kRes.Output
+		if restartNotice != "" {
+			if outputText != "" {
+				outputText = restartNotice + "\n" + outputText
+			} else {
+				outputText = restartNotice
+			}
+		}
+		if kRes.TimedOut {
+			if cellLanguage == LangPython {
+				// upstream: packages/coding-agent/src/eval/executor-base.ts:578-583 +
+				// packages/tui/src/tools/streaming-output.ts:1655,1668 — sink.dump(annotation)
+				// prefixes `[${annotation}]\n` before the accumulated body.
+				annotation := formatPyTimeoutAnnotation(cellTimeout, kRes.KernelKilled)
+				outputText = "[" + annotation + "]\n" + outputText
+			} else {
+				// upstream: packages/coding-agent/src/eval/js/executor.ts:227-234 —
+				// executeJs pushes annotation into outputSink then calls dump() without notice.
+				annotation := formatJSTimeoutAnnotation(cellTimeout)
+				if outputText != "" && !strings.HasSuffix(outputText, "\n") {
+					outputText += "\n"
+				}
+				outputText += annotation
+			}
+		} else if kRes.DiedMidExec {
+			// upstream: packages/coding-agent/src/eval/executor-base.ts:580-583 +
+			// packages/tui/src/tools/streaming-output.ts:1655,1668 — sink.dump(annotation)
+			// prefixes `[${annotation}]\n` before the accumulated body.
+			annotation := formatKernelDiedAnnotation()
+			outputText = "[" + annotation + "]\n" + outputText
+		}
+
+		runtimeOutput := strings.TrimSpace(outputText)
+		if prepared.Environment != "" && !kRes.Cancelled && kRes.ExitCode != nil && *kRes.ExitCode == 0 {
+			if runtimeOutput != "" {
+				runtimeOutput += "\n"
+			}
+			runtimeOutput += fmt.Sprintf("Eval environment: %s.", prepared.Environment)
+		}
+
+		var outputMeta *OutputMeta
+		var truncNotice string
+		if kRes.Truncation != nil {
+			var spillRef string
+			if WriteSpill != nil {
+				fullContent := kRes.FullOutput
+				if fullContent == "" {
+					fullContent = outputText
+				}
+				label := string(cellLanguage)
+				if cellResult.Title != "" {
+					label = cellResult.Title
+				}
+				if ref := strings.TrimSpace(WriteSpill(ctx, label, fullContent)); ref != "" {
+					spillRef = ref
+					kRes.Truncation.ArtifactID = normalizeArtifactID(ref)
+					if kRes.Truncation.TotalBytes > len(fullContent) {
+						kRes.Truncation.ArtifactElidedBytes = kRes.Truncation.TotalBytes - len(fullContent)
 					}
 				}
 			}
-			statusMu.Unlock()
+			outputMeta = &OutputMeta{Truncation: kRes.Truncation}
+			truncNotice = formatTruncationNotice(kRes.Truncation, spillRef)
 		}
-	}
-	// Collect preludes with FirstCallDocumentation called during this cell so we can inject
-	// omp's hidden `<system-notice id="prelude-guide">` once per conversation after the cell runs.
-	// upstream: packages/coding-agent/src/eval/preludes.ts:219, session/session-tools.ts:2070-2141
-	var firstCallMu sync.Mutex
-	var firstCallCalled []Prelude
-	firstCallSeen := map[string]bool{}
-	onFirstCallPrelude := func(p Prelude) {
-		if strings.TrimSpace(p.FirstCallDocumentation) == "" {
-			return
+		statusMu.Lock()
+		cellResult.Output = runtimeOutput
+		cellResult.DurationMs = &durationMs
+		cellResult.ExitCode = kRes.ExitCode
+		if len(views) > 0 {
+			cellResult.Views = views
 		}
-		firstCallMu.Lock()
-		if !firstCallSeen[p.Name] {
-			firstCallSeen[p.Name] = true
-			firstCallCalled = append(firstCallCalled, p)
+		finalImages := append([]EvalImageDetail(nil), images...)
+		statusMu.Unlock()
+
+		sdkImages := make([]sdk.ImageContent, 0, len(finalImages))
+		for _, img := range finalImages {
+			sdkImages = append(sdkImages, sdk.ImageContent{
+				Data:     img.Data,
+				MimeType: img.MimeType,
+			})
 		}
-		firstCallMu.Unlock()
-	}
 
-	start := time.Now()
-	var kRes kernelResult
-	var execErr error
-	var restartNotice string
-
-	switch cellLanguage {
-	case LangPython:
-		kRes, restartNotice, execErr = m.runPythonCell(
-			runCtx, ctx, cwd, sessionID, sessionFile, artifactsDir,
-			settings, localRoots, bridge, enabledPreludes,
-			prepared, reset, int(cellTimeout/time.Millisecond),
-			emitStatus, onUpdate, onFirstCallPrelude, onChunk, onDisplay,
-		)
-	case LangJS:
-		kRes, restartNotice, execErr = m.runJSCell(
-			runCtx, ctx, cwd, sessionID,
-			localRoots, bridge, enabledPreludes,
-			prepared, reset, int(cellTimeout/time.Millisecond),
-			emitStatus, onUpdate, onFirstCallPrelude, onChunk, onDisplay,
-		)
-	}
-	stopUpdates()
-	m.emitFirstCallPreludeGuides(ctx, sessionID, firstCallCalled)
-	durationMs := time.Since(start).Milliseconds()
-
-	if execErr != nil {
-		return sdk.ToolResult{}, execErr
-	}
-
-	if idle != nil && idle.TimedOut() {
-		kRes.TimedOut = true
-		kRes.Cancelled = true
-	}
-
-	outputText := kRes.Output
-	if restartNotice != "" {
-		if outputText != "" {
-			outputText = restartNotice + "\n" + outputText
-		} else {
-			outputText = restartNotice
-		}
-	}
-	if kRes.TimedOut {
-		if cellLanguage == LangPython {
-			// upstream: packages/coding-agent/src/eval/executor-base.ts:578-583 +
-			// packages/tui/src/tools/streaming-output.ts:1655,1668 — sink.dump(annotation)
-			// prefixes `[${annotation}]\n` before the accumulated body.
-			annotation := formatPyTimeoutAnnotation(cellTimeout, kRes.KernelKilled)
-			outputText = "[" + annotation + "]\n" + outputText
-		} else {
-			// upstream: packages/coding-agent/src/eval/js/executor.ts:227-234 —
-			// executeJs pushes annotation into outputSink then calls dump() without notice.
-			annotation := formatJSTimeoutAnnotation(cellTimeout)
-			if outputText != "" && !strings.HasSuffix(outputText, "\n") {
-				outputText += "\n"
-			}
-			outputText += annotation
-		}
-	} else if kRes.DiedMidExec {
-		// upstream: packages/coding-agent/src/eval/executor-base.ts:580-583 +
-		// packages/tui/src/tools/streaming-output.ts:1655,1668 — sink.dump(annotation)
-		// prefixes `[${annotation}]\n` before the accumulated body.
-		annotation := formatKernelDiedAnnotation()
-		outputText = "[" + annotation + "]\n" + outputText
-	}
-
-	runtimeOutput := strings.TrimSpace(outputText)
-	if prepared.Environment != "" && !kRes.Cancelled && kRes.ExitCode != nil && *kRes.ExitCode == 0 {
-		if runtimeOutput != "" {
-			runtimeOutput += "\n"
-		}
-		runtimeOutput += fmt.Sprintf("Eval environment: %s.", prepared.Environment)
-	}
-
-	var outputMeta *OutputMeta
-	var truncNotice string
-	if kRes.Truncation != nil {
-		var spillRef string
-		if WriteSpill != nil {
-			fullContent := kRes.FullOutput
-			if fullContent == "" {
-				fullContent = outputText
-			}
-			label := string(cellLanguage)
-			if cellResult.Title != "" {
-				label = cellResult.Title
-			}
-			if ref := strings.TrimSpace(WriteSpill(ctx, label, fullContent)); ref != "" {
-				spillRef = ref
-				kRes.Truncation.ArtifactID = normalizeArtifactID(ref)
-				if kRes.Truncation.TotalBytes > len(fullContent) {
-					kRes.Truncation.ArtifactElidedBytes = kRes.Truncation.TotalBytes - len(fullContent)
+		failed := kRes.Cancelled || (kRes.ExitCode != nil && *kRes.ExitCode != 0)
+		if failed {
+			cellResult.Status = "error"
+			var finalText string
+			if kRes.Cancelled {
+				finalText = runtimeOutput
+				if finalText == "" {
+					finalText = "Command aborted"
+				}
+			} else {
+				exitLine := fmt.Sprintf("Command exited with code %d", *kRes.ExitCode)
+				if runtimeOutput != "" {
+					finalText = runtimeOutput + "\n\n" + exitLine
+				} else {
+					finalText = exitLine
 				}
 			}
-		}
-		outputMeta = &OutputMeta{Truncation: kRes.Truncation}
-		truncNotice = formatTruncationNotice(kRes.Truncation, spillRef)
-	}
-	statusMu.Lock()
-	cellResult.Output = runtimeOutput
-	cellResult.DurationMs = &durationMs
-	cellResult.ExitCode = kRes.ExitCode
-	if len(views) > 0 {
-		cellResult.Views = views
-	}
-	finalImages := append([]EvalImageDetail(nil), images...)
-	statusMu.Unlock()
-
-	sdkImages := make([]sdk.ImageContent, 0, len(finalImages))
-	for _, img := range finalImages {
-		sdkImages = append(sdkImages, sdk.ImageContent{
-			Data:     img.Data,
-			MimeType: img.MimeType,
-		})
-	}
-
-	failed := kRes.Cancelled || (kRes.ExitCode != nil && *kRes.ExitCode != 0)
-	if failed {
-		cellResult.Status = "error"
-		var finalText string
-		if kRes.Cancelled {
-			finalText = runtimeOutput
-			if finalText == "" {
-				finalText = "Command aborted"
+			if notice != "" {
+				finalText = notice + "\n\n" + finalText
 			}
-		} else {
-			exitLine := fmt.Sprintf("Command exited with code %d", *kRes.ExitCode)
-			if runtimeOutput != "" {
-				finalText = runtimeOutput + "\n\n" + exitLine
+			if truncNotice != "" {
+				finalText += truncNotice
+			}
+			details := EvalToolDetails{
+				Language:  cellLanguage,
+				Languages: []EvalLanguage{cellLanguage},
+				Cells:     []EvalCellResult{cellResult},
+				Images:    finalImages,
+				Replies:   replies,
+				IsError:   true,
+				Meta:      outputMeta,
+				Notice:    notice,
+			}
+			return sdk.ToolResult{
+				Content: finalText,
+				Images:  sdkImages,
+				Details: details,
+				IsError: true,
+			}, nil
+		}
+
+		cellResult.Status = "complete"
+		finalText := runtimeOutput
+		if finalText == "" {
+			if len(sdkImages) > 0 {
+				suffix := "s"
+				if len(sdkImages) == 1 {
+					suffix = ""
+				}
+				finalText = fmt.Sprintf("(%d image%s; no text output)", len(sdkImages), suffix)
 			} else {
-				finalText = exitLine
+				finalText = "(no output)"
 			}
 		}
 		if notice != "" {
@@ -860,7 +989,6 @@ func (m *Manager) Execute(ctx sdk.Context, params map[string]any) (sdk.ToolResul
 			Cells:     []EvalCellResult{cellResult},
 			Images:    finalImages,
 			Replies:   replies,
-			IsError:   true,
 			Meta:      outputMeta,
 			Notice:    notice,
 		}
@@ -868,43 +996,201 @@ func (m *Manager) Execute(ctx sdk.Context, params map[string]any) (sdk.ToolResul
 			Content: finalText,
 			Images:  sdkImages,
 			Details: details,
-			IsError: true,
 		}, nil
 	}
 
-	cellResult.Status = "complete"
-	finalText := runtimeOutput
-	if finalText == "" {
-		if len(sdkImages) > 0 {
-			suffix := "s"
-			if len(sdkImages) == 1 {
-				suffix = ""
+	// Default path (`eval.autoBackground.enabled == false`) or at running-job cap:
+	// run inline identically with zero job allocation or overhead.
+	// upstream: packages/coding-agent/src/tools/eval.ts:571-576
+	reg := m.jobRegistry()
+	if !settings.AutoBackgroundEnabled || reg.atCapacityForSession(sessionID) {
+		return runCell(
+			reqCtx,
+			func(text string, det EvalToolDetails) {
+				_ = ctx.OnUpdate(sdk.ToolResult{Content: text, Details: det})
+			},
+			nil,
+			func(partial any) {
+				_ = ctx.OnUpdate(partial)
+			},
+		)
+	}
+
+	// Auto-background path (`eval.autoBackground.enabled == true`).
+	// upstream: packages/coding-agent/src/tools/eval.ts:578-711
+	var timeoutSecPtr *float64
+	if cellTimeoutSec > 0 {
+		sec := cellTimeoutSec
+		timeoutSecPtr = &sec
+	}
+	waitMs := resolveAutoBackgroundWaitMs(settings.AutoBackgroundThresholdMs, timeoutSecPtr)
+	startBackgrounded := waitMs == 0
+
+	label := formatEvalJobLabel(title, code)
+	intentStr := intent.For(ctx, ctx.ToolCallID())
+
+	jobCtx, jobCancel := context.WithCancel(context.Background())
+	job, err := reg.createJob(sessionID, label, intentStr, startBackgrounded, jobCancel)
+	if err != nil {
+		jobCancel()
+		return runCell(
+			reqCtx,
+			func(text string, det EvalToolDetails) {
+				_ = ctx.OnUpdate(sdk.ToolResult{Content: text, Details: det})
+			},
+			nil,
+			func(partial any) {
+				_ = ctx.OnUpdate(partial)
+			},
+		)
+	}
+	if startBackgrounded {
+		jobs.EnsureDeliveryListener()
+		jobs.BindSessionIfMissing(sessionID, ctx)
+		jobs.Add(sessionID, job)
+	}
+
+	completionCh := make(chan cellOutcome, 1)
+	go func() {
+		defer jobCancel()
+		defer func() {
+			if r := recover(); r != nil {
+				panicErr := fmt.Errorf("eval cell panicked: %v", r)
+				completionCh <- cellOutcome{err: panicErr}
+				bg, released := job.settle("failed", "", panicErr.Error(), nil)
+				reg.onJobSettled(job, bg, released)
 			}
-			finalText = fmt.Sprintf("(%d image%s; no text output)", len(sdkImages), suffix)
-		} else {
-			finalText = "(no output)"
+		}()
+		res, runErr := runCell(
+			jobCtx,
+			func(text string, det EvalToolDetails) {
+				if job.isReleased() {
+					return
+				}
+				detCopy := det
+				if job.isBackgrounded() {
+					detCopy.Replies = nil
+					detCopy.Async = &EvalAsyncDetail{
+						State: "running",
+						JobID: job.ID(),
+						Type:  "eval",
+					}
+				}
+				job.setProgress(text, &detCopy)
+				if !job.isReleased() {
+					_ = ctx.OnUpdate(sdk.ToolResult{Content: text, Details: detCopy})
+				}
+			},
+			func(chunk string) {
+				job.pushWidgetChunk(chunk)
+			},
+			func(partial any) {
+				if !job.isBackgrounded() && !job.isReleased() {
+					_ = ctx.OnUpdate(partial)
+				}
+			},
+		)
+
+		var finalDet *EvalToolDetails
+		if d, ok := res.Details.(EvalToolDetails); ok {
+			cp := d
+			finalDet = &cp
 		}
+
+		status := "completed"
+		resultText := res.Content
+		errText := ""
+		if runErr != nil {
+			errText = runErr.Error()
+			if jobCtx.Err() != nil {
+				status = "cancelled"
+			} else {
+				status = "failed"
+			}
+		} else if res.IsError {
+			errText = res.Content
+			if errText == "" {
+				errText = "Eval cell failed"
+			}
+			if jobCtx.Err() != nil {
+				status = "cancelled"
+			} else {
+				status = "failed"
+			}
+		}
+
+		// Hand the full result to the foreground waiter before settling the job.
+		completionCh <- cellOutcome{result: res, err: runErr}
+		bg, released := job.settle(status, resultText, errText, finalDet)
+		if bg && !released {
+			frameText := resultText
+			if status != "completed" && errText != "" {
+				frameText = errText
+			}
+			if finalDet != nil {
+				detFrame := *finalDet
+				detFrame.Replies = nil
+				detFrame.Async = &EvalAsyncDetail{
+					State: status,
+					JobID: job.ID(),
+					Type:  "eval",
+				}
+				_ = ctx.OnUpdate(sdk.ToolResult{Content: frameText, Details: detFrame})
+			} else {
+				_ = ctx.OnUpdate(sdk.ToolResult{
+					Content: frameText,
+					Details: EvalToolDetails{
+						Language:  cellLanguage,
+						Languages: []EvalLanguage{cellLanguage},
+						Async: &EvalAsyncDetail{
+							State: status,
+							JobID: job.ID(),
+							Type:  "eval",
+						},
+					},
+				})
+			}
+		}
+		reg.onJobSettled(job, bg, released)
+	}()
+
+	if startBackgrounded {
+		return buildEvalBackgroundStartResult(job.ID(), cellLanguage, title, code, notice, notice, nil, timeoutSecPtr), nil
 	}
-	if notice != "" {
-		finalText = notice + "\n\n" + finalText
+
+	timer := time.NewTimer(time.Duration(waitMs) * time.Millisecond)
+	defer timer.Stop()
+
+	select {
+	case outcome := <-completionCh:
+		reg.releaseForeground(job)
+		if outcome.err != nil {
+			return sdk.ToolResult{}, outcome.err
+		}
+		return outcome.result, nil
+	case <-reqCtx.Done():
+		job.Cancel()
+		reg.releaseForeground(job)
+		preview, _ := job.latestPreview()
+		if strings.TrimSpace(preview) == "" {
+			preview = "Eval cell aborted"
+		}
+		return sdk.ToolResult{}, errors.New(preview)
+	case <-timer.C:
+		// Race guard: if the cell completed right as the timer fired, return inline.
+		select {
+		case outcome := <-completionCh:
+			reg.releaseForeground(job)
+			if outcome.err != nil {
+				return sdk.ToolResult{}, outcome.err
+			}
+			return outcome.result, nil
+		default:
+		}
+		reg.promoteToBackground(ctx, job)
+		preview, latestDet := job.latestPreview()
+		return buildEvalBackgroundStartResult(job.ID(), cellLanguage, title, code, notice, preview, latestDet, timeoutSecPtr), nil
 	}
-	if truncNotice != "" {
-		finalText += truncNotice
-	}
-	details := EvalToolDetails{
-		Language:  cellLanguage,
-		Languages: []EvalLanguage{cellLanguage},
-		Cells:     []EvalCellResult{cellResult},
-		Images:    finalImages,
-		Replies:   replies,
-		Meta:      outputMeta,
-		Notice:    notice,
-	}
-	return sdk.ToolResult{
-		Content: finalText,
-		Images:  sdkImages,
-		Details: details,
-	}, nil
 }
 
 func buildManagedPyEnv(sessionFile, artifactsDir, bridgeSession string, bridge *bridgeServer, localRoots map[string]string) (map[string]string, map[string]any) {
@@ -953,6 +1239,7 @@ func (m *Manager) runPythonCell(
 	prepared PreparedEvalSource,
 	reset bool,
 	cellTimeoutMs int,
+	armTimeout func(context.Context) (context.Context, func()),
 	emitStatus func(EvalStatusEvent),
 	onUpdate func(any),
 	onFirstCallPrelude func(Prelude),
@@ -965,6 +1252,11 @@ func (m *Manager) runPythonCell(
 	if settings.PythonKernelMode == "per-call" {
 		if runCtx.Err() != nil {
 			return kernelResult{Cancelled: true}, "", nil
+		}
+		if armTimeout != nil {
+			var disarm func()
+			runCtx, disarm = armTimeout(runCtx)
+			defer disarm()
 		}
 		k, err := startPythonKernel(runCtx, cwd, settings.PythonInterpreter, strEnv)
 		if err != nil {
@@ -1002,7 +1294,11 @@ func (m *Manager) runPythonCell(
 	if runCtx.Err() != nil {
 		return kernelResult{Cancelled: true}, "", nil
 	}
-
+	if armTimeout != nil {
+		var disarm func()
+		runCtx, disarm = armTimeout(runCtx)
+		defer disarm()
+	}
 	var restartNotice string
 	if reset {
 		if k := slot.liveKernel(); k != nil {
@@ -1065,6 +1361,7 @@ func (m *Manager) runJSCell(
 	prepared PreparedEvalSource,
 	reset bool,
 	cellTimeoutMs int,
+	armTimeout func(context.Context) (context.Context, func()),
 	emitStatus func(EvalStatusEvent),
 	onUpdate func(any),
 	onFirstCallPrelude func(Prelude),
@@ -1081,7 +1378,11 @@ func (m *Manager) runJSCell(
 	if runCtx.Err() != nil {
 		return kernelResult{Cancelled: true}, "", nil
 	}
-
+	if armTimeout != nil {
+		var disarm func()
+		runCtx, disarm = armTimeout(runCtx)
+		defer disarm()
+	}
 	var restartNotice string
 	if reset {
 		if k := slot.liveKernel(); k != nil {

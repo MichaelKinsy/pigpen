@@ -21,6 +21,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/browser"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/checkpoint"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/commit"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ctxnotes"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/debug"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/eval"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/files"
@@ -30,6 +31,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lsp"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/memory"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/modes"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/pause"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prediction"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prompt"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/providerwire"
@@ -71,6 +73,7 @@ var registrars = []func(*sdk.Extension){
 	autolearn.Register,
 	think.Register,
 	memory.Register,
+	ctxnotes.Register,
 	autothinking.Register,
 	eval.Register,
 	commit.Register,
@@ -79,6 +82,7 @@ var registrars = []func(*sdk.Extension){
 	agents.Register,
 	modes.Register,
 	advisor.Register,
+	pause.Register,
 	vibe.Register,
 	browser.Register,
 	ternbrowser.Register,

@@ -12,6 +12,7 @@ Port of omp's memory backends (`local`, `mnemopi`, `hindsight`), memory tools (`
 - `packages/coding-agent/src/tools/memory-{retain,recall,reflect,edit}.ts` + `tools/learn.ts` → `tools.go` (`Register`, `ExecuteRetain`, `ExecuteRecall`, `ExecuteReflect`, `ExecuteMemoryEdit`, `ExecuteLearn`, `BuildMemoryPromptInstructions`, `DefaultActive: false` + `toolcmd.RegisterAutoActivate` + `intent.Tool` + `intent.RegisterSync`).
 - `packages/coding-agent/src/internal-urls/memory-protocol.ts:1-491` → `protocol.go` (`MemoryHandler` for `memory://root[/<subpath>]` under `local` and `memory://<id>` under `mnemopi`; `PromptDoc` returns `""` unless `host.MemoryBackend == "local"`).
 - `packages/coding-agent/src/prompts/tools/{retain,recall,reflect,memory-edit,learn}.md`, `prompts/internal-urls/memory.md`, `prompts/system/{mnemopi,hindsight}-instructions.md`, `prompts/memories/read-path.md` → `prompts/*.md` (embedded verbatim).
+- `packages/coding-agent/src/slash-commands/builtin-lifecycle.ts:523-610`, `modes/controllers/command-controller.ts:1024-1356`, `hindsight/client.ts:484-579`, `hindsight/mental-models.ts:89-132`, `hindsight/seeds.json` → `command.go` (`/memory` slash command: `view`, `stats`, `diagnose`, `clear`, `reset`, `enqueue`, `rebuild`, `sync`, `queue`, `mm <list|show|refresh|history|seed|reload|delete>`).
 
 ## Stdlib-Only Adaptations (Zero Third-Party Deps / Zero cgo)
 
@@ -28,4 +29,5 @@ Port of omp's memory backends (`local`, `mnemopi`, `hindsight`), memory tools (`
 | `memory.backend` | `"off"` | Yes | `"off" \| "local" \| "mnemopi" \| "hindsight"`; default `"off"` keeps all 5 tools inactive and `memory://` prompt doc empty. |
 | `mnemopi.{dbPath,bank,bankId,scoping,recallLimit,noEmbeddings,embeddingModel,embeddingApiUrl,embeddingApiKey,embeddingQueryPrefix,injectionTokenLimit}` | upstream defaults | Yes | `mnemopi.scoping` defaults to `"per-project"`. |
 | `hindsight.{apiUrl,apiToken,apiKey,bankId,bankIdPrefix,scoping,globalScope,bankMission,retainMission,retainContext,recallBudget,recallMaxTokens,recallTypes,requestTimeoutMs,recallTimeoutMs,reflectTimeoutMs,retainTimeoutMs}` | upstream defaults | Yes | `hindsight.apiUrl` must be non-empty for Hindsight tool activation. |
+| `hindsight.mentalModelsEnabled` | `true` | Yes | Required alongside `memory.backend=hindsight` for `/memory mm ...` subcommands. |
 | `autolearn.enabled` | `false` | Yes | Required alongside a live memory backend to activate `learn`. |

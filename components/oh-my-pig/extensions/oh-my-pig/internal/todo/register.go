@@ -255,6 +255,51 @@ func releaseSession(sessionID string) {
 	delete(liveApps, sessionID)
 	storeMu.Unlock()
 }
+
+// CurrentPhases returns a deep copy of the active todo phases for ctx's
+// session and whether todo is enabled for that session.
+func CurrentPhases(ctx sdk.Context) (bool, []TodoPhase) {
+	if !settingBool(ctx, "todo.enabled", true) {
+		return false, nil
+	}
+	var activeTools []string
+	func() {
+		defer func() { _ = recover() }()
+		if tools, err := ctx.GetActiveTools(); err == nil {
+			activeTools = tools
+		}
+	}()
+	if len(activeTools) > 0 {
+		hasTodo := false
+		for _, name := range activeTools {
+			if name == "todo" {
+				hasTodo = true
+				break
+			}
+		}
+		if !hasTodo {
+			return false, nil
+		}
+	}
+	var sid string
+	func() {
+		defer func() { _ = recover() }()
+		if id, err := ctx.GetSessionID(); err == nil {
+			sid = strings.TrimSpace(id)
+		}
+	}()
+	if sid == "" {
+		return true, nil
+	}
+	storeMu.Lock()
+	st := sessions[sid]
+	var phases []TodoPhase
+	if st != nil && len(st.phases) > 0 {
+		phases = ClonePhases(st.phases)
+	}
+	storeMu.Unlock()
+	return true, phases
+}
 func stateLocked(key string) *sessionState {
 	st, ok := sessions[key]
 	if !ok {

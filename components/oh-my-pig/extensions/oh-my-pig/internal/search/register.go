@@ -79,8 +79,9 @@ func getArchiveReader() *ArchiveMemberReader {
 // process-wide. Keyed strictly by non-empty sessionID and released via
 // lifecycle.OnEnd("search", ...).
 type findSessionState struct {
-	autoActivated bool // true once this extension activated `find` for this session
-	userRemoved   bool // true if `find` was removed after we activated it
+	autoActivated bool            // true once this extension activated `find` for this session
+	userRemoved   bool            // true if `find` was removed after we activated it
+	removedByGate map[string]bool // tools ("grep", "glob") removed by `*.enabled: false`
 }
 
 var (
@@ -142,6 +143,131 @@ func findEnabledSetting(ctx sdk.Context) string {
 		}
 	}
 	return "auto"
+}
+
+// grepEnabledSetting reads `grep.enabled` (default true).
+// upstream: packages/coding-agent/src/tools/settings.ts:518-528, tools/index.ts:819
+func grepEnabledSetting(ctx sdk.Context) bool {
+	if v, ok := readSetting(ctx, "grep.enabled").(bool); ok {
+		return v
+	}
+	return true
+}
+
+// globEnabledSetting reads `glob.enabled` (default true).
+// upstream: packages/coding-agent/src/tools/settings.ts:506-516, tools/index.ts:818
+func globEnabledSetting(ctx sdk.Context) bool {
+	if v, ok := readSetting(ctx, "glob.enabled").(bool); ok {
+		return v
+	}
+	return true
+}
+
+// applySearchEnabledSettings enforces `grep.enabled` and `glob.enabled` on
+// `session_start` and `before_agent_start`. Tools removed by a `false` setting
+// are tracked in per-session `removedByGate` so toggling back to `true`
+// mid-session restores them at their canonical BuiltinToolOrder position.
+// Default sessions (`true`/`true` with empty `removedByGate`) perform zero IPC.
+func applySearchEnabledSettings(ctx sdk.Context) {
+	grepOn := grepEnabledSetting(ctx)
+	globOn := globEnabledSetting(ctx)
+
+	if grepOn && globOn {
+		// Fast path: if no tracked session has any gated-out search tool,
+		// avoid even calling GetSessionID() (zero IPC for default sessions).
+		findSessionsMu.Lock()
+		anyRemoved := false
+		for _, st := range findSessions {
+			if st != nil && len(st.removedByGate) > 0 {
+				anyRemoved = true
+				break
+			}
+		}
+		findSessionsMu.Unlock()
+		if !anyRemoved {
+			return
+		}
+	}
+
+	sid, _ := ctx.GetSessionID()
+	var hadRemovedGrep, hadRemovedGlob bool
+	if sid != "" {
+		findSessionsMu.Lock()
+		if st := findSessions[sid]; st != nil && len(st.removedByGate) > 0 {
+			hadRemovedGrep = st.removedByGate["grep"]
+			hadRemovedGlob = st.removedByGate["glob"]
+		}
+		findSessionsMu.Unlock()
+	}
+
+	needRestoreGrep := grepOn && hadRemovedGrep
+	needRestoreGlob := globOn && hadRemovedGlob
+	if grepOn && globOn && !needRestoreGrep && !needRestoreGlob {
+		return
+	}
+
+	active, err := ctx.GetActiveTools()
+	if err != nil {
+		return
+	}
+
+	next := make([]string, 0, len(active)+2)
+	changed := false
+	removedGrep := false
+	removedGlob := false
+	for _, name := range active {
+		if name == "grep" && !grepOn {
+			changed = true
+			removedGrep = true
+			continue
+		}
+		if name == "glob" && !globOn {
+			changed = true
+			removedGlob = true
+			continue
+		}
+		next = append(next, name)
+	}
+	if needRestoreGrep && !slices.Contains(next, "grep") {
+		next = insertToolInOrder(next, "grep")
+		changed = true
+	}
+	if needRestoreGlob && !slices.Contains(next, "glob") {
+		next = insertToolInOrder(next, "glob")
+		changed = true
+	}
+
+	if sid != "" && (removedGrep || removedGlob || needRestoreGrep || needRestoreGlob) {
+		findSessionsMu.Lock()
+		st := findSessions[sid]
+		if st == nil {
+			st = &findSessionState{}
+			findSessions[sid] = st
+		}
+		if removedGrep || removedGlob {
+			if st.removedByGate == nil {
+				st.removedByGate = make(map[string]bool, 2)
+			}
+			if removedGrep {
+				st.removedByGate["grep"] = true
+			}
+			if removedGlob {
+				st.removedByGate["glob"] = true
+			}
+		}
+		if needRestoreGrep {
+			delete(st.removedByGate, "grep")
+		}
+		if needRestoreGlob {
+			delete(st.removedByGate, "glob")
+		}
+		findSessionsMu.Unlock()
+	}
+
+	if changed {
+		ctx.SetActiveTools(next)
+		toolcmd.Sync(ctx)
+	}
 }
 
 func findHitThresholdSetting(ctx sdk.Context) float64 {
@@ -286,7 +412,12 @@ func Register(e *sdk.Extension) {
 			findSessions[sid] = &findSessionState{}
 			findSessionsMu.Unlock()
 		}
+		applySearchEnabledSettings(ctx)
 		updateFindToolActivation(ctx)
+		return nil, nil
+	})
+	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		applySearchEnabledSettings(ctx)
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventModelSelect, func(ctx sdk.Context, _ map[string]any) (any, error) {
@@ -414,10 +545,14 @@ func updateFindToolActivation(ctx sdk.Context) {
 // auto-activation preserves omp's tool order without reordering non-default lists.
 // upstream: packages/coding-agent/src/tools/index.ts:622-652
 func insertFindInOrder(active []string) []string {
+	return insertToolInOrder(active, "find")
+}
+
+func insertToolInOrder(active []string, toolName string) []string {
 	order := toolcmd.BuiltinToolOrder
-	findRank := slices.Index(order, "find")
-	if findRank < 0 {
-		return append(slices.Clone(active), "find")
+	targetRank := slices.Index(order, toolName)
+	if targetRank < 0 {
+		return append(slices.Clone(active), toolName)
 	}
 	rankOf := make(map[string]int, len(order))
 	for i, name := range order {
@@ -425,14 +560,14 @@ func insertFindInOrder(active []string) []string {
 	}
 	insertAt := len(active)
 	for i, name := range active {
-		if r, ok := rankOf[name]; ok && r > findRank {
+		if r, ok := rankOf[name]; ok && r > targetRank {
 			insertAt = i
 			break
 		}
 	}
 	out := make([]string, 0, len(active)+1)
 	out = append(out, active[:insertAt]...)
-	out = append(out, "find")
+	out = append(out, toolName)
 	out = append(out, active[insertAt:]...)
 	return out
 }

@@ -36,6 +36,36 @@ func RenderBtwUserPrompt(question string, inject bool) string {
 	})
 }
 
+const (
+	btwInjectOpenTag  = "<inject>"
+	btwInjectCloseTag = "</inject>"
+)
+
+func isBtwInjectEnabled(ctx sdk.Context) bool {
+	return readModeSettingBool(ctx, "btw.inject", false)
+}
+
+// ExtractBtwInject extracts the steering prompt from the last closed
+// `<inject>...</inject>` block in a `/btw` answer, returning "" when absent,
+// unclosed, or blank.
+// upstream: packages/tui/src/overlays/btw-history.ts:71-103
+func ExtractBtwInject(answer string) string {
+	lastClose := strings.LastIndex(answer, btwInjectCloseTag)
+	if lastClose < len(btwInjectOpenTag) {
+		return ""
+	}
+	open := strings.LastIndex(answer[:lastClose], btwInjectOpenTag)
+	if open < 0 {
+		return ""
+	}
+	afterOpen := open + len(btwInjectOpenTag)
+	closeIdx := strings.Index(answer[afterOpen:], btwInjectCloseTag)
+	if closeIdx < 0 {
+		return ""
+	}
+	return strings.TrimSpace(answer[afterOpen : afterOpen+closeIdx])
+}
+
 func btwSidecarDir(ctx sdk.Context) string {
 	root := resolveLocalRootDir(ctx)
 	if root == "" {
@@ -92,16 +122,21 @@ func saveBtwSidecar(ctx sdk.Context, rec BtwRecord) error {
 	return os.WriteFile(filepath.Join(dir, rec.ID+".json"), raw, 0o600)
 }
 
-// handleBtwCommand implements `/btw [question]`.
-// Without arguments it browses this session's BTW sidecar history; with a
-// question it runs an ephemeral one-shot completion via `ctx.Complete` with
-// full session branch context and without mutating the main session journal or
-// interrupting an active turn.
+// handleBtwCommand implements `/btw [question | inject]`.
+// Without arguments it browses this session's BTW sidecar history; with
+// `inject` it steers the main session with the latest drafted `<inject>` block
+// (when `btw.inject` was enabled); with a question it runs an ephemeral
+// one-shot completion via `ctx.Complete` with full session branch context and
+// without mutating the main session journal or interrupting an active turn.
 // upstream: packages/coding-agent/src/slash-commands/builtin-lifecycle.ts:424-438
+// upstream: packages/coding-agent/src/session/btw-turn.ts:67-109
 func (m *manager) handleBtwCommand(ctx sdk.Context, args string) error {
 	question := strings.TrimSpace(args)
 	if question == "" {
 		return m.showBtwHistory(ctx)
+	}
+	if strings.EqualFold(question, "inject") {
+		return m.handleBtwInjectCommand(ctx)
 	}
 
 	modelInfo, err := ctx.GetModelInfo()
@@ -122,13 +157,21 @@ func (m *manager) handleBtwCommand(ctx sdk.Context, args string) error {
 		_ = json.Unmarshal(rawAuth, &auth)
 	}
 
-	messages := buildBtwMessages(ctx, question)
+	injectEnabled := isBtwInjectEnabled(ctx)
+	messages := buildBtwMessages(ctx, question, injectEnabled)
 	req := map[string]any{
 		"messages":   messages,
 		"toolChoice": "none",
 	}
 	if sysPrompt, err := ctx.GetSystemPrompt(); err == nil && sysPrompt != "" {
 		req["systemPrompt"] = sysPrompt
+	}
+	// Ensure session state exists before ctx.Complete so a session shutdown
+	// during Complete removes it and we never recreate an ended session afterward.
+	if sid := strictSessionID(ctx); sid != "" {
+		m.mu.Lock()
+		_ = m.stateLocked(sid)
+		m.mu.Unlock()
 	}
 
 	raw, err := ctx.Complete(modelObj, req, auth)
@@ -146,6 +189,20 @@ func (m *manager) handleBtwCommand(ctx sdk.Context, args string) error {
 		answer = "(empty response)"
 	}
 
+	draftedInject := ""
+	if injectEnabled {
+		draftedInject = sanitizeBtwInjectText(ExtractBtwInject(answer))
+		if draftedInject != "" {
+			if sid := strictSessionID(ctx); sid != "" {
+				m.mu.Lock()
+				if st := m.sessions[sid]; st != nil {
+					st.btwLastInject = draftedInject
+				}
+				m.mu.Unlock()
+			}
+		}
+	}
+
 	now := m.now()
 	rec := BtwRecord{
 		ID:        fmt.Sprintf("btw-%d-%d", now, goalIDSeq.Add(1)),
@@ -156,7 +213,42 @@ func (m *manager) handleBtwCommand(ctx sdk.Context, args string) error {
 	// Persist only in the session-local sidecar; never append to the main session journal.
 	_ = saveBtwSidecar(ctx, rec)
 
-	notifyInfo(ctx, fmt.Sprintf("BTW: %s\n\n%s", question, answer))
+	msg := fmt.Sprintf("BTW: %s\n\n%s", question, answer)
+	if draftedInject != "" {
+		msg += "\n\n(Drafted steering prompt available — run /btw inject to steer the main session.)"
+	}
+	notifyInfo(ctx, msg)
+	return nil
+}
+
+func (m *manager) handleBtwInjectCommand(ctx sdk.Context) error {
+	sid := strictSessionID(ctx)
+	var text string
+	if sid != "" {
+		m.mu.Lock()
+		if st := m.sessions[sid]; st != nil {
+			text = st.btwLastInject
+			st.btwLastInject = ""
+		}
+		m.mu.Unlock()
+	}
+	text = sanitizeBtwInjectText(text)
+	if text == "" {
+		notifyInfo(ctx, "No drafted <inject> prompt from /btw.")
+		return nil
+	}
+	if err := ctx.SendUserMessage(text, "steer"); err != nil {
+		if sid != "" {
+			m.mu.Lock()
+			if st := m.sessions[sid]; st != nil && st.btwLastInject == "" {
+				st.btwLastInject = text
+			}
+			m.mu.Unlock()
+		}
+		notifyError(ctx, fmt.Sprintf("Failed to inject /btw prompt: %v", err))
+		return nil
+	}
+	notifyInfo(ctx, "Injected /btw prompt into main session.")
 	return nil
 }
 
@@ -198,7 +290,7 @@ func (m *manager) showBtwHistory(ctx sdk.Context) error {
 // buildBtwMessages assembles full conversation context from the session branch
 // (including compaction summaries, user/assistant text, tool calls, and tool
 // results) followed by the `<btw>` question prompt.
-func buildBtwMessages(ctx sdk.Context, question string) []map[string]any {
+func buildBtwMessages(ctx sdk.Context, question string, inject bool) []map[string]any {
 	var messages []map[string]any
 	if branch, err := ctx.GetBranch(); err == nil {
 		for _, entry := range branch {
@@ -250,7 +342,7 @@ func buildBtwMessages(ctx sdk.Context, question string) []map[string]any {
 	}
 	messages = append(messages, map[string]any{
 		"role":    "user",
-		"content": []map[string]any{{"type": "text", "text": RenderBtwUserPrompt(question, false)}},
+		"content": []map[string]any{{"type": "text", "text": RenderBtwUserPrompt(question, inject)}},
 	})
 	return messages
 }
@@ -297,4 +389,41 @@ func extractCompleteText(raw json.RawMessage) (text, errMsg string) {
 		return strings.TrimSpace(strings.Join(parts, "")), ""
 	}
 	return "", ""
+}
+
+// sanitizeBtwInjectText strips ANSI escape sequences and C0 control characters
+// (except `\n` and `\t`) from extracted `<inject>` text before steering the
+// main session.
+func sanitizeBtwInjectText(s string) string {
+	if s == "" {
+		return ""
+	}
+	var b strings.Builder
+	b.Grow(len(s))
+	inESC := false
+	inCSI := false
+	for _, r := range s {
+		if inCSI {
+			if r >= 0x40 && r <= 0x7e {
+				inCSI = false
+			}
+			continue
+		}
+		if inESC {
+			if r == '[' {
+				inCSI = true
+			}
+			inESC = false
+			continue
+		}
+		if r == 0x1b {
+			inESC = true
+			continue
+		}
+		if (r < 0x20 && r != '\n' && r != '\t') || r == 0x7f {
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return strings.TrimSpace(b.String())
 }

@@ -113,6 +113,11 @@ var MemoryInstructions func(ctx sdk.Context) string
 // default ("" -> off, zero change on default sessions).
 var MemoryBackend func(ctx sdk.Context) string
 
+// ContextNotesInstructions returns `<experimental-context-notes>` guidance for
+// the system prompt when `compaction.experimentalContextManagement` is true and
+// notes are non-empty, or "" otherwise. Nil by default (no-op on default sessions).
+var ContextNotesInstructions func(ctx sdk.Context) string
+
 // PrepareSystemPrompt optionally transforms the rendered system prompt before
 // returning it from `before_agent_start` (used by `snapcompact.PrepareInlineSystemPrompt`
 // for `snapcompact.systemPrompt: "all"|"agents-md"`). Nil or default setting is a no-op.
@@ -1087,6 +1092,15 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 		appendPrompt, _ := options["appendSystemPrompt"].(string)
 		if MemoryInstructions != nil {
 			if guidance := strings.TrimSpace(MemoryInstructions(ctx)); guidance != "" {
+				if strings.TrimSpace(appendPrompt) != "" {
+					appendPrompt = strings.TrimRight(appendPrompt, "\n") + "\n\n" + guidance
+				} else {
+					appendPrompt = guidance
+				}
+			}
+		}
+		if ContextNotesInstructions != nil {
+			if guidance := strings.TrimSpace(ContextNotesInstructions(ctx)); guidance != "" {
 				if strings.TrimSpace(appendPrompt) != "" {
 					appendPrompt = strings.TrimRight(appendPrompt, "\n") + "\n\n" + guidance
 				} else {

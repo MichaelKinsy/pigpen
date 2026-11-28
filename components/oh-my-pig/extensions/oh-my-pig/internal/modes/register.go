@@ -228,6 +228,19 @@ func registerWithManager(e *sdk.Extension, m *manager) {
 		}),
 		Handler: m.handleCleanseCommand,
 	})
+	e.RegisterCommand("prewalk", sdk.CommandOptions{
+		Description: "Arm, restart, or cancel a one-shot model handoff",
+		GetArgumentCompletions: staticSubcommandCompletions([]sdk.AutocompleteItem{
+			{Value: "restart ", Label: "restart", Description: "Return to the planning model and re-arm the handoff (default prewalk.from -> prewalk.into)"},
+			{Value: "off ", Label: "off", Description: "Cancel this session's handoff without changing the active model"},
+			{Value: "status ", Label: "status", Description: "Show current prewalk state and target model"},
+		}),
+		Handler: m.handlePrewalkCommand,
+	})
+	e.RegisterCommand("omfg", sdk.CommandOptions{
+		Description: "Forge a TTSR rule from a complaint to stop a recurring behavior",
+		Handler:     m.handleOmfgCommand,
+	})
 
 	// Event hooks
 	e.OnSessionStart(m.onSessionStart)
@@ -240,6 +253,7 @@ func registerWithManager(e *sdk.Extension, m *manager) {
 	e.OnEvent(sdk.EventBeforeAgentStart, m.onBeforeAgentStart)
 	e.OnEvent(sdk.EventAgentStart, m.onAgentStart)
 	e.OnToolResult(m.onToolResult)
+	e.OnEvent(sdk.EventTurnEnd, m.onTurnEnd)
 	e.OnEvent(sdk.EventAgentBeforeSettle, m.onAgentBeforeSettle)
 	e.OnEvent(sdk.EventAgentEnd, m.onAgentEnd)
 }
@@ -297,6 +311,11 @@ func (m *manager) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error)
 			ctx.SetActiveTools(next)
 		}
 	}
+
+	// Auto-enter plan mode on fresh empty interactive sessions when plan.defaultOnStartup is true.
+	m.maybeEnterPlanDefaultOnStartup(ctx, sid)
+	// Auto-arm prewalk on session start when prewalk.enabled is true (default false).
+	m.maybeArmConfiguredPrewalk(ctx, sid)
 	return nil, nil
 }
 
@@ -637,11 +656,22 @@ func (m *manager) onBeforeAgentStart(ctx sdk.Context, _ map[string]any) (any, er
 		primaryContent = planPrompt
 	case goalState != nil && goalState.Enabled && goalState.Goal.Status == GoalStatusActive:
 		primaryType = "goal-mode-context"
-		primaryContent = RenderGoalPrompt("active", goalState.Goal)
+		primaryContent = buildGoalModeContextMessage(ctx, goalState.Goal)
 	case needPlanRef:
 		if content, ok, err := readPlanFile(ctx, planRefPath); err == nil && ok && strings.TrimSpace(content) != "" {
 			primaryType = "plan-mode-reference"
 			primaryContent = renderPlanReferencePrompt(planRefPath, content)
+		}
+	}
+
+	if prewalkPlan := m.takePrewalkPlanContext(sid); prewalkPlan != "" {
+		if primaryContent == "" {
+			primaryType = prewalkPlanMessageType
+			primaryContent = prewalkPlan
+		} else {
+			_ = ctx.SendMessage(prewalkPlanMessageType, prewalkPlan, false, sdk.SendMessageOptions{
+				TriggerTurn: sdk.Bool(false),
+			})
 		}
 	}
 
@@ -722,6 +752,8 @@ func (m *manager) onToolResult(ctx sdk.Context, data map[string]any) (any, error
 		}
 		m.mu.Unlock()
 	}
+
+	m.recordPrewalkToolResult(sid, toolName, isErr, data)
 
 	if toolName == goalToolName {
 		m.flushGoalUsage(ctx, sid, false)

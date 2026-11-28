@@ -8,7 +8,7 @@ import (
 )
 
 // Embedded upstream omp v19.1.1 prompt files.
-// 16 templates under packages/coding-agent/src/prompts/ plus handoff-document.md
+// 21 templates under packages/coding-agent/src/prompts/ plus handoff-document.md
 // from packages/agent/src/compaction/prompts/.
 var (
 	//go:embed prompts/plan-mode-active.md
@@ -52,6 +52,17 @@ var (
 
 	//go:embed prompts/commit-request.md
 	commitRequestTemplate string
+
+	//go:embed prompts/prewalk-plan.md
+	prewalkPlanPrompt string
+	//go:embed prompts/prewalk-continue.md
+	prewalkContinuePrompt string
+	//go:embed prompts/prewalk-checklist.md
+	prewalkChecklistPrompt string
+	//go:embed prompts/omfg-user.md
+	omfgUserTemplate string
+	//go:embed prompts/goal-todo-context.md
+	goalTodoContextTemplate string
 )
 
 // templateData holds values evaluated by renderTemplate (minimal Handlebars
@@ -60,6 +71,7 @@ type templateData struct {
 	Vars  map[string]string
 	Bools map[string]bool
 	Lists map[string][]string
+	Items map[string][]templateData
 }
 
 // renderTemplate evaluates omp's Handlebars constructs in a single pass so
@@ -120,14 +132,49 @@ func evalTemplate(s string, data templateData) string {
 			elseBody = stripLeadingBlockNewline(elseBody)
 
 			if kind == "each" {
-				for _, item := range data.Lists[arg] {
-					childVars := make(map[string]string, len(data.Vars)+1)
-					for k, v := range data.Vars {
-						childVars[k] = v
+				if items, ok := data.Items[arg]; ok {
+					for _, item := range items {
+						childVars := make(map[string]string, len(data.Vars)+len(item.Vars))
+						for k, v := range data.Vars {
+							childVars[k] = v
+						}
+						for k, v := range item.Vars {
+							childVars[k] = v
+						}
+						childBools := make(map[string]bool, len(data.Bools)+len(item.Bools))
+						for k, v := range data.Bools {
+							childBools[k] = v
+						}
+						for k, v := range item.Bools {
+							childBools[k] = v
+						}
+						childLists := make(map[string][]string, len(data.Lists)+len(item.Lists))
+						for k, v := range data.Lists {
+							childLists[k] = v
+						}
+						for k, v := range item.Lists {
+							childLists[k] = v
+						}
+						childItems := make(map[string][]templateData, len(data.Items)+len(item.Items))
+						for k, v := range data.Items {
+							childItems[k] = v
+						}
+						for k, v := range item.Items {
+							childItems[k] = v
+						}
+						child := templateData{Vars: childVars, Bools: childBools, Lists: childLists, Items: childItems}
+						b.WriteString(evalTemplate(thenBody, child))
 					}
-					childVars["this"] = item
-					child := templateData{Vars: childVars, Bools: data.Bools, Lists: data.Lists}
-					b.WriteString(evalTemplate(thenBody, child))
+				} else {
+					for _, item := range data.Lists[arg] {
+						childVars := make(map[string]string, len(data.Vars)+1)
+						for k, v := range data.Vars {
+							childVars[k] = v
+						}
+						childVars["this"] = item
+						child := templateData{Vars: childVars, Bools: data.Bools, Lists: data.Lists, Items: data.Items}
+						b.WriteString(evalTemplate(thenBody, child))
+					}
 				}
 			} else if evalCondition(kind, arg, data) {
 				b.WriteString(evalTemplate(thenBody, data))

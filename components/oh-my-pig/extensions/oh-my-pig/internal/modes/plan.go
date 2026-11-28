@@ -1002,6 +1002,59 @@ func (m *manager) enterPlanMode(ctx sdk.Context, sid, planFilePath string) {
 	notifyInfo(ctx, "Plan mode enabled. Plan file: "+planFilePath)
 }
 
+// isPlanDefaultOnStartupSetting reports whether `plan.defaultOnStartup` is
+// enabled (default false).
+// upstream: packages/coding-agent/src/plan-mode/settings.ts:25-35
+func isPlanDefaultOnStartupSetting(ctx sdk.Context) bool {
+	return readModeSettingBool(ctx, "plan.defaultOnStartup", false)
+}
+
+// maybeEnterPlanDefaultOnStartup automatically enters plan mode on a fresh,
+// empty interactive TUI session when `plan.defaultOnStartup == true` and
+// `plan.enabled == true`, matching omp's `shouldEnterPlanModeOnStartup`.
+// Zero effect when `plan.defaultOnStartup` is false (the default).
+// upstream: packages/coding-agent/src/modes/interactive-mode.ts:718-730,6250-6260
+func (m *manager) maybeEnterPlanDefaultOnStartup(ctx sdk.Context, sid string) {
+	if isSubagentSession(ctx) {
+		return
+	}
+	if !ctx.HasUI() || ctx.Mode() != "tui" {
+		return
+	}
+	if !isPlanDefaultOnStartupSetting(ctx) || !isPlanEnabledSetting(ctx) {
+		return
+	}
+	if VibeActive != nil && VibeActive(ctx) {
+		return
+	}
+	m.mu.Lock()
+	st := m.stateLocked(sid)
+	hasActiveOrPausedMode := st.planEnabled || st.planPaused || st.planHasEntered || st.goalState != nil || st.loopEnabled
+	m.mu.Unlock()
+	if hasActiveOrPausedMode {
+		return
+	}
+	branch, err := ctx.GetBranch()
+	if err != nil {
+		return
+	}
+	for _, entry := range branch {
+		if entry.Type == "message" && (entry.Role == "user" || entry.Role == "assistant") {
+			return
+		}
+	}
+	rawEntries, err := ctx.GetEntries()
+	if err != nil {
+		return
+	}
+	for _, raw := range rawEntries {
+		if strings.Contains(string(raw), `"mode_change"`) {
+			return
+		}
+	}
+	m.enterPlanMode(ctx, sid, defaultPlanFileURL)
+}
+
 func (m *manager) exitPlanMode(ctx sdk.Context, sid string, paused, silent bool) {
 	m.mu.Lock()
 	st := m.stateLocked(sid)

@@ -779,6 +779,38 @@ func (t *BashTool) Execute(ctx sdk.Context, params map[string]any) (any, error) 
 		return nil, sdk.NewToolError(gateErr.Error())
 	}
 
+	// Optional shared-checkout git guard (bash.gitGuard, default false, operator authority).
+	// Disabled by default: incurs zero overhead and spawns zero subprocesses when false.
+	// upstream: packages/coding-agent/src/exec/settings.ts:155-166, crates/shell/src/git/guard.rs
+	if readSettingBool(ctx, "bash.gitGuard", false) {
+		guardCtx := context.Background()
+		var cancelGuard context.CancelFunc
+		if hasHostCtx && ctx.Done() != nil {
+			guardCtx, cancelGuard = context.WithCancel(context.Background())
+			go func() {
+				select {
+				case <-ctx.Done():
+					cancelGuard()
+				case <-guardCtx.Done():
+				}
+			}()
+		}
+		var sessState *sessionState
+		if t.runtime != nil && sessionKey != "" {
+			sessState = t.runtime.sessionState(sessionKey)
+		}
+		guardDec := checkBashGitGuardWithState(guardCtx, command, commandCwd, sessState)
+		if cancelGuard != nil {
+			cancelGuard()
+		}
+		if guardDec.Refusal != "" {
+			return nil, sdk.NewToolError(guardDec.Refusal)
+		}
+		if len(guardDec.Notes) > 0 {
+			pendingNotices = append(pendingNotices, guardDec.Notes...)
+		}
+	}
+
 	stampCwd := func(res any) any {
 		if ranCwd == "" {
 			return res

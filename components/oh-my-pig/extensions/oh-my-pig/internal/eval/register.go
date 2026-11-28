@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/intent"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/jobs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/schemaorder"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/toolcmd"
@@ -150,6 +151,9 @@ func registerWithManager(e *sdk.Extension, mgr *Manager) {
 	// then refresh the registered tool definition so the model sees the exact session
 	// description and schema (and PrepareLoadout reuses the snapshot).
 	e.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		if id, err := ctx.SessionManager().GetSessionID(); err == nil && strings.TrimSpace(id) != "" {
+			jobs.BindSession(id, ctx)
+		}
 		opts := descriptionOptionsForSession(ctx, nil)
 		mounted, hidden := snapshotToolCmdState(ctx)
 		snapMu.Lock()
@@ -208,6 +212,7 @@ func descriptionOptionsForSession(ctx sdk.Context, toolNames []string) Descripti
 	opts.Py = settings.AllowPy
 	opts.JS = settings.AllowJS
 	opts.EvalTools = settings.EvalToolsEnabled
+	opts.AutoBackgroundEnabled = settings.AutoBackgroundEnabled
 	opts.MaxTimeout = settings.MaxTimeout
 	return opts
 }

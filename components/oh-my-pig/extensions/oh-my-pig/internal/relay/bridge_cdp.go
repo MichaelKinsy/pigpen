@@ -347,8 +347,23 @@ func (b *RelayBridge) handlePageSessionCommandLocked(conn *cdpConnection, msg cd
 		b.replyErrorLocked(conn, msg, fmt.Sprintf("No tab %s", ref.tabKey), cdpErrorServer)
 		return
 	}
+	if tab.rootRuntimeEnabled {
+		b.replayRuntimeContextsLocked(conn, sessionID, ref, tab)
+		enabling.resolve(struct{}{})
+		b.replyLocked(conn, msg, map[string]any{})
+		if ref.runtimeEnabling == enabling {
+			ref.runtimeEnabling = nil
+		}
+		return
+	}
+	existingRoot := tab.rootRuntimeEnabling
 	go func() {
-		err := b.ensureRuntimeEnabled(tab)
+		var err error
+		if existingRoot != nil {
+			_, err = existingRoot.wait()
+		} else {
+			err = b.ensureRuntimeEnabled(tab)
+		}
 		b.mu.Lock()
 		if err != nil {
 			if ref.runtimeEpoch == epoch {

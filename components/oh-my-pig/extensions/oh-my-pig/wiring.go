@@ -22,6 +22,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/browser"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/checkpoint"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/commit"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ctxnotes"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/debug"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/dirs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/eval"
@@ -33,6 +34,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lsp"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/memory"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/modes"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/pause"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prediction"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prompt"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/providerwire"
@@ -119,6 +121,54 @@ func wireSettings() {
 		}
 		return modes.DetachedTaskResult{JobID: jobID, AgentID: agentID}, nil
 	}
+	modes.IsSubagent = agents.IsSubagent
+	modes.AgentDirForContext = settings.AgentDirForContext
+	modes.TodoContextSnapshot = func(ctx sdk.Context) (bool, []modes.GoalTodoPhase) {
+		active, phases := todo.CurrentPhases(ctx)
+		if !active || len(phases) == 0 {
+			return active, nil
+		}
+		out := make([]modes.GoalTodoPhase, len(phases))
+		for i, p := range phases {
+			tasks := make([]modes.GoalTodoTask, len(p.Tasks))
+			for j, t := range p.Tasks {
+				tasks[j] = modes.GoalTodoTask{
+					Status:  string(t.Status),
+					Content: t.Content,
+				}
+			}
+			out[i] = modes.GoalTodoPhase{
+				Name:  p.Name,
+				Tasks: tasks,
+			}
+		}
+		return true, out
+	}
+	pause.WorkStatus = func(ctx sdk.Context) pause.WorkSummary {
+		var sid string
+		func() {
+			defer func() { _ = recover() }()
+			if id, err := ctx.GetSessionID(); err == nil {
+				sid = strings.TrimSpace(id)
+			}
+		}()
+		if sid == "" {
+			return pause.WorkSummary{}
+		}
+		var summary pause.WorkSummary
+		for _, j := range jobs.List(sid) {
+			if j.Status() != "running" {
+				continue
+			}
+			if j.Kind() == jobs.KindAgent {
+				summary.ActiveAgents++
+				summary.UnsettledTurns++
+			} else {
+				summary.UnfinishedJobs++
+			}
+		}
+		return summary
+	}
 	agents.ResolveModelRole = func(ctx sdk.Context, selector string) (provider, id, thinking string, ok bool) {
 		// Resolve `@role` / `pi/<role>` for subagents only when that role is
 		// explicitly configured in `modelRoles`, preserving parent active-model
@@ -146,6 +196,7 @@ func wireSettings() {
 	}
 	prompt.AutoLearnInstructions = autolearn.BuildInstructions
 	prompt.MemoryInstructions = memory.BuildMemoryPromptInstructions
+	prompt.ContextNotesInstructions = ctxnotes.BuildPromptInstructions
 	prompt.MemoryBackend = memory.BackendFor
 	prompt.PrepareSystemPrompt = snapcompact.PrepareInlineSystemPrompt
 	web.Setting = settings.Any
@@ -154,6 +205,7 @@ func wireSettings() {
 	commit.Setting = settings.Any
 	eval.ResolveModelRole = providerwire.ResolveRoleWithThinking
 	eval.TurnBudgetHook = modes.TurnBudgetSnapshot
+	eval.ShellGuard = shell.EvaluateShellGitGuard
 	prediction.Setting = settings.Any
 	prediction.IsSubagent = agents.IsSubagent
 	ratchet.Setting = settings.Any
@@ -174,7 +226,9 @@ func wireSettings() {
 	think.IsSubagent = agents.IsSubagent
 	memory.Setting = func(ctx sdk.Context, key string) any {
 		switch key {
-		case "memory.backend", "hindsight.apiUrl", "hindsight.apiToken", "mnemopi.embeddingApiUrl", "mnemopi.embeddingApiKey", "mnemopi.dbPath":
+		case "memory.backend",
+			"hindsight.apiUrl", "hindsight.apiToken", "hindsight.bankId", "hindsight.bankIdPrefix", "hindsight.scoping",
+			"mnemopi.embeddingApiUrl", "mnemopi.embeddingApiKey", "mnemopi.dbPath", "mnemopi.bankId", "mnemopi.scoping":
 			return settings.OperatorAny(ctx, key)
 		default:
 			return settings.Any(ctx, key)
@@ -182,6 +236,8 @@ func wireSettings() {
 	}
 	memory.IsSubagent = agents.IsSubagent
 	memory.ExplicitTools = agents.ExplicitTools
+	ctxnotes.Setting = settings.Any
+	ctxnotes.IsSubagent = agents.IsSubagent
 	autolearn.LearnActive = memory.LearnActive
 	advisor.Setting = settings.Any
 	advisor.SetSetting = settings.Set
@@ -245,6 +301,13 @@ func wireSettings() {
 		switch key {
 		case "bash.patterns", "bash.allowedEnvVars", "bash.allowCompoundCommands", "bash.direnv":
 			return settings.OperatorAny(ctx, key)
+		case "bash.gitGuard":
+			// Tighten-only: operator true cannot be disabled by project layer,
+			// while a trusted project layer may enable gitGuard.
+			if v, ok := settings.OperatorAny(ctx, key).(bool); ok && v {
+				return true
+			}
+			return settings.Any(ctx, key)
 		case "tools.approval.bash":
 			if m, ok := settings.Any(ctx, "tools.approval").(map[string]any); ok {
 				return m["bash"]
@@ -259,6 +322,7 @@ func wireSettings() {
 	// operator authority view (`tools/bash.ts:846-921`).
 	shell.SessionSetting = settings.Any
 	shell.KillAgentHook = agents.KillAgent
+	approval.BeforeVeto = pause.WaitBeforeToolCall
 	// approval is the one tool_call veto for every tool. Policy keys come from
 	// operator layers; the session view (project layers included) may tighten
 	// and never loosen (omp: tools/approval.ts:382-492).

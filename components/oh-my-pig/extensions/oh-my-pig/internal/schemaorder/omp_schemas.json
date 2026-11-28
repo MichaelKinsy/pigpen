@@ -1425,5 +1425,28 @@
       ],
       "additionalProperties": false
     }
+  },
+  "context_notes": {
+    "source": "derived",
+    "description_len": 0,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Entire replacement notebook text, up to 16384 UTF-8 bytes. Omit to read without changing notes; use an empty string to clear."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "new_context": {
+    "source": "derived",
+    "description_len": 0,
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
   }
 }

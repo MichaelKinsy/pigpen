@@ -34,6 +34,10 @@ const maxShellOutputChars = 16 * 1024 * 1024
 // sdk.Context.ExecuteTool is unavailable or in unit tests without a host tool registry.
 type ToolExecutor func(ctx context.Context, name string, args map[string]any) (sdk.AgentToolResult, error)
 
+// ShellGuard is an optional hook wired by wiring.go (shell.EvaluateShellGitGuard)
+// to run the bash.gitGuard check before `sh()` executes a shell command.
+var ShellGuard func(goCtx context.Context, sdkCtx sdk.Context, command, cwd string) (refusal string, notes []string)
+
 // bridgeRun holds host-side execution state for one active eval cell.
 type bridgeRun struct {
 	sdkCtx             sdk.Context
@@ -642,6 +646,15 @@ func dispatchShellCall(run *bridgeRun, rawArgs json.RawMessage) (any, error) {
 		defer cancel()
 	}
 
+	var guardNotes []string
+	if guard := ShellGuard; guard != nil {
+		refusal, notes := guard(ctx, run.sdkCtx, command, cmdCwd)
+		if refusal != "" {
+			return nil, errors.New(refusal)
+		}
+		guardNotes = notes
+	}
+
 	shellBin, shellArgs := defaultShellCommand(command)
 	cmd := exec.Command(shellBin, shellArgs...)
 	cmd.Dir = cmdCwd
@@ -681,6 +694,14 @@ func dispatchShellCall(run *bridgeRun, rawArgs json.RawMessage) (any, error) {
 	output := sanitizeText(outBuf.String())
 	if outBuf.truncated {
 		output += fmt.Sprintf("\n[output truncated: sh() keeps the first %d characters]\n", maxShellOutputChars)
+	}
+	if len(guardNotes) > 0 {
+		prefix := strings.Join(guardNotes, "\n")
+		if output != "" {
+			output = prefix + "\n" + output
+		} else {
+			output = prefix
+		}
 	}
 	if timedOut {
 		if run.emitStatus != nil {

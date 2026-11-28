@@ -115,6 +115,12 @@ var IsSubagent func(ctx sdk.Context) bool
 // tool-owned deny at the approval gate.
 var OutPolicy func(ctx sdk.Context) urls.OutPolicy
 
+// BeforeVeto optionally runs before approval evaluation inside the single
+// `EventToolCall` handler (used by internal/pause to park tool calls while
+// paused without subscribing a second `EventToolCall` IPC handler on default
+// sessions). Returning a non-nil error blocks the tool call.
+var BeforeVeto func(ctx sdk.Context) error
+
 // BashEvaluator evaluates bash's tool-owned approval decision (bashInterceptor,
 // bash.patterns, CRITICAL_BASH_PATTERNS, tool-command-line read tier).
 // Registered by `internal/shell` via `SetBashEvaluator` on init so bash keeps
@@ -1857,6 +1863,14 @@ func HandleToolCallVeto(ctx sdk.Context, event map[string]any) (any, error) {
 	toolName, _ := event["toolName"].(string)
 	if toolName == "" {
 		return nil, nil
+	}
+	if fn := BeforeVeto; fn != nil {
+		if err := fn(ctx); err != nil {
+			return map[string]any{
+				"block":  true,
+				"reason": err.Error(),
+			}, nil
+		}
 	}
 	input, _ := event["input"].(map[string]any)
 

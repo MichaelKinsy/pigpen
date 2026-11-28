@@ -26,6 +26,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autolearn"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autoresearch"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/checkpoint"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ctxnotes"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/debug"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/eval"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/files"
@@ -66,6 +67,7 @@ var allToolAreas = []areaRegistrar{
 	{area: "internal/autolearn", register: autolearn.Register},
 	{area: "internal/memory", register: memory.Register},
 	{area: "internal/think", register: think.Register},
+	{area: "internal/ctxnotes", register: ctxnotes.Register},
 }
 
 type wireRegisteredTool struct {

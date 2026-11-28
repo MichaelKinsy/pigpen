@@ -2822,3 +2822,523 @@ func TestJSKernelEvalToolsEndToEndAndNoDeadlock(t *testing.T) {
 		t.Fatalf("JS kernel should stay alive after tool_cancel: %+v err=%v", aliveRes, err)
 	}
 }
+
+// --- Eval auto-background tests ---
+
+// upstream: packages/coding-agent/src/async/auto-background.ts:16-21
+func TestResolveAutoBackgroundWaitMs(t *testing.T) {
+	f := func(v float64) *float64 { return &v }
+	cases := []struct {
+		name      string
+		threshold int
+		timeout   *float64
+		want      int
+	}{
+		{"zero threshold backgrounds immediately", 0, f(30), 0},
+		{"negative threshold backgrounds immediately", -5, f(30), 0},
+		{"no timeout returns threshold", 60_000, nil, 60_000},
+		{"zero timeout disables deadline", 60_000, f(0), 60_000},
+		{"bounded by timeout minus 1s buffer", 60_000, f(30), 29_000},
+		{"timeout 1s leaves 0 wait", 60_000, f(1), 0},
+		{"small threshold wins over larger timeout", 250, f(30), 250},
+		{"fractional timeout respected", 60_000, f(2.5), 1_500},
+	}
+	for _, tc := range cases {
+		if got := resolveAutoBackgroundWaitMs(tc.threshold, tc.timeout); got != tc.want {
+			t.Errorf("%s: resolveAutoBackgroundWaitMs(%d, %v) = %d, want %d", tc.name, tc.threshold, tc.timeout, got, tc.want)
+		}
+	}
+}
+
+// Verifies eval.md renders the auto-background note ONLY when eval.autoBackground.enabled is true,
+// keeping default sessions byte-identical.
+// upstream: packages/coding-agent/src/prompts/tools/eval.md:95-98, tools/eval.ts:342
+func TestDescriptionRendersAutoBackgroundNoteWhenEnabled(t *testing.T) {
+	prevSetting := Setting
+	t.Cleanup(func() { Setting = prevSetting })
+
+	const wantLine1 = "Long cells may auto-background and deliver later; the kernel stays busy."
+	const wantLine2 = "`timeout: 0` disables the cell deadline, not the foreground wait."
+
+	off := RenderDescription(DescriptionOptions{Py: true, JS: true, EvalTools: true, WaitTool: true, AutoBackgroundEnabled: false})
+	if strings.Contains(off, wantLine1) || strings.Contains(off, wantLine2) {
+		t.Fatalf("expected auto-background note absent when disabled:\n%s", off)
+	}
+	on := RenderDescription(DescriptionOptions{Py: true, JS: true, EvalTools: true, WaitTool: true, AutoBackgroundEnabled: true})
+	if !strings.Contains(on, wantLine1) || !strings.Contains(on, wantLine2) {
+		t.Fatalf("expected auto-background note present when enabled:\n%s", on)
+	}
+
+	// End-to-end via session_start + Setting hook.
+	store := map[string]any{"eval.autoBackground.enabled": true}
+	Setting = func(_ sdk.Context, key string) any { return store[key] }
+
+	ext := sdk.New("test-eval-autobg-desc")
+	mgr := NewManager()
+	t.Cleanup(mgr.ShutdownAll)
+	registerWithManager(ext, mgr)
+
+	h := startHost(t, ext, hostOptions{})
+	// Before session_start, initial description stays default-off.
+	h.mu.Lock()
+	initialDesc := h.tools["eval"].Description
+	h.mu.Unlock()
+	if strings.Contains(initialDesc, wantLine1) {
+		t.Fatalf("expected initial registration description to stay default-off:\n%s", initialDesc)
+	}
+	if _, errMsg := h.emitEvent("session_start", nil); errMsg != "" {
+		t.Fatalf("session_start failed: %s", errMsg)
+	}
+	h.mu.Lock()
+	startedDesc := h.tools["eval"].Description
+	h.mu.Unlock()
+	if !strings.Contains(startedDesc, wantLine1) || !strings.Contains(startedDesc, wantLine2) {
+		t.Fatalf("expected session_start description to include auto-background note:\n%s", startedDesc)
+	}
+}
+
+// Verifies default eval.autoBackground.enabled == false runs inline with zero background jobs.
+func TestEvalAutoBackgroundDefaultOffRunsInline(t *testing.T) {
+	if !hasPython3(t) {
+		t.Skip("python3 unavailable")
+	}
+	prevSetting := Setting
+	t.Cleanup(func() {
+		Setting = prevSetting
+		jobs.SetDeliverySink(nil)
+	})
+	Setting = func(_ sdk.Context, key string) any {
+		if key == "eval.autoBackground.thresholdMs" {
+			return 5 // tiny threshold must be ignored when enabled is false (default)
+		}
+		return nil
+	}
+
+	ext := sdk.New("test-eval-autobg-default-off")
+	mgr := NewManager()
+	t.Cleanup(mgr.ShutdownAll)
+	registerWithManager(ext, mgr)
+
+	sessID := "sess-eval-autobg-off-" + newRandomID()
+	t.Cleanup(func() {
+		lifecycle.End(sessID)
+		jobs.PurgeSessionState(sessID)
+	})
+	h := startHost(t, ext, hostOptions{SessionID: sessID})
+	if _, errMsg := h.emitEvent("session_start", nil); errMsg != "" {
+		t.Fatalf("session_start failed: %s", errMsg)
+	}
+
+	raw, errMsg := h.callTool("eval", map[string]any{
+		"language": "py",
+		"code":     "import time\ntime.sleep(0.08)\nprint('inline_default')",
+	})
+	if errMsg != "" {
+		t.Fatalf("eval failed: %s", errMsg)
+	}
+	text, _, details, isErr := decodeToolResult(t, raw)
+	if isErr || !strings.Contains(text, "inline_default") {
+		t.Fatalf("expected inline completion, got isErr=%v text=%q", isErr, text)
+	}
+	if details.Async != nil {
+		t.Fatalf("expected details.Async == nil when autoBackground is off, got %+v", details.Async)
+	}
+	if got := jobs.List(sessID); len(got) != 0 {
+		t.Fatalf("expected zero jobs registered when autoBackground is off, got %d", len(got))
+	}
+}
+
+// upstream: packages/coding-agent/test/tools/eval-auto-background.test.ts: "keeps fast cells inline without a job row or delivery"
+func TestEvalAutoBackgroundFastCellFinishesForeground(t *testing.T) {
+	if !hasPython3(t) {
+		t.Skip("python3 unavailable")
+	}
+	prevSetting := Setting
+	t.Cleanup(func() {
+		Setting = prevSetting
+		jobs.SetDeliverySink(nil)
+	})
+	Setting = func(_ sdk.Context, key string) any {
+		switch key {
+		case "eval.autoBackground.enabled":
+			return true
+		case "eval.autoBackground.thresholdMs":
+			return 5_000
+		}
+		return nil
+	}
+
+	var delivered atomic.Int32
+	jobs.SetDeliverySink(func(sessionID, customType, content string, display bool, opts sdk.SendMessageOptions) error {
+		delivered.Add(1)
+		return nil
+	})
+
+	ext := sdk.New("test-eval-autobg-fast")
+	mgr := NewManager()
+	t.Cleanup(mgr.ShutdownAll)
+	registerWithManager(ext, mgr)
+
+	sessID := "sess-eval-autobg-fast-" + newRandomID()
+	t.Cleanup(func() {
+		lifecycle.End(sessID)
+		jobs.PurgeSessionState(sessID)
+	})
+	h := startHost(t, ext, hostOptions{SessionID: sessID})
+	if _, errMsg := h.emitEvent("session_start", nil); errMsg != "" {
+		t.Fatalf("session_start failed: %s", errMsg)
+	}
+
+	raw, errMsg := h.callTool("eval", map[string]any{
+		"language": "py",
+		"code":     "print('fast_ok')",
+	})
+	if errMsg != "" {
+		t.Fatalf("eval failed: %s", errMsg)
+	}
+	text, _, details, isErr := decodeToolResult(t, raw)
+	if isErr || !strings.Contains(text, "fast_ok") {
+		t.Fatalf("expected fast_ok foreground result, got isErr=%v text=%q", isErr, text)
+	}
+	if details.Async != nil {
+		t.Fatalf("expected no async details on fast cell, got %+v", details.Async)
+	}
+	if len(details.Cells) != 1 || details.Cells[0].Status != "complete" {
+		t.Fatalf("expected completed cell detail, got %+v", details.Cells)
+	}
+	if got := jobs.List(sessID); len(got) != 0 {
+		t.Fatalf("expected no background job registered for fast cell, got %d", len(got))
+	}
+	if delivered.Load() != 0 {
+		t.Fatalf("expected zero async deliveries for fast cell, got %d", delivered.Load())
+	}
+}
+
+// upstream: packages/coding-agent/test/tools/eval-auto-background.test.ts: "backgrounds a cell that outlives the threshold and delivers its result"
+func TestEvalAutoBackgroundSlowCellDeliversViaJobs(t *testing.T) {
+	if !hasPython3(t) {
+		t.Skip("python3 unavailable")
+	}
+	prevSetting := Setting
+	t.Cleanup(func() {
+		Setting = prevSetting
+		jobs.SetDeliverySink(nil)
+	})
+	var threshold atomic.Int64
+	threshold.Store(10_000) // keep warmup foreground; lowered right before gated cell
+	Setting = func(_ sdk.Context, key string) any {
+		switch key {
+		case "eval.autoBackground.enabled":
+			return true
+		case "eval.autoBackground.thresholdMs":
+			return int(threshold.Load())
+		}
+		return nil
+	}
+
+	type deliveryMsg struct {
+		sessionID  string
+		customType string
+		content    string
+	}
+	deliveryCh := make(chan deliveryMsg, 4)
+	jobs.SetDeliverySink(func(sessionID, customType, content string, display bool, opts sdk.SendMessageOptions) error {
+		deliveryCh <- deliveryMsg{sessionID: sessionID, customType: customType, content: content}
+		return nil
+	})
+
+	inBridge := make(chan struct{}, 1)
+	releaseCell := make(chan struct{})
+
+	ext := sdk.New("test-eval-autobg-slow")
+	mgr := NewManager()
+	t.Cleanup(mgr.ShutdownAll)
+	registerWithManager(ext, mgr)
+
+	sessID := "sess-eval-autobg-slow-" + newRandomID()
+	t.Cleanup(func() {
+		lifecycle.End(sessID)
+		jobs.PurgeSessionState(sessID)
+	})
+	h := startHost(t, ext, hostOptions{
+		SessionID: sessID,
+		OnExecTool: func(name string, args map[string]any) sdk.AgentToolCallOutcome {
+			if name == "gate_slow" {
+				select {
+				case inBridge <- struct{}{}:
+				default:
+				}
+				<-releaseCell
+				return sdk.AgentToolCallOutcome{
+					ToolCall: sdk.ToolCall{Type: "toolCall", ID: "tc-gate", Name: name, Arguments: args},
+					Result: sdk.AgentToolResult{
+						Content: []sdk.ToolResultContent{{Type: "text", Text: "gate_released"}},
+					},
+				}
+			}
+			return sdk.AgentToolCallOutcome{IsError: true}
+		},
+	})
+	if _, errMsg := h.emitEvent("session_start", nil); errMsg != "" {
+		t.Fatalf("session_start failed: %s", errMsg)
+	}
+
+	// Warm up kernel so startup latency doesn't affect the test.
+	if _, errMsg := h.callTool("eval", map[string]any{"language": "py", "code": "x = 1"}); errMsg != "" {
+		t.Fatalf("warmup failed: %s", errMsg)
+	}
+	threshold.Store(40)
+	// Run a cell that parks inside a host bridge call (also exercises IdleTimeout pause across backgrounding).
+	raw, errMsg := h.callTool("eval", map[string]any{
+		"language": "py",
+		"title":    "Slow analysis cell",
+		"code":     "print('before_gate', flush=True)\nres = await tool.gate_slow({})\nprint('after_gate', res)",
+	})
+	if errMsg != "" {
+		close(releaseCell)
+		t.Fatalf("eval call failed: %s", errMsg)
+	}
+	text, _, details, isErr := decodeToolResult(t, raw)
+	if isErr {
+		close(releaseCell)
+		t.Fatalf("expected non-error background notice, got error: %q", text)
+	}
+	if details.Async == nil || details.Async.State != "running" || details.Async.Type != "eval" || details.Async.JobID == "" {
+		close(releaseCell)
+		t.Fatalf("expected running eval async details, got %+v", details.Async)
+	}
+	if !strings.Contains(text, "Backgrounded as job "+details.Async.JobID) || !strings.Contains(text, "kernel stays busy") {
+		close(releaseCell)
+		t.Fatalf("expected background notice in text, got:\n%s", text)
+	}
+	if !strings.Contains(text, "(killed once it has run 30s in total; `timeout: 0` disables the deadline)") {
+		close(releaseCell)
+		t.Fatalf("expected default 30s deadline in background notice, got:\n%s", text)
+	}
+
+	jobID := details.Async.JobID
+	j, ok := jobs.Get(sessID, jobID)
+	if !ok {
+		close(releaseCell)
+		t.Fatalf("expected job %q in jobs registry", jobID)
+	}
+	if j.Kind() != jobs.KindEval || j.Status() != "running" {
+		close(releaseCell)
+		t.Fatalf("expected running KindEval job, got kind=%s status=%s", j.Kind(), j.Status())
+	}
+	if j.Label() != "Slow analysis cell" {
+		close(releaseCell)
+		t.Fatalf("expected label %q, got %q", "Slow analysis cell", j.Label())
+	}
+	if _, ok := j.(jobs.JobDetailer); !ok {
+		close(releaseCell)
+		t.Fatalf("expected EvalJob to implement jobs.JobDetailer")
+	}
+
+	select {
+	case <-inBridge:
+	case <-time.After(5 * time.Second):
+		close(releaseCell)
+		t.Fatal("timed out waiting for cell to reach gate_slow")
+	}
+
+	// Release the cell and verify it settles and delivers through internal/jobs.
+	close(releaseCell)
+	select {
+	case <-j.Done():
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for backgrounded eval job to finish")
+	}
+	if j.Status() != "completed" {
+		t.Fatalf("expected completed status, got %q (result=%q)", j.Status(), j.Result())
+	}
+	if !strings.Contains(j.Result(), "after_gate") || !strings.Contains(j.Result(), "gate_released") {
+		t.Fatalf("expected completed output in job.Result(), got %q", j.Result())
+	}
+
+	select {
+	case msg := <-deliveryCh:
+		if msg.sessionID != sessID || msg.customType != jobs.AsyncResultMessageType {
+			t.Fatalf("unexpected delivery target: %+v", msg)
+		}
+		if !strings.Contains(msg.content, jobID) || !strings.Contains(msg.content, "after_gate") {
+			t.Fatalf("unexpected delivery content:\n%s", msg.content)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for async-result delivery of backgrounded eval job")
+	}
+}
+
+// Verifies cancelling an auto-backgrounded eval job via job.Cancel() interrupts the
+// running cell cleanly, suppresses delivery, and leaves the session usable.
+func TestEvalAutoBackgroundCancelInterruptsCell(t *testing.T) {
+	if !hasPython3(t) {
+		t.Skip("python3 unavailable")
+	}
+	prevSetting := Setting
+	t.Cleanup(func() {
+		Setting = prevSetting
+		jobs.SetDeliverySink(nil)
+	})
+	var threshold atomic.Int64
+	threshold.Store(10_000) // keep warmup foreground; lowered right before long cell
+	Setting = func(_ sdk.Context, key string) any {
+		switch key {
+		case "eval.autoBackground.enabled":
+			return true
+		case "eval.autoBackground.thresholdMs":
+			return int(threshold.Load())
+		}
+		return nil
+	}
+	var delivered atomic.Int32
+	jobs.SetDeliverySink(func(sessionID, customType, content string, display bool, opts sdk.SendMessageOptions) error {
+		delivered.Add(1)
+		return nil
+	})
+
+	ext := sdk.New("test-eval-autobg-cancel")
+	mgr := NewManager()
+	t.Cleanup(mgr.ShutdownAll)
+	registerWithManager(ext, mgr)
+
+	sessID := "sess-eval-autobg-cancel-" + newRandomID()
+	t.Cleanup(func() {
+		lifecycle.End(sessID)
+		jobs.PurgeSessionState(sessID)
+	})
+	h := startHost(t, ext, hostOptions{SessionID: sessID})
+	if _, errMsg := h.emitEvent("session_start", nil); errMsg != "" {
+		t.Fatalf("session_start failed: %s", errMsg)
+	}
+
+	// Warm up kernel.
+	if _, errMsg := h.callTool("eval", map[string]any{"language": "py", "code": "ready = True"}); errMsg != "" {
+		t.Fatalf("warmup failed: %s", errMsg)
+	}
+	threshold.Store(40)
+	raw, errMsg := h.callTool("eval", map[string]any{
+		"language": "py",
+		"code":     "import time\ntime.sleep(30)\nprint('should_not_finish')",
+		"timeout":  0,
+	})
+	if errMsg != "" {
+		t.Fatalf("eval failed: %s", errMsg)
+	}
+	text, _, details, _ := decodeToolResult(t, raw)
+	if details.Async == nil || details.Async.JobID == "" {
+		t.Fatalf("expected auto-backgrounded job, got text=%q details=%+v", text, details)
+	}
+	if !strings.Contains(text, "(no deadline)") {
+		t.Fatalf("expected (no deadline) for timeout: 0, got:\n%s", text)
+	}
+	j, ok := jobs.Get(sessID, details.Async.JobID)
+	if !ok {
+		t.Fatalf("expected job %q in jobs registry", details.Async.JobID)
+	}
+
+	j.Cancel()
+	select {
+	case <-j.Done():
+	case <-time.After(10 * time.Second):
+		t.Fatal("timed out waiting for cancelled backgrounded eval job to settle")
+	}
+	if j.Status() != "cancelled" {
+		t.Fatalf("expected status cancelled, got %q", j.Status())
+	}
+	if d, ok := j.(jobs.JobDetailer); !ok || !d.SkipDelivery() {
+		t.Fatalf("expected cancelled job to skip delivery")
+	}
+
+	// Kernel remains usable for subsequent cells after cancellation (raise threshold so it runs foreground).
+	threshold.Store(5_000)
+	afterRaw, afterErr := h.callTool("eval", map[string]any{
+		"language": "py",
+		"code":     "print('alive_after_cancel', ready)",
+	})
+	if afterErr != "" {
+		t.Fatalf("cell after cancel failed: %s", afterErr)
+	}
+	afterTxt, _, _, afterIsErr := decodeToolResult(t, afterRaw)
+	if afterIsErr || !strings.Contains(afterTxt, "alive_after_cancel True") {
+		t.Fatalf("unexpected cell after cancel: isErr=%v text=%q", afterIsErr, afterTxt)
+	}
+	if delivered.Load() != 0 {
+		t.Fatalf("expected cancelled job not to deliver async-result, got %d deliveries", delivered.Load())
+	}
+}
+
+// Verifies lifecycle.End(sid) cleanly cancels running backgrounded eval jobs for that session.
+func TestEvalAutoBackgroundLifecycleEndCancelsRunningJob(t *testing.T) {
+	if !hasPython3(t) {
+		t.Skip("python3 unavailable")
+	}
+	prevSetting := Setting
+	t.Cleanup(func() {
+		Setting = prevSetting
+		jobs.SetDeliverySink(nil)
+	})
+	var threshold atomic.Int64
+	threshold.Store(10_000) // keep warmup foreground
+	Setting = func(_ sdk.Context, key string) any {
+		switch key {
+		case "eval.autoBackground.enabled":
+			return true
+		case "eval.autoBackground.thresholdMs":
+			return int(threshold.Load())
+		}
+		return nil
+	}
+	jobs.SetDeliverySink(func(sessionID, customType, content string, display bool, opts sdk.SendMessageOptions) error {
+		return nil
+	})
+
+	ext := sdk.New("test-eval-autobg-lifecycle")
+	mgr := NewManager()
+	t.Cleanup(mgr.ShutdownAll)
+	registerWithManager(ext, mgr)
+
+	sessID := "sess-eval-autobg-end-" + newRandomID()
+	t.Cleanup(func() {
+		lifecycle.End(sessID)
+		jobs.PurgeSessionState(sessID)
+	})
+	h := startHost(t, ext, hostOptions{SessionID: sessID})
+	if _, errMsg := h.emitEvent("session_start", nil); errMsg != "" {
+		t.Fatalf("session_start failed: %s", errMsg)
+	}
+	if _, errMsg := h.callTool("eval", map[string]any{"language": "py", "code": "x = 1"}); errMsg != "" {
+		t.Fatalf("warmup failed: %s", errMsg)
+	}
+	threshold.Store(40)
+
+	raw, errMsg := h.callTool("eval", map[string]any{
+		"language": "py",
+		"code":     "import time\ntime.sleep(30)",
+		"timeout":  0,
+	})
+	if errMsg != "" {
+		t.Fatalf("eval failed: %s", errMsg)
+	}
+	_, _, details, _ := decodeToolResult(t, raw)
+	if details.Async == nil || details.Async.JobID == "" {
+		t.Fatalf("expected backgrounded job, got %+v", details)
+	}
+	j, ok := jobs.Get(sessID, details.Async.JobID)
+	if !ok {
+		t.Fatalf("expected job %q registered", details.Async.JobID)
+	}
+
+	lifecycle.End(sessID)
+	select {
+	case <-j.Done():
+	case <-time.After(10 * time.Second):
+		t.Fatal("timed out waiting for job to settle after lifecycle.End")
+	}
+	if j.Status() != "cancelled" {
+		t.Fatalf("expected status cancelled after lifecycle.End, got %q", j.Status())
+	}
+	if _, still := jobs.Get(sessID, details.Async.JobID); still {
+		t.Fatalf("expected job removed from jobs registry after lifecycle.End")
+	}
+}

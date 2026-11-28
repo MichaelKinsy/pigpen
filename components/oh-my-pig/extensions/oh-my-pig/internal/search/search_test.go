@@ -1512,6 +1512,7 @@ type testHost struct {
 	mu            sync.Mutex
 	tools         map[string]testHostTool
 	handlerIDs    map[string]int
+	allHandlerIDs map[string][]int
 	pending       map[string]chan testWireFrame
 	reqSeq        int
 	sessionID     string
@@ -1526,14 +1527,15 @@ func startTestHost(t *testing.T, ext *sdk.Extension, cwd, sessionID string) *tes
 	t.Helper()
 	hostSide, extSide := net.Pipe()
 	h := &testHost{
-		t:           t,
-		nc:          hostSide,
-		runDone:     make(chan error, 1),
-		tools:       map[string]testHostTool{},
-		handlerIDs:  map[string]int{},
-		pending:     map[string]chan testWireFrame{},
-		sessionID:   sessionID,
-		activeTools: []string{"grep", "glob"},
+		t:             t,
+		nc:            hostSide,
+		runDone:       make(chan error, 1),
+		tools:         map[string]testHostTool{},
+		handlerIDs:    map[string]int{},
+		allHandlerIDs: map[string][]int{},
+		pending:       map[string]chan testWireFrame{},
+		sessionID:     sessionID,
+		activeTools:   []string{"grep", "glob"},
 	}
 	go func() { h.runDone <- ext.RunWithConn(extSide) }()
 
@@ -1546,6 +1548,7 @@ func startTestHost(t *testing.T, ext *sdk.Extension, cwd, sessionID string) *tes
 	}
 	for _, hdl := range reg.Register.Handlers {
 		h.handlerIDs[hdl.Event] = hdl.HandlerID
+		h.allHandlerIDs[hdl.Event] = append(h.allHandlerIDs[hdl.Event], hdl.HandlerID)
 	}
 
 	stateJSON, _ := json.Marshal(map[string]any{"hasUI": false, "sessionId": sessionID})
@@ -1719,11 +1722,25 @@ func (h *testHost) sendReq(req map[string]any) testWireFrame {
 }
 
 func (h *testHost) emit(event string) {
-	hid, ok := h.handlerIDs[event]
-	if !ok {
+	hids := h.allHandlerIDs[event]
+	if len(hids) == 0 {
+		if hid, ok := h.handlerIDs[event]; ok {
+			hids = []int{hid}
+		}
+	}
+	if len(hids) == 0 {
 		h.t.Fatalf("event %q not registered", event)
 	}
-	h.sendReq(map[string]any{"method": "event", "event": event, "handler_id": hid, "data": json.RawMessage(`{}`)})
+	args := json.RawMessage(`{}`)
+	if event == string(sdk.EventBeforeAgentStart) {
+		args = json.RawMessage(`{"systemPromptOptions":{}}`)
+	}
+	for _, hid := range hids {
+		resp := h.sendReq(map[string]any{"method": "event", "event": event, "handler_id": hid, "args": args})
+		if resp.Response != nil && resp.Response.Error != nil {
+			h.t.Fatalf("event %q handler %d error: %s", event, hid, resp.Response.Error.Message)
+		}
+	}
 }
 
 func (h *testHost) active() []string {

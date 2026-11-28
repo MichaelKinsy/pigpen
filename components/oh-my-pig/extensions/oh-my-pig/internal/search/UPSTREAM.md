@@ -50,8 +50,8 @@ Pinned upstream release: **omp `v19.1.1`** (commit `31ffee513f`).
 
 | Setting | Default | Honoured |
 |---|---|---|
-| `grep.enabled` | `true` | Registered by default (PiG manages active tools) |
-| `glob.enabled` | `true` | Registered by default (PiG manages active tools) |
+| `grep.enabled` | `true` | Yes via `search.Setting(ctx, "grep.enabled")` (default `true`; deactivates `grep` at `session_start` when `false`) |
+| `glob.enabled` | `true` | Yes via `search.Setting(ctx, "glob.enabled")` (default `true`; deactivates `glob` at `session_start` when `false`) |
 | `grep.contextBefore` | `0` | Yes via `search.Setting(ctx, "grep.contextBefore")` (explicit tool `context`/`contextBefore` params override; default `0`) |
 | `grep.contextAfter` | `0` | Yes via `search.Setting(ctx, "grep.contextAfter")` (explicit tool `context`/`contextAfter` params override; default `0`) |
 | `find.enabled` | `"auto"` | Yes, via `search.Setting(ctx, "find.enabled")`: `"auto"` requires native classifier (`ModelTypeClassifier`), `"on"` also allows session chat model via `Context.Complete`, `"off"` disables `find` |

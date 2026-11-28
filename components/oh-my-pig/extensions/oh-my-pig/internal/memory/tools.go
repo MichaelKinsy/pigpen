@@ -416,6 +416,8 @@ func Register(e *sdk.Extension) {
 		return nil, nil
 	})
 
+	registerMemoryCommand(e)
+
 	lifecycle.OnEnd("memory", cleanupSession)
 	e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
 		if sid := sessionIDForContext(ctx); sid != "" {

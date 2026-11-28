@@ -52,22 +52,23 @@ var defaultHindsightRecallTypes = []string{"world", "experience"}
 // HindsightConfig holds resolved Hindsight settings for a session.
 // upstream: packages/coding-agent/src/hindsight/config.ts:41-82
 type HindsightConfig struct {
-	APIURL           string
-	APIToken         string
-	BankID           string
-	BankIDPrefix     string
-	Scoping          string // "global" | "per-project" | "per-project-tagged"
-	GlobalScope      bool
-	BankMission      string
-	RetainMission    string
-	RetainContext    string
-	RecallBudget     string
-	RecallMaxTokens  int
-	RecallTypes      []string
-	RequestTimeoutMs int
-	RecallTimeoutMs  int
-	ReflectTimeoutMs int
-	RetainTimeoutMs  int
+	APIURL              string
+	APIToken            string
+	BankID              string
+	BankIDPrefix        string
+	Scoping             string // "global" | "per-project" | "per-project-tagged"
+	GlobalScope         bool
+	BankMission         string
+	RetainMission       string
+	RetainContext       string
+	RecallBudget        string
+	RecallMaxTokens     int
+	RecallTypes         []string
+	RequestTimeoutMs    int
+	RecallTimeoutMs     int
+	ReflectTimeoutMs    int
+	RetainTimeoutMs     int
+	MentalModelsEnabled bool
 }
 
 // HindsightBankScope describes the resolved bank ID and project tags.
@@ -172,22 +173,23 @@ func LoadHindsightConfig(ctx sdk.Context) HindsightConfig {
 	}
 
 	return HindsightConfig{
-		APIURL:           apiURL,
-		APIToken:         apiToken,
-		BankID:           settingString(ctx, SettingHindsightBankID, ""),
-		BankIDPrefix:     settingString(ctx, SettingHindsightBankIDPrefix, ""),
-		Scoping:          scoping,
-		GlobalScope:      settingBool(ctx, SettingHindsightGlobalScope, false),
-		BankMission:      settingString(ctx, SettingHindsightBankMission, ""),
-		RetainMission:    settingString(ctx, SettingHindsightRetainMission, ""),
-		RetainContext:    retainCtx,
-		RecallBudget:     budget,
-		RecallMaxTokens:  maxTokens,
-		RecallTypes:      recallTypes,
-		RequestTimeoutMs: reqTimeout,
-		RecallTimeoutMs:  recallTimeout,
-		ReflectTimeoutMs: reflectTimeout,
-		RetainTimeoutMs:  retainTimeout,
+		APIURL:              apiURL,
+		APIToken:            apiToken,
+		BankID:              settingString(ctx, SettingHindsightBankID, ""),
+		BankIDPrefix:        settingString(ctx, SettingHindsightBankIDPrefix, ""),
+		Scoping:             scoping,
+		GlobalScope:         settingBool(ctx, SettingHindsightGlobalScope, false),
+		BankMission:         settingString(ctx, SettingHindsightBankMission, ""),
+		RetainMission:       settingString(ctx, SettingHindsightRetainMission, ""),
+		RetainContext:       retainCtx,
+		RecallBudget:        budget,
+		RecallMaxTokens:     maxTokens,
+		RecallTypes:         recallTypes,
+		RequestTimeoutMs:    reqTimeout,
+		RecallTimeoutMs:     recallTimeout,
+		ReflectTimeoutMs:    reflectTimeout,
+		RetainTimeoutMs:     retainTimeout,
+		MentalModelsEnabled: settingBool(ctx, SettingHindsightMentalModelsEnabled, true),
 	}
 }
 

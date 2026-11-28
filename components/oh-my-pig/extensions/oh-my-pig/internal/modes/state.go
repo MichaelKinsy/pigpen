@@ -59,6 +59,29 @@ var SetForcedToolChoice func(sessionID, toolName string)
 // for sessionID. Wired by the integrator to `providerwire.ClearForcedToolChoice`.
 var ClearForcedToolChoice func(sessionID string)
 
+// IsSubagent reports whether ctx belongs to a subagent session.
+// Wired by the integrator to `agents.IsSubagent`.
+// Falls back to checking ParentSession when unset.
+var IsSubagent func(ctx sdk.Context) bool
+
+// AgentDirForContext resolves the product's agent directory (e.g. ~/.pig/agent).
+// Wired by the integrator to `settings.AgentDirForContext`.
+var AgentDirForContext func(ctx sdk.Context) string
+
+// isSubagentSession reports whether ctx belongs to a subagent session using
+// IsSubagent when wired, falling back to ParentSession.
+func isSubagentSession(ctx sdk.Context) bool {
+	if IsSubagent != nil && IsSubagent(ctx) {
+		return true
+	}
+	if ParentSession != nil {
+		if _, isSub := ParentSession(ctx); isSub {
+			return true
+		}
+	}
+	return false
+}
+
 // defaultStore is the single process-wide, session-ID-keyed store shared by
 // every extension instance PiG creates (one per session / reload / replacement).
 var (
@@ -226,6 +249,10 @@ type sessionState struct {
 	// /cleanse single-active-run guard
 	cleanseActive bool
 	cleanseCancel func()
+	// /prewalk one-shot model handoff state
+	prewalk prewalkState
+	// /btw latest drafted <inject> block (btw.inject)
+	btwLastInject string
 }
 
 // strictSessionID returns the session ID from ctx, or "" when it cannot be

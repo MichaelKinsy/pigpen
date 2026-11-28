@@ -72,6 +72,24 @@ type GoalTokenUsage struct {
 	CacheWrite int
 }
 
+// GoalTodoTask is a single todo item projected into goal-mode `<todo_context>`.
+// upstream: packages/coding-agent/src/session/agent-session.ts:8989-9019
+type GoalTodoTask struct {
+	Status  string
+	Content string
+}
+
+// GoalTodoPhase is a named phase of todo items projected into goal-mode `<todo_context>`.
+type GoalTodoPhase struct {
+	Name  string
+	Tasks []GoalTodoTask
+}
+
+// TodoContextSnapshot returns the current session's persisted todo phases when
+// todo tracking is active (`todo.enabled` && `todo` tool active). Wired by the
+// integrator (`wiring.go`) to `internal/todo.CurrentPhases`.
+var TodoContextSnapshot func(ctx sdk.Context) (active bool, phases []GoalTodoPhase)
+
 var goalIDSeq atomic.Uint64
 
 func defaultNowMs() int64 { return time.Now().UnixMilli() }
@@ -180,6 +198,101 @@ func RenderGoalPrompt(kind string, g Goal) string {
 			"timeUsedSeconds": strconv.Itoa(g.TimeUsedSeconds),
 		},
 	})
+}
+
+// sanitizeGoalTodoText escapes XML characters and control/newline characters
+// for safe single-line interpolation inside `<todo_context>`.
+// upstream: packages/coding-agent/src/session/agent-session.ts:8980-8987
+func sanitizeGoalTodoText(text string) string {
+	escaped := escapeXMLText(text)
+	escaped = strings.ReplaceAll(escaped, "\r\n", `\n`)
+	escaped = strings.ReplaceAll(escaped, "\r", `\r`)
+	escaped = strings.ReplaceAll(escaped, "\n", `\n`)
+	escaped = strings.ReplaceAll(escaped, "\t", `\t`)
+	var b strings.Builder
+	b.Grow(len(escaped))
+	for _, r := range escaped {
+		if (r >= 0x00 && r <= 0x08) || r == 0x0b || r == 0x0c || (r >= 0x0e && r <= 0x1f) || (r >= 0x7f && r <= 0x9f) || r == 0x2028 || r == 0x2029 {
+			b.WriteByte(' ')
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
+}
+
+// RenderGoalTodoContext renders upstream `goal-todo-context.md` for non-empty
+// phases, returning "" when there are no tasks to report.
+// upstream: packages/coding-agent/src/session/agent-session.ts:8989-9019
+func RenderGoalTodoContext(phases []GoalTodoPhase) string {
+	var (
+		total      int
+		closed     int
+		open       int
+		phaseItems []templateData
+	)
+	for _, ph := range phases {
+		if len(ph.Tasks) == 0 {
+			continue
+		}
+		taskItems := make([]templateData, 0, len(ph.Tasks))
+		for _, t := range ph.Tasks {
+			total++
+			if t.Status == "completed" || t.Status == "abandoned" {
+				closed++
+			} else {
+				open++
+			}
+			taskItems = append(taskItems, templateData{
+				Vars: map[string]string{
+					"status":  sanitizeGoalTodoText(t.Status),
+					"content": sanitizeGoalTodoText(t.Content),
+				},
+			})
+		}
+		phaseItems = append(phaseItems, templateData{
+			Vars: map[string]string{
+				"name": sanitizeGoalTodoText(ph.Name),
+			},
+			Items: map[string][]templateData{
+				"tasks": taskItems,
+			},
+		})
+	}
+	if len(phaseItems) == 0 {
+		return ""
+	}
+	return renderTemplate(goalTodoContextTemplate, templateData{
+		Vars: map[string]string{
+			"closed": strconv.Itoa(closed),
+			"total":  strconv.Itoa(total),
+			"open":   strconv.Itoa(open),
+		},
+		Items: map[string][]templateData{
+			"phases": phaseItems,
+		},
+	})
+}
+
+// buildGoalModeContextMessage renders `goal-mode-active.md` and appends
+// `<todo_context>` when `TodoContextSnapshot` reports active non-empty phases.
+// upstream: packages/coding-agent/src/session/agent-session.ts:8952-9019
+func buildGoalModeContextMessage(ctx sdk.Context, g Goal) string {
+	content := RenderGoalPrompt("active", g)
+	if TodoContextSnapshot == nil {
+		return content
+	}
+	if !readModeSettingBool(ctx, "todo.enabled", true) {
+		return content
+	}
+	active, phases := TodoContextSnapshot(ctx)
+	if !active || len(phases) == 0 {
+		return content
+	}
+	if todoCtx := RenderGoalTodoContext(phases); todoCtx != "" {
+		return content + "\n" + todoCtx
+	}
+	return content
 }
 
 func renderGuidedGoalInterview(initial string) string {
