@@ -486,6 +486,9 @@ func (rt *Runtime) EffectiveConfig(ctx sdk.Context) Config {
 	cfg.AgentIdleTTLMs = st.Int("task.agentIdleTtlMs")
 	cfg.DisabledAgents = st.Strings("task.disabledAgents")
 	cfg.CrossInstance = st.Bool("task.crossInstance")
+	if rawEvalTools, ok := st.Any("eval.tools.enabled").(bool); ok {
+		cfg.EvalToolsEnabled = rawEvalTools
+	}
 	if opPCM, ok := st.GetOperator("task.perCallModel"); ok {
 		if s, ok := opPCM.(string); ok && s != "" {
 			cfg.PerCallModel = s
@@ -1381,8 +1384,8 @@ type resolvedSpawn struct {
 	modelOverride              []string
 	effort                     string
 	softBudget                 int
+	customTools                []sdk.ToolDefinition
 }
-
 type spawnPlan struct {
 	index    int
 	agentID  string
@@ -1495,6 +1498,40 @@ func (rt *Runtime) ExecuteTask(ctx sdk.Context, rawParams map[string]any) (sdk.T
 		parentAgentID = meta.AgentID
 	}
 	parentLocalRoot, _ := urls.LocalRoot(longLivedCtx)
+	// Preflight all requested eval-defined tools before resolving individual items,
+	// matching upstream packages/coding-agent/src/task/index.ts:1081-1093.
+	var allEvalToolNames []string
+	for _, item := range items {
+		allEvalToolNames = append(allEvalToolNames, item.Tools...)
+	}
+	var evalToolsByName map[string]sdk.ToolDefinition
+	if len(dedupeNonEmptyStrings(allEvalToolNames)) > 0 {
+		if planMode {
+			return taskModeError("Task execution failed: " + errEvalToolsPlanMode), nil
+		}
+		if !cfg.EvalToolsEnabled {
+			return taskModeError("Task execution failed: " + errEvalToolsDisabled), nil
+		}
+		preflightCtx, preflightCancel := context.WithCancel(context.Background())
+		defer preflightCancel()
+		if done := ctx.Done(); done != nil {
+			go func() {
+				select {
+				case <-done:
+					preflightCancel()
+				case <-preflightCtx.Done():
+				}
+			}()
+		}
+		resolvedTools, err := ResolveEvalCustomTools(preflightCtx, longLivedCtx, allEvalToolNames, planMode)
+		if err != nil {
+			return taskModeError("Task execution failed: " + err.Error()), nil
+		}
+		evalToolsByName = make(map[string]sdk.ToolDefinition, len(resolvedTools))
+		for _, td := range resolvedTools {
+			evalToolsByName[td.Name] = td
+		}
+	}
 	resolved := make([]resolvedSpawn, 0, len(items))
 	var preflightErrs []string
 
@@ -1506,7 +1543,7 @@ func (rt *Runtime) ExecuteTask(ctx sdk.Context, rawParams map[string]any) (sdk.T
 		// Plan-mode control checks (`task/structured-subagent.ts:317-332`).
 		if planMode {
 			if len(item.Tools) > 0 {
-				preflightErrs = append(preflightErrs, fmt.Sprintf("%s failed preflight: Eval-defined tools are unavailable in plan mode.", label))
+				preflightErrs = append(preflightErrs, fmt.Sprintf("%s failed preflight: %s", label, errEvalToolsPlanMode))
 				continue
 			}
 			if item.Isolated != nil {
@@ -1597,6 +1634,15 @@ func (rt *Runtime) ExecuteTask(ctx sdk.Context, rawParams map[string]any) (sdk.T
 			effort = item.Effort
 		}
 
+		var itemCustomTools []sdk.ToolDefinition
+		if len(item.Tools) > 0 && len(evalToolsByName) > 0 {
+			for _, name := range dedupeNonEmptyStrings(item.Tools) {
+				if td, ok := evalToolsByName[name]; ok {
+					itemCustomTools = append(itemCustomTools, td)
+				}
+			}
+		}
+
 		resolved = append(resolved, resolvedSpawn{
 			item:                       item,
 			agent:                      ag,
@@ -1608,6 +1654,7 @@ func (rt *Runtime) ExecuteTask(ctx sdk.Context, rawParams map[string]any) (sdk.T
 			modelOverride:              modelOverride,
 			effort:                     effort,
 			softBudget:                 ResolveSoftRequestBudget(ag.Name, cfg.SoftRequestBudget, cfg.AgentSoftRequestBudget),
+			customTools:                itemCustomTools,
 		})
 	}
 
@@ -1826,6 +1873,7 @@ func (rt *Runtime) ExecuteTask(ctx sdk.Context, rawParams map[string]any) (sdk.T
 				MaxDepth:                   cfg.MaxRecursionDepth,
 				IRCEnabled:                 !planMode,
 				KeepAlive:                  true,
+				CustomTools:                sp.spec.customTools,
 				Semaphore:                  rt.sem,
 				OnProgress: func(p AgentProgress) {
 					aggMu.Lock()
@@ -2132,6 +2180,7 @@ func (rt *Runtime) runSyncFanout(
 				MaxDepth:                   cfg.MaxRecursionDepth,
 				IRCEnabled:                 !planMode,
 				KeepAlive:                  false,
+				CustomTools:                sp.spec.customTools,
 				Semaphore:                  rt.sem,
 				OnProgress: func(p AgentProgress) {
 					mu.Lock()
@@ -2256,4 +2305,174 @@ func findArtifactFile(dir, name string) string {
 		return p
 	}
 	return ""
+}
+
+// DetachedSpawnRequest describes a background subagent spawn initiated by a
+// slash command (`/tan`, `/cleanse`) rather than a model `task` tool call.
+type DetachedSpawnRequest struct {
+	Name             string
+	AgentDisplayName string
+	AgentType        string
+	Label            string
+	Context          string
+	Task             string
+	SolutionSpace    string
+	ModelSelector    string
+	ShareParentLocal bool
+}
+
+// SpawnDetached launches a detached background subagent under the default
+// runtime, registering it as a jobs.Job (`proc://<jobID>`) and agent
+// (`agent://<agentID>`).
+func SpawnDetached(ctx sdk.Context, req DetachedSpawnRequest) (jobID, agentID string, err error) {
+	rt := DefaultRuntime()
+	if rt.resolveSessionID(ctx) == "" {
+		return "", "", fmt.Errorf("no active session for detached spawn")
+	}
+	sessKey := rt.sessionKey(ctx)
+	cfg := rt.EffectiveConfig(ctx)
+	taskDepth := rt.Registry.TaskDepthFor(sessKey)
+	effMaxDepth := EffectiveMaxRecursionDepth(cfg.MaxRecursionDepth)
+	if !CanSpawnAtDepth(effMaxDepth, taskDepth) {
+		return "", "", fmt.Errorf("cannot spawn detached agent at depth %d (max %d)", taskDepth, effMaxDepth)
+	}
+
+	cwd := ctx.Cwd()
+	if cwd == "" {
+		cwd, _ = os.Getwd()
+	}
+	agentType := strings.TrimSpace(req.AgentType)
+	if agentType == "" {
+		agentType = DefaultSpawnAgent
+	}
+	disc := rt.discover(cwd)
+	ag, ok := GetAgent(disc.Agents, agentType)
+	if !ok {
+		return "", "", fmt.Errorf("unknown agent %q", agentType)
+	}
+	if gate.PlanActive(ctx) {
+		ag = CreatePlanModeAgent(ag)
+	}
+
+	var modelSel []string
+	if ms := strings.TrimSpace(req.ModelSelector); ms != "" {
+		modelSel = []string{ms}
+	} else if ov := cfg.ModelOverrides[agentType]; len(ov) > 0 {
+		modelSel = ov
+	} else {
+		modelSel = ag.Model
+	}
+
+	longLivedCtx := rt.sessionContextFor(sessKey, ctx)
+	artifactsDir, _ := rt.sessionArtifactsDir(ctx)
+	outMgr := rt.outputManager(sessKey, artifactsDir, cfg.CrossInstance)
+	rawID := SanitizeAgentID(req.Name)
+	if rawID == "" {
+		rawID = GenerateTaskName()
+	}
+	agentID = outMgr.Allocate(rawID)
+	jobID = agentID
+
+	parentAgentID := MainAgentID
+	if meta, ok := rt.Registry.ChildMeta(sessKey); ok && meta.AgentID != "" {
+		parentAgentID = meta.AgentID
+	}
+	jobs.BindSessionIfMissing(sessKey, longLivedCtx)
+	var parentLocalRoot string
+	if req.ShareParentLocal {
+		parentLocalRoot, _ = urls.LocalRoot(longLivedCtx)
+	}
+	if taskDepth == 0 {
+		rt.ensureMainRef(sessKey, longLivedCtx, artifactsDir)
+	}
+
+	assignment := strings.TrimSpace(req.Task)
+	if strings.TrimSpace(req.Context) != "" {
+		assignment = strings.TrimSpace(req.Context) + "\n\n" + assignment
+	}
+	displayLabel := strings.TrimSpace(req.Label)
+	if displayLabel == "" {
+		displayLabel = agentID
+	}
+	displayAgent := strings.TrimSpace(req.AgentDisplayName)
+	if displayAgent == "" {
+		displayAgent = ag.Name
+	}
+
+	jobCtx, jobCancel := context.WithCancel(context.Background())
+	rt.trackCancel(sessKey, jobCancel)
+	initial := AgentProgress{
+		ID:          agentID,
+		Agent:       displayAgent,
+		AgentSource: ag.Source,
+		Status:      "running",
+		Task:        RenderSubagentUserPrompt(assignment),
+		Assignment:  assignment,
+	}
+	job := NewAgentJob(jobID, displayLabel, jobCancel, initial)
+	jobs.Add(sessKey, job)
+
+	softBudget := ResolveSoftRequestBudget(ag.Name, cfg.SoftRequestBudget, cfg.AgentSoftRequestBudget)
+	noticeEnabled := cfg.SoftRequestBudgetNotice
+	go func() {
+		defer jobCancel()
+		defer func() {
+			if r := recover(); r != nil {
+				errStr := fmt.Sprintf("subagent panicked: %v", r)
+				job.finish("failed", errStr, errStr, nil, nil, false, nil)
+			}
+		}()
+		if err := rt.sem.Acquire(jobCtx); err != nil {
+			job.finish("cancelled", "Aborted before execution", "Aborted before execution", nil, nil, false, nil)
+			return
+		}
+		defer rt.sem.Release()
+
+		sr := RunSubagent(jobCtx, rt.Registry, RunRequest{
+			SDK:              longLivedCtx,
+			ParentSessionID:  sessKey,
+			ParentAgentID:    parentAgentID,
+			ParentLocalRoot:  parentLocalRoot,
+			Cwd:              cwd,
+			TaskDepth:        taskDepth,
+			ID:               agentID,
+			Agent:            ag,
+			Assignment:       assignment,
+			SolutionSpace:    req.SolutionSpace,
+			ModelOverride:    modelSel,
+			MaxEffort:        cfg.MaxEffort,
+			ArtifactsDir:     artifactsDir,
+			MaxRuntimeMs:     cfg.MaxRuntimeMs,
+			SoftBudget:       softBudget,
+			SoftBudgetNotice: &noticeEnabled,
+			AgentIdleTTLMs:   cfg.AgentIdleTTLMs,
+			MaxDepth:         cfg.MaxRecursionDepth,
+			IRCEnabled:       !gate.PlanActive(longLivedCtx),
+			KeepAlive:        true,
+			Semaphore:        rt.sem,
+			OnProgress: func(p AgentProgress) {
+				job.updateProgress(p, fmt.Sprintf("Running %s %s...", displayAgent, p.ID))
+			},
+			OnToolResult: func(tool, intent, text string) {
+				job.RecordToolCall(tool, intent, text)
+			},
+		})
+		status := "completed"
+		var errStr string
+		if jobCtx.Err() != nil {
+			status = "cancelled"
+			errStr = sr.AbortReason
+		} else if sr.Aborted || sr.ExitCode != 0 || sr.Error != "" {
+			status = "failed"
+			errStr = sr.Error
+			if errStr == "" {
+				errStr = sr.AbortReason
+			}
+			if errStr == "" {
+				errStr = sr.Stderr
+			}
+		}
+		job.finish(status, sr.Output, errStr, &sr, nil, false, nil)
+	}()
+	return jobID, agentID, nil
 }

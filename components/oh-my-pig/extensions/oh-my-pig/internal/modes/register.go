@@ -215,6 +215,19 @@ func registerWithManager(e *sdk.Extension, m *manager) {
 		}),
 		Handler: m.handleModelPresetCommand,
 	})
+	e.RegisterCommand("tan", sdk.CommandOptions{
+		Description: "Run a full background agent on tangential work",
+		Handler:     m.handleTanCommand,
+	})
+	e.RegisterCommand("cleanse", sdk.CommandOptions{
+		Description: "Detect and fix project diagnostics with weighted parallel subagents",
+		GetArgumentCompletions: staticSubcommandCompletions([]sdk.AutocompleteItem{
+			{Value: "--all ", Label: "--all", Description: "Run every discovered checker without prompting"},
+			{Value: "--tests ", Label: "--tests", Description: "Include test suites"},
+			{Value: "cancel ", Label: "cancel", Description: "Cancel an active cleanse run"},
+		}),
+		Handler: m.handleCleanseCommand,
+	})
 
 	// Event hooks
 	e.OnSessionStart(m.onSessionStart)
@@ -505,6 +518,17 @@ func (m *manager) onInput(ctx sdk.Context, data map[string]any) (any, error) {
 			return nil, err
 		}
 		return map[string]any{"action": "handled"}, nil
+	}
+	// Intercept `/export --copy|copy|clipboard` and `/export --themes [path]`
+	// while leaving bare `/export` and `/export <path>` to PiG's built-in handler.
+	if strings.HasPrefix(trimmed, "/export ") {
+		exportArgs := trimmed[len("/export "):]
+		if shouldInterceptExport(exportArgs) {
+			if err := m.handleExportIntercept(ctx, exportArgs); err != nil {
+				return nil, err
+			}
+			return map[string]any{"action": "handled"}, nil
+		}
 	}
 
 	if source == "extension" {
@@ -856,6 +880,9 @@ func (m *manager) onAgentEnd(ctx sdk.Context, data map[string]any) (any, error) 
 	st.pendingPlanReview = nil
 	goalExiting := st.goalState != nil && st.goalState.Mode == "exiting"
 	goalActive := st.goalState != nil && st.goalState.Enabled && st.goalState.Goal.Status == GoalStatusActive
+	if st.cleanseActive && st.cleanseCancel == nil {
+		st.cleanseActive = false
+	}
 	m.mu.Unlock()
 
 	if pendingReview != nil {

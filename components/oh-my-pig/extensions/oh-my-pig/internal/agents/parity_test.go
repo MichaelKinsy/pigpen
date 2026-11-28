@@ -1972,19 +1972,13 @@ func TestAgentsSchemasMatchOmpSchemasJSON(t *testing.T) {
 		t.Fatalf("wait schema content differs from omp v19.1.1:\ngot:  %#v\nwant: %#v", gotWait, wantWait)
 	}
 
-	// 3. `task`: matches omp v19.1.1 identically except the intentionally omitted
-	// `tasks[].tools` property (eval-defined subagent tools are not ported).
+	// 3. `task`: exact content match with omp v19.1.1 (including `tasks[].tools`).
 	gotTask := roundTrip(TaskSchema(DefaultConfig(), DefaultSpawnAgent))
-	wantTask := roundTrip(captured["task"].Parameters).(map[string]any)
-	wantTaskItemProps := wantTask["properties"].(map[string]any)["tasks"].(map[string]any)["items"].(map[string]any)["properties"].(map[string]any)
-	if _, hasTools := wantTaskItemProps["tools"]; !hasTools {
-		t.Fatalf("expected omp captured task schema to include tasks[].tools")
-	}
-	delete(wantTaskItemProps, "tools")
+	wantTask := roundTrip(captured["task"].Parameters)
 	if !reflect.DeepEqual(gotTask, wantTask) {
 		gotJSON, _ := json.MarshalIndent(gotTask, "", "  ")
 		wantJSON, _ := json.MarshalIndent(wantTask, "", "  ")
-		t.Fatalf("task schema content differs from omp v19.1.1 (beyond omitted tasks[].tools):\ngot:\n%s\nwant:\n%s", gotJSON, wantJSON)
+		t.Fatalf("task schema content differs from omp v19.1.1:\ngot:\n%s\nwant:\n%s", gotJSON, wantJSON)
 	}
 }
 

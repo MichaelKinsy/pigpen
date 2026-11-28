@@ -1085,9 +1085,22 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 	}
 
 	// Prepare CustomTools: copy caller custom tools + inject `yield` when structured.
+	// When the agent declares an explicit tool allowlist (`toolsList != nil`), append
+	// each custom tool name so PiG's `AllowedTools` filter keeps eval-defined tools
+	// active and callable on read-only/restricted agents (`scout`, `reviewer`, etc.).
 	var customTools []sdk.ToolDefinition
 	if len(req.CustomTools) > 0 {
-		customTools = append(customTools, req.CustomTools...)
+		for _, ct := range req.CustomTools {
+			customTools = append(customTools, wrapSubagentCustomTool(req.SDK, ct))
+		}
+		if toolsList != nil {
+			toolsList = append([]string(nil), toolsList...)
+			for _, ct := range req.CustomTools {
+				if ct.Name != "" && !slices.Contains(toolsList, ct.Name) {
+					toolsList = append(toolsList, ct.Name)
+				}
+			}
+		}
 	}
 	var childSession *sdk.AgentSession
 	var yieldAbortOnce sync.Once
@@ -2822,9 +2835,20 @@ func makeReviveHandler(reg *Registry, ref *AgentRef, req RunRequest, structured 
 		thinkingLevel := resolveChildThinkingWithAuto(context.Background(), req.SDK, modelObj, req, modelThinkSuffix)
 
 		// Prepare CustomTools: copy caller custom tools + inject `yield` when structured.
+		// Keep custom tools admitted by explicit allowlists on revived sessions too.
 		var customTools []sdk.ToolDefinition
 		if len(req.CustomTools) > 0 {
-			customTools = append(customTools, req.CustomTools...)
+			for _, ct := range req.CustomTools {
+				customTools = append(customTools, wrapSubagentCustomTool(req.SDK, ct))
+			}
+			if toolsList != nil {
+				toolsList = append([]string(nil), toolsList...)
+				for _, ct := range req.CustomTools {
+					if ct.Name != "" && !slices.Contains(toolsList, ct.Name) {
+						toolsList = append(toolsList, ct.Name)
+					}
+				}
+			}
 		}
 		if structured {
 			yieldTool := intent.Tool(schemaorder.Apply(BuildYieldToolDefinition(req.OutputSchema, req.WorkPoolItems, func(_ YieldItem, _ bool) {})))

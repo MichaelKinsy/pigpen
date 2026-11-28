@@ -2491,7 +2491,7 @@ func TestOmpDrawRoundParityAgainstProof9(t *testing.T) {
 		}
 		// Verify no tip references unregistered omp commands.
 		for _, tip := range ompWelcomeTips {
-			for _, bad := range []string{"/shake", "/tan", "/omfg", "/collab", "/advisor", "/cleanse", "omp stats", "omp -c", "omp auth-"} {
+			for _, bad := range []string{"/shake", "/omfg", "/collab", "omp stats", "omp -c", "omp auth-", "omp cleanse"} {
 				if strings.Contains(tip, bad) {
 					t.Errorf("ompWelcomeTips contains unregistered command %q in %q", bad, tip)
 				}

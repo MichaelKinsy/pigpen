@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 	"math"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -1186,5 +1188,176 @@ func (m *manager) handleCommitCommand(ctx sdk.Context, args string) error {
 	if err := sendPromptOrSteer(ctx, promptText); err != nil {
 		notifyError(ctx, fmt.Sprintf("Failed to send commit prompt: %v", err))
 	}
+	return nil
+}
+
+// ParseExportArgs parses `/export [--themes] [path]` matching upstream
+// `packages/coding-agent/src/export/html/args.ts:14-20`.
+func ParseExportArgs(args string) (outputPath string, useUserThemes bool, err error) {
+	parts := strings.Fields(args)
+	var paths []string
+	for _, p := range parts {
+		if p == "--themes" {
+			useUserThemes = true
+			continue
+		}
+		paths = append(paths, p)
+	}
+	if len(paths) > 1 {
+		return "", false, fmt.Errorf("Usage: /export [--themes] [path]")
+	}
+	if len(paths) == 1 {
+		outputPath = paths[0]
+	}
+	return outputPath, useUserThemes, nil
+}
+
+func isExportCopyArg(outputPath string) bool {
+	switch strings.ToLower(strings.TrimSpace(outputPath)) {
+	case "--copy", "copy", "clipboard":
+		return true
+	default:
+		return false
+	}
+}
+
+// shouldInterceptExport reports whether `/export <args>` should be handled by
+// oh-my-pig (`--copy|copy|clipboard` guard or `--themes [path]`), leaving bare
+// `/export` and `/export <path>` to PiG's built-in command handler.
+func shouldInterceptExport(args string) bool {
+	outputPath, useUserThemes, err := ParseExportArgs(args)
+	if err != nil {
+		return strings.Contains(args, "--themes") || strings.Contains(args, "--copy")
+	}
+	return useUserThemes || isExportCopyArg(outputPath)
+}
+
+// handleExportIntercept implements omp's `/export --copy` guard and
+// `/export --themes [path]` dual-theme HTML export.
+// upstream: packages/coding-agent/src/slash-commands/builtin-collaboration.ts:180-203
+func (m *manager) handleExportIntercept(ctx sdk.Context, args string) error {
+	outputPath, useUserThemes, err := ParseExportArgs(args)
+	if err != nil {
+		notifyInfo(ctx, err.Error())
+		return nil
+	}
+	if isExportCopyArg(outputPath) {
+		notifyInfo(ctx, "Use /dump to copy the session to clipboard.")
+		return nil
+	}
+	if !useUserThemes {
+		return nil
+	}
+	branch, err := ctx.GetBranch()
+	if err != nil {
+		notifyError(ctx, fmt.Sprintf("Failed to export session: %v", err))
+		return nil
+	}
+	target := strings.TrimSpace(outputPath)
+	if target == "" {
+		ts := time.UnixMilli(m.now()).UTC().Format("20060102-150405")
+		target = filepath.Join(ctx.Cwd(), fmt.Sprintf("session-export-%s.html", ts))
+	} else {
+		if target == "~" || strings.HasPrefix(target, "~/") || strings.HasPrefix(target, `~\`) {
+			if home, err := os.UserHomeDir(); err == nil && home != "" {
+				if target == "~" {
+					target = home
+				} else {
+					target = filepath.Join(home, target[2:])
+				}
+			}
+		}
+		if !filepath.IsAbs(target) {
+			target = filepath.Join(ctx.Cwd(), target)
+		}
+	}
+	sessionName := ""
+	if sn, err := ctx.GetSessionName(); err == nil && sn != nil {
+		sessionName = *sn
+	}
+	doc := RenderThemedSessionHTML(sessionName, branch)
+	if err := atomicWriteFile(target, []byte(doc), 0o600); err != nil {
+		notifyError(ctx, fmt.Sprintf("Failed to export session: %v", err))
+		return nil
+	}
+	notifyInfo(ctx, fmt.Sprintf("Session exported to: %s", target))
+	return nil
+}
+
+// RenderThemedSessionHTML builds a self-contained dark/light HTML export of
+// branch entries with strict HTML escaping.
+func RenderThemedSessionHTML(title string, branch []sdk.BranchEntry) string {
+	if strings.TrimSpace(title) == "" {
+		title = "Session Export"
+	}
+	var b strings.Builder
+	b.WriteString("<!DOCTYPE html>\n<html lang=\"en\" data-theme=\"dark\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>")
+	b.WriteString(html.EscapeString(title))
+	b.WriteString("</title>\n<style>\n")
+	b.WriteString(`:root{--bg:#0f1216;--card:#161b22;--fg:#e8ecf4;--muted:#9ca3b0;--border:#2a3038;--accent:#00b4ff}
+@media (prefers-color-scheme: light){:root[data-theme="auto"]{--bg:#f8fafc;--card:#ffffff;--fg:#111827;--muted:#4b5563;--border:#d1d5db;--accent:#0284c7}}
+:root[data-theme="light"]{--bg:#f8fafc;--card:#ffffff;--fg:#111827;--muted:#4b5563;--border:#d1d5db;--accent:#0284c7}
+body{margin:0;padding:24px;background:var(--bg);color:var(--fg);font:14px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}
+header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:20px}
+button{background:var(--card);color:var(--fg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer}
+.msg{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:12px}
+.role{font-weight:700;color:var(--accent);text-transform:uppercase;font-size:12px;margin-bottom:6px}
+pre{margin:0;white-space:pre-wrap;word-break:break-word}
+`)
+	b.WriteString("</style>\n</head>\n<body>\n<header><h1>")
+	b.WriteString(html.EscapeString(title))
+	b.WriteString("</h1><button id=\"theme-toggle\" type=\"button\" onclick=\"const r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'dark':'light'\">Toggle theme</button></header>\n<main>\n")
+	for _, e := range branch {
+		if e.Type != "message" || (strings.TrimSpace(e.Content) == "" && len(e.ToolCalls) == 0) {
+			continue
+		}
+		b.WriteString("<section class=\"msg\"><div class=\"role\">")
+		b.WriteString(html.EscapeString(e.Role))
+		b.WriteString("</div><pre>")
+		b.WriteString(html.EscapeString(e.Content))
+		for _, tc := range e.ToolCalls {
+			b.WriteString("\n[tool: ")
+			b.WriteString(html.EscapeString(tc.Name))
+			b.WriteString(" ")
+			b.WriteString(html.EscapeString(tc.Args))
+			b.WriteString("]")
+		}
+		b.WriteString("</pre></section>\n")
+	}
+	b.WriteString("</main>\n</body>\n</html>\n")
+	return b.String()
+}
+
+func atomicWriteFile(dest string, data []byte, perm os.FileMode) error {
+	dir := filepath.Dir(dest)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(dir, ".session-export-*.tmp")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	cleanup := true
+	defer func() {
+		if cleanup {
+			_ = os.Remove(tmpPath)
+		}
+	}()
+	if _, err := tmp.Write(data); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err := tmp.Chmod(perm); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	if err := os.Rename(tmpPath, dest); err != nil {
+		return err
+	}
+	cleanup = false
 	return nil
 }

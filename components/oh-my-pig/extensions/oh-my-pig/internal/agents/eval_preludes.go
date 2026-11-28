@@ -72,6 +72,7 @@ type WorkPool struct {
 	agentDef      AgentDefinition
 	contextText   string
 	modelSel      []string
+	customTools   []sdk.ToolDefinition
 	limit         int
 	closed        bool
 	nextSeq       int
@@ -88,7 +89,7 @@ type WorkPool struct {
 	wg            sync.WaitGroup
 }
 
-func (rt *Runtime) newWorkPoolLocked(ctx sdk.Context, sessKey, parentAgentID string, taskDepth int, planMode bool, cwd, artifactsDir, name string, ag AgentDefinition, contextText string, modelSel []string) *WorkPool {
+func (rt *Runtime) newWorkPoolLocked(ctx sdk.Context, sessKey, parentAgentID string, taskDepth int, planMode bool, cwd, artifactsDir, name string, ag AgentDefinition, contextText string, modelSel []string, customTools []sdk.ToolDefinition) *WorkPool {
 	lim := rt.Config.MaxConcurrency
 	if lim <= 0 {
 		lim = 32
@@ -108,6 +109,7 @@ func (rt *Runtime) newWorkPoolLocked(ctx sdk.Context, sessKey, parentAgentID str
 		agentDef:      ag,
 		contextText:   contextText,
 		modelSel:      modelSel,
+		customTools:   customTools,
 		limit:         lim,
 		nextSeq:       1,
 		nextWorker:    1,
@@ -280,6 +282,7 @@ func (wp *WorkPool) startWorkerBatchLocked(worker *WorkPoolAgent) {
 				IRCEnabled:      !wp.planMode,
 				KeepAlive:       false,
 				WorkPoolItems:   yieldItems,
+				CustomTools:     wp.customTools,
 			})
 			wp.rt.sem.Release()
 		}
@@ -458,7 +461,7 @@ func (wp *WorkPool) Close() map[string]any {
 func RenderEvalAgentsDoc() string {
 	return strings.TrimSpace(`
 ` + "```" + `
-agent(prompt, *, agent?="task", label?=None, schema?=None, schema_mode?=None, isolated?=None, apply?=None, merge?=None) → AgentHandle
+agent(prompt, *, agent?="task", label?=None, schema?=None, schema_mode?=None, isolated?=None, apply?=None, merge?=None, tools?=None) → AgentHandle
   Spawns a background subagent and returns immediately.
   - ` + "`agent`" + ` selects a discovered agent; omit it to use ` + "`task`" + `.
   - Handle: ` + "`.id`" + `, ` + "`.handle`" + ` ("agent://<id>"), ` + "`.status`" + `, ` + "`.done()`" + `, ` + "`.wait(timeout?)`" + ` → final text (parsed with ` + "`schema`" + `),
@@ -466,17 +469,18 @@ agent(prompt, *, agent?="task", label?=None, schema?=None, schema_mode?=None, is
   - Unwaited results auto-deliver like async jobs.
   - ` + "`schema`" + ` overrides agent/session schemas.
   - ` + "`schema_mode`" + `: "permissive" warns after retries, "strict" fails; omitted → session setting, else "permissive".
+  - ` + "`tools`" + `: names of tools you defined with ` + "`@tool` / `tool(fn)`" + ` that the child may call.
   - Python: call without ` + "`await`" + `; ` + "`await agent(…)`" + ` returns the final result, not a handle (` + "`await h`" + ` = ` + "`h.wait()`" + `).
-  - JS: ONE trailing object — ` + "`h = await agent(prompt, { agent, label, schema, schemaMode })`" + `.
+  - JS: ONE trailing object — ` + "`h = await agent(prompt, { agent, label, schema, schemaMode, isolated, apply, merge, tools })`" + `.
     - Without ` + "`await agent(…)`" + `, ` + "`.id`" + `/` + "`.handle`" + ` are undefined.
     - Every handle method returns a Promise; ` + "`.status`" + ` is ` + "`await h.status()`" + `.
-workpool(agent?=None, *, name?=None, context?=None) → WorkPool
+workpool(agent?=None, *, name?=None, context?=None, tools?=None) → WorkPool
   Keep-alive worker pool for a batch of independent items.
   - ` + "`.push(*items)`" + ` (strings) → item ids; ` + "`.status()`" + `; ` + "`.peek()`" + `; ` + "`.close()`" + `.
   - Pool name = async job id; results auto-deliver.
   - The first full drain closes the pool: push the whole batch while it is active; next wave → new pool.
   - Completely blocked? Leave ` + "`eval`" + ` and call the ` + "`wait`" + ` tool (not kernel ` + "`wait()`" + `); NEVER poll.
-  - JS: ` + "`pool = await workpool(agent, { name, context })`" + `; ` + "`await`" + ` each pool method.
+  - JS: ` + "`pool = await workpool(agent, { name, context, tools })`" + `; ` + "`await`" + ` each pool method.
 ` + "```" + `
 
 The cell ` + "`timeout`" + ` counts only the cell's own work, not waits on ` + "`agent()`" + `/` + "`wait()`" + `/` + "`tool.task(…)`" + `, so a subagent can outlast it.
@@ -664,8 +668,28 @@ func (rt *Runtime) invokeAgentSpawn(call eval.PreludeCall, sessKey string, args 
 	if hasMergeControl && !requestedIso {
 		return nil, errors.New("Subagent isolation control `merge` requires `isolated: true`.")
 	}
+	longLivedCtx := rt.sessionContextFor(sessKey, call.SDK)
+	var customTools []sdk.ToolDefinition
 	if len(evalToolNames) > 0 {
-		return nil, errors.New("Eval-defined tools are disabled; exposing kernel-defined @tool/tool() functions to subagents is not ported in oh-my-pig.")
+		if !cfg.EvalToolsEnabled {
+			return nil, errors.New(errEvalToolsDisabled)
+		}
+		resolveCtx, resolveCancel := context.WithCancel(context.Background())
+		defer resolveCancel()
+		if done := call.SDK.Done(); done != nil {
+			go func() {
+				select {
+				case <-done:
+					resolveCancel()
+				case <-resolveCtx.Done():
+				}
+			}()
+		}
+		resolvedTools, err := ResolveEvalCustomTools(resolveCtx, longLivedCtx, evalToolNames, planMode)
+		if err != nil {
+			return nil, err
+		}
+		customTools = resolvedTools
 	}
 	var modelSel []string
 	if rawModel, exists := args["model"]; exists && rawModel != nil && !isBlankModel(rawModel) {
@@ -743,7 +767,6 @@ func (rt *Runtime) invokeAgentSpawn(call eval.PreludeCall, sessKey string, args 
 	if meta, ok := rt.Registry.ChildMeta(sessKey); ok && meta.AgentID != "" {
 		parentAgentID = meta.AgentID
 	}
-	longLivedCtx := rt.sessionContextFor(sessKey, call.SDK)
 	jobs.BindSessionIfMissing(sessKey, longLivedCtx)
 	parentLocalRoot, _ := urls.LocalRoot(longLivedCtx)
 	if taskDepth == 0 {
@@ -803,6 +826,7 @@ func (rt *Runtime) invokeAgentSpawn(call eval.PreludeCall, sessKey string, args 
 			MaxDepth:                   cfg.MaxRecursionDepth,
 			IRCEnabled:                 !planMode,
 			KeepAlive:                  true,
+			CustomTools:                customTools,
 			Semaphore:                  rt.sem,
 			OnProgress: func(p AgentProgress) {
 				job.updateProgress(p, fmt.Sprintf("Running agent %s...", p.ID))
@@ -1084,27 +1108,46 @@ func (rt *Runtime) invokeWorkpoolPrelude(call eval.PreludeCall, raw json.RawMess
 			}
 			contextText = strings.TrimSpace(s)
 		}
+		var evalToolNames []string
 		if rawTools, ok := args["tools"]; ok && rawTools != nil {
 			list, ok := rawTools.([]any)
 			if !ok {
 				return nil, errors.New("workpool tools must be an array of non-empty strings")
 			}
-			var names []string
 			for _, item := range list {
 				s, ok := item.(string)
 				if !ok || len(s) == 0 {
 					return nil, errors.New("workpool tools must be an array of non-empty strings")
 				}
-				names = append(names, s)
+				evalToolNames = append(evalToolNames, s)
 			}
-			if len(names) > 0 {
-				if planMode {
-					return nil, errors.New("Eval-defined tools are unavailable in plan mode.")
-				}
-				return nil, errors.New("Eval-defined tools are disabled; exposing kernel-defined @tool/tool() functions to subagents is not ported in oh-my-pig.")
+			if len(evalToolNames) > 0 && planMode {
+				return nil, errors.New(errEvalToolsPlanMode)
 			}
 		}
 		cfg := rt.EffectiveConfig(call.SDK)
+		var customTools []sdk.ToolDefinition
+		if len(evalToolNames) > 0 {
+			if !cfg.EvalToolsEnabled {
+				return nil, errors.New(errEvalToolsDisabled)
+			}
+			resolveCtx, resolveCancel := context.WithCancel(context.Background())
+			defer resolveCancel()
+			if done := call.SDK.Done(); done != nil {
+				go func() {
+					select {
+					case <-done:
+						resolveCancel()
+					case <-resolveCtx.Done():
+					}
+				}()
+			}
+			resolvedTools, err := ResolveEvalCustomTools(resolveCtx, longLivedCtx, evalToolNames, planMode)
+			if err != nil {
+				return nil, err
+			}
+			customTools = resolvedTools
+		}
 		var modelSel []string
 		if rawModel, exists := args["model"]; exists && rawModel != nil && !isBlankModel(rawModel) {
 			if cfg.PerCallModel == "off" {
@@ -1183,7 +1226,7 @@ func (rt *Runtime) invokeWorkpoolPrelude(call eval.PreludeCall, raw json.RawMess
 		if meta, ok := rt.Registry.ChildMeta(sessKey); ok && meta.AgentID != "" {
 			parentAgentID = meta.AgentID
 		}
-		wp := rt.newWorkPoolLocked(longLivedCtx, sessKey, parentAgentID, taskDepth, planMode, cwd, artifactsDir, name, ag, contextText, modelSel)
+		wp := rt.newWorkPoolLocked(longLivedCtx, sessKey, parentAgentID, taskDepth, planMode, cwd, artifactsDir, name, ag, contextText, modelSel, customTools)
 		rt.workpools[sessKey+"\x00"+name] = wp
 		rt.mu.Unlock()
 		return &eval.PreludeResult{

@@ -32,10 +32,12 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/github"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/intent"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lsp"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/memory"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/modes"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/schemaorder"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/search"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/shell"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/think"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/todo"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/web"
 )
@@ -62,6 +64,8 @@ var allToolAreas = []areaRegistrar{
 	{area: "internal/lsp", register: lsp.Register},
 	{area: "internal/autoresearch", register: autoresearch.Register},
 	{area: "internal/autolearn", register: autolearn.Register},
+	{area: "internal/memory", register: memory.Register},
+	{area: "internal/think", register: think.Register},
 }
 
 type wireRegisteredTool struct {

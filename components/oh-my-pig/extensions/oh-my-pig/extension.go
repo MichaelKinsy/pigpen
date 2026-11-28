@@ -8,9 +8,11 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/advisor"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/agents"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ansi"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/approval"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/archive"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ask"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ast"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autolearn"
@@ -26,6 +28,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/intent"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lsp"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/memory"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/modes"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prediction"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prompt"
@@ -38,6 +41,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ssh"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/tern"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ternbrowser"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/think"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/todo"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/toolcmd"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
@@ -65,12 +69,16 @@ var registrars = []func(*sdk.Extension){
 	github.Register,
 	checkpoint.Register,
 	autolearn.Register,
+	think.Register,
+	memory.Register,
 	autothinking.Register,
 	eval.Register,
 	commit.Register,
 	ratchet.Register,
+	archive.Register,
 	agents.Register,
 	modes.Register,
+	advisor.Register,
 	vibe.Register,
 	browser.Register,
 	ternbrowser.Register,

@@ -48,8 +48,8 @@ type DescriptionOptions struct {
 }
 
 // DefaultDescriptionOptions returns description options for the active session,
-// deriving Spawns from whether an `agent` prelude is registered, and setting
-// EvalTools=false since kernel-hosted `@tool`/`tool(fn)` subagent dispatch is not ported.
+// deriving Spawns from whether an `agent` prelude is registered, and defaulting
+// EvalTools=true (matching omp v19.1.1's `eval.tools.enabled` default).
 func DefaultDescriptionOptions(preludes []Prelude) DescriptionOptions {
 	hasAgent := false
 	for _, p := range preludes {
@@ -64,7 +64,7 @@ func DefaultDescriptionOptions(preludes []Prelude) DescriptionOptions {
 		Spawns:                hasAgent,
 		SpawnDefaultAgent:     "task",
 		AutoBackgroundEnabled: false,
-		EvalTools:             false,
+		EvalTools:             true,
 		EagerDelegation:       false,
 		WaitTool:              true,
 		Preludes:              preludes,

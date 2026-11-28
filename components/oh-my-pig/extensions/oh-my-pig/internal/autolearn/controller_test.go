@@ -18,6 +18,7 @@ func saveAndRestoreAutolearnHooks(t *testing.T) {
 	origIsSubagent := IsSubagent
 	origExplicitTools := ExplicitTools
 	origGoalActive := GoalActive
+	origLearnActive := LearnActive
 	origCaptureTurn := CaptureTurn
 	t.Cleanup(func() {
 		Enabled = origEnabled
@@ -25,6 +26,7 @@ func saveAndRestoreAutolearnHooks(t *testing.T) {
 		IsSubagent = origIsSubagent
 		ExplicitTools = origExplicitTools
 		GoalActive = origGoalActive
+		LearnActive = origLearnActive
 		CaptureTurn = origCaptureTurn
 		gate.ResetForTests()
 	})
@@ -66,6 +68,18 @@ func TestBuildInstructions(t *testing.T) {
 	got := BuildInstructions(zero)
 	if !strings.Contains(got, "## Auto-Learn (experimental)") || !strings.Contains(got, "manage_skill") {
 		t.Fatalf("unexpected standing guidance: %q", got)
+	}
+
+	// LearnActive=true -> appends autolearn-guidance-learn addendum.
+	LearnActive = func(_ sdk.Context) bool { return true }
+	gotWithLearn := BuildInstructions(zero)
+	if !strings.Contains(gotWithLearn, "record with `learn`") {
+		t.Fatalf("expected learn guidance addendum when LearnActive=true, got %q", gotWithLearn)
+	}
+	LearnActive = func(_ sdk.Context) bool { return false }
+	gotWithoutLearn := BuildInstructions(zero)
+	if strings.Contains(gotWithoutLearn, "record with `learn`") {
+		t.Fatalf("unexpected learn guidance addendum when LearnActive=false, got %q", gotWithoutLearn)
 	}
 
 	// Subagent without explicit manage_skill -> empty string.

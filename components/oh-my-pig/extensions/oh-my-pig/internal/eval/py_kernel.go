@@ -496,6 +496,7 @@ type pyFrame struct {
 	View           any             `json:"view"`
 	Image          map[string]any  `json:"image"`
 	Event          EvalStatusEvent `json:"event"`
+	Value          any             `json:"value"`
 	Ename          string          `json:"ename"`
 	Evalue         string          `json:"evalue"`
 	Traceback      []string        `json:"traceback"`
@@ -518,6 +519,27 @@ func (p *pyPending) finish() {
 	p.once.Do(func() { close(p.done) })
 }
 
+// pyToolReply holds the settled result of one `type:"tool"` request to py_runner.py.
+type pyToolReply struct {
+	envelope map[string]any
+	err      error
+}
+
+type pyToolPending struct {
+	reply    map[string]any
+	errName  string
+	errValue string
+	status   string
+	ch       chan pyToolReply
+	once     sync.Once
+}
+
+func (p *pyToolPending) deliver(res pyToolReply) {
+	p.once.Do(func() {
+		p.ch <- res
+	})
+}
+
 // pythonKernel manages one long-lived Python subprocess running py_runner.py.
 type pythonKernel struct {
 	id         string
@@ -532,6 +554,7 @@ type pythonKernel struct {
 	exitReason       string
 	stderrTail       strings.Builder
 	pending          map[string]*pyPending
+	toolPending      map[string]*pyToolPending
 	installedPrelude map[string]preludeSnippet
 	exited           chan struct{}
 	interruptWait    time.Duration
@@ -613,6 +636,7 @@ func startPythonKernel(ctx context.Context, cwd, interpreter string, env map[str
 		stdin:            stdin,
 		alive:            true,
 		pending:          make(map[string]*pyPending),
+		toolPending:      make(map[string]*pyToolPending),
 		installedPrelude: make(map[string]preludeSnippet),
 		exited:           make(chan struct{}),
 		interruptWait:    pyInterruptEscalation,
@@ -694,6 +718,11 @@ func (k *pythonKernel) abortPending(reason string, diedMidRun bool) {
 		pendings = append(pendings, p)
 	}
 	k.pending = make(map[string]*pyPending)
+	toolPendings := make([]*pyToolPending, 0, len(k.toolPending))
+	for _, tp := range k.toolPending {
+		toolPendings = append(toolPendings, tp)
+	}
+	k.toolPending = make(map[string]*pyToolPending)
 	k.mu.Unlock()
 
 	// upstream: packages/coding-agent/src/eval/kernel-base.ts:556-578
@@ -705,6 +734,9 @@ func (k *pythonKernel) abortPending(reason string, diedMidRun bool) {
 			p.onChunk("[kernel] " + reason + "\n")
 		}
 		p.finish()
+	}
+	for _, tp := range toolPendings {
+		tp.deliver(pyToolReply{err: newKernelNotRunningError("py")})
 	}
 }
 
@@ -777,7 +809,12 @@ func (k *pythonKernel) readStdout(r io.Reader) {
 func (k *pythonKernel) handleFrame(frame pyFrame) {
 	k.mu.Lock()
 	p := k.pending[frame.ID]
+	tp := k.toolPending[frame.ID]
 	k.mu.Unlock()
+	if tp != nil {
+		k.handleToolFrame(tp, frame)
+		return
+	}
 	if p == nil {
 		return
 	}
@@ -832,6 +869,130 @@ func (k *pythonKernel) handleFrame(frame pyFrame) {
 	}
 }
 
+// handleToolFrame routes `reply`/`error`/`done`/`tool_result` frames for a
+// concurrent `type:"tool"` request without interfering with active cell runs.
+// upstream: packages/coding-agent/src/eval/kernel-base.ts:710-745, py/executor.ts:486-577
+func (k *pythonKernel) handleToolFrame(tp *pyToolPending, frame pyFrame) {
+	switch frame.Type {
+	case "reply":
+		if m, ok := frame.Value.(map[string]any); ok {
+			tp.reply = m
+		}
+	case "tool_result":
+		k.mu.Lock()
+		delete(k.toolPending, frame.ID)
+		k.mu.Unlock()
+		if m, ok := frame.Value.(map[string]any); ok {
+			tp.deliver(pyToolReply{envelope: m})
+		} else {
+			tp.deliver(pyToolReply{err: errors.New("Python tool request returned an invalid response")})
+		}
+	case "error":
+		tp.status = "error"
+		tp.errName = frame.Ename
+		tp.errValue = frame.Evalue
+	case "done":
+		k.mu.Lock()
+		delete(k.toolPending, frame.ID)
+		k.mu.Unlock()
+		if frame.Status == "error" || tp.status == "error" {
+			msg := tp.errValue
+			if msg == "" {
+				msg = tp.errName
+			}
+			if msg == "" {
+				msg = "Python tool request failed"
+			}
+			tp.deliver(pyToolReply{err: errors.New(msg)})
+			return
+		}
+		tp.deliver(pyToolReply{envelope: tp.reply})
+	}
+}
+
+// invokeTool sends a concurrent `type:"tool"` describe/call request to this
+// retained Python kernel and waits for its reply or caller cancellation.
+// upstream: packages/coding-agent/src/eval/py/kernel.ts:255-263
+func (k *pythonKernel) invokeTool(ctx context.Context, runID string, request map[string]any) (map[string]any, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	tp := &pyToolPending{
+		status: "ok",
+		ch:     make(chan pyToolReply, 1),
+	}
+	k.mu.Lock()
+	if !k.alive || k.disposed {
+		k.mu.Unlock()
+		return nil, newKernelNotRunningError("py")
+	}
+	k.toolPending[runID] = tp
+	k.mu.Unlock()
+
+	payload := make(map[string]any, len(request)+2)
+	for key, val := range request {
+		payload[key] = val
+	}
+	payload["type"] = "tool"
+	payload["id"] = runID
+	writeErrCh := make(chan error, 1)
+	go func() {
+		writeErrCh <- k.writeLine(payload)
+	}()
+	select {
+	case err := <-writeErrCh:
+		if err != nil {
+			k.mu.Lock()
+			delete(k.toolPending, runID)
+			alive := k.alive && !k.disposed
+			k.mu.Unlock()
+			if !alive {
+				return nil, newKernelNotRunningError("py")
+			}
+			return nil, err
+		}
+	case <-ctx.Done():
+		k.mu.Lock()
+		delete(k.toolPending, runID)
+		k.mu.Unlock()
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return nil, errors.New("Python tool request timed out")
+		}
+		return nil, errors.New("Python tool request was cancelled")
+	case <-k.exited:
+		k.mu.Lock()
+		delete(k.toolPending, runID)
+		k.mu.Unlock()
+		return nil, newKernelNotRunningError("py")
+	}
+
+	select {
+	case res := <-tp.ch:
+		return res.envelope, res.err
+	case <-ctx.Done():
+		k.mu.Lock()
+		delete(k.toolPending, runID)
+		k.mu.Unlock()
+		go func() {
+			_ = k.tryWriteLine(map[string]any{"type": "tool_cancel", "id": runID})
+		}()
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return nil, errors.New("Python tool request timed out")
+		}
+		return nil, errors.New("Python tool request was cancelled")
+	case <-k.exited:
+		k.mu.Lock()
+		delete(k.toolPending, runID)
+		k.mu.Unlock()
+		select {
+		case res := <-tp.ch:
+			return res.envelope, res.err
+		default:
+			return nil, newKernelNotRunningError("py")
+		}
+	}
+}
+
 func parseImageMap(m map[string]any) *EvalImageDetail {
 	data, _ := m["data"].(string)
 	mime, _ := m["mimeType"].(string)
@@ -859,6 +1020,23 @@ func (k *pythonKernel) writeLine(payload any) error {
 	}
 	raw = append(raw, '\n')
 	k.stdinMu.Lock()
+	defer k.stdinMu.Unlock()
+	if k.stdin == nil {
+		return errors.New("Python kernel stdin closed")
+	}
+	_, err = k.stdin.Write(raw)
+	return err
+}
+
+func (k *pythonKernel) tryWriteLine(payload any) error {
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	raw = append(raw, '\n')
+	if !k.stdinMu.TryLock() {
+		return errors.New("Python kernel stdin busy")
+	}
 	defer k.stdinMu.Unlock()
 	if k.stdin == nil {
 		return errors.New("Python kernel stdin closed")
@@ -1020,8 +1198,8 @@ func (k *pythonKernel) execRaw(
 		cancelled = p.cancelled
 	case <-ctx.Done():
 		cancelled = true
-		_ = k.writeLine(map[string]any{"type": "interrupt", "id": runID})
 		sendInterrupt(k.cmd.Process)
+		_ = k.tryWriteLine(map[string]any{"type": "interrupt", "id": runID})
 		timer := time.NewTimer(k.interruptWait)
 		select {
 		case <-p.done:
@@ -1083,18 +1261,20 @@ func (k *pythonKernel) shutdown() {
 
 	k.abortPending("Python kernel shutdown", false)
 
-	_ = k.writeLine(map[string]any{"type": "exit"})
-	k.stdinMu.Lock()
-	if k.stdin != nil {
-		_ = k.stdin.Close()
-		k.stdin = nil
-	}
-	k.stdinMu.Unlock()
-
-	select {
-	case <-k.exited:
-		return
-	case <-time.After(pyShutdownGrace):
+	if k.stdinMu.TryLock() {
+		if k.stdin != nil {
+			if raw, err := json.Marshal(map[string]any{"type": "exit"}); err == nil {
+				_, _ = k.stdin.Write(append(raw, '\n'))
+			}
+			_ = k.stdin.Close()
+			k.stdin = nil
+		}
+		k.stdinMu.Unlock()
+		select {
+		case <-k.exited:
+			return
+		case <-time.After(pyShutdownGrace):
+		}
 	}
 	killProcessTreeGraceful(k.cmd.Process, k.exited, pyShutdownGrace)
 	<-k.exited

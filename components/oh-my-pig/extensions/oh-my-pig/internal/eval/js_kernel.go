@@ -135,15 +135,18 @@ func probeJSRuntime(ctx context.Context) jsAvailability {
 }
 
 type jsFrame struct {
-	Type  string          `json:"type"`
-	ID    string          `json:"id"`
-	Data  string          `json:"data"`
-	Text  string          `json:"text"`
-	View  any             `json:"view"`
-	Image map[string]any  `json:"image"`
-	Event EvalStatusEvent `json:"event"`
-	OK    bool            `json:"ok"`
-	Error json.RawMessage `json:"error"`
+	Type    string          `json:"type"`
+	ID      string          `json:"id"`
+	Data    string          `json:"data"`
+	Text    string          `json:"text"`
+	View    any             `json:"view"`
+	Image   map[string]any  `json:"image"`
+	Event   EvalStatusEvent `json:"event"`
+	OK      bool            `json:"ok"`
+	Error   json.RawMessage `json:"error"`
+	Tools   json.RawMessage `json:"tools"`
+	Missing json.RawMessage `json:"missing"`
+	Value   json.RawMessage `json:"value"`
 }
 
 type jsPending struct {
@@ -160,6 +163,23 @@ func (p *jsPending) finish() {
 	p.once.Do(func() { close(p.done) })
 }
 
+// jsToolReply holds the settled result of one `type:"tool"` request to js_runner.js.
+type jsToolReply struct {
+	envelope map[string]any
+	err      error
+}
+
+type jsToolPending struct {
+	ch   chan jsToolReply
+	once sync.Once
+}
+
+func (p *jsToolPending) deliver(res jsToolReply) {
+	p.once.Do(func() {
+		p.ch <- res
+	})
+}
+
 type jsKernel struct {
 	id        string
 	runtime   jsRuntimeInfo
@@ -172,6 +192,7 @@ type jsKernel struct {
 	disposed    bool
 	exitMsg     string
 	pending     map[string]*jsPending
+	toolPending map[string]*jsToolPending
 	activeRunID string
 	readyCh     chan error
 	exited      chan struct{}
@@ -308,14 +329,15 @@ func startJSKernelWithRuntime(ctx context.Context, rt jsRuntimeInfo, cwd, sessio
 	}
 
 	k := &jsKernel{
-		id:        "js-" + newRandomID(),
-		runtime:   rt,
-		cmd:       cmd,
-		ctrlWrite: ctrlWrite,
-		alive:     true,
-		pending:   make(map[string]*jsPending),
-		readyCh:   make(chan error, 1),
-		exited:    make(chan struct{}),
+		id:          "js-" + newRandomID(),
+		runtime:     rt,
+		cmd:         cmd,
+		ctrlWrite:   ctrlWrite,
+		alive:       true,
+		pending:     make(map[string]*jsPending),
+		toolPending: make(map[string]*jsToolPending),
+		readyCh:     make(chan error, 1),
+		exited:      make(chan struct{}),
 	}
 
 	var readersWG sync.WaitGroup
@@ -422,6 +444,11 @@ func (k *jsKernel) abortPending(reason string) {
 		pendings = append(pendings, p)
 	}
 	k.pending = make(map[string]*jsPending)
+	toolPendings := make([]*jsToolPending, 0, len(k.toolPending))
+	for _, tp := range k.toolPending {
+		toolPendings = append(toolPendings, tp)
+	}
+	k.toolPending = make(map[string]*jsToolPending)
 	k.activeRunID = ""
 	k.mu.Unlock()
 
@@ -431,6 +458,23 @@ func (k *jsKernel) abortPending(reason string) {
 			p.errText = reason
 		}
 		p.finish()
+	}
+	for _, tp := range toolPendings {
+		tp.deliver(jsToolReply{err: newKernelNotRunningError("js")})
+	}
+}
+
+func (k *jsKernel) abortToolPending() {
+	k.mu.Lock()
+	toolPendings := make([]*jsToolPending, 0, len(k.toolPending))
+	for _, tp := range k.toolPending {
+		toolPendings = append(toolPendings, tp)
+	}
+	k.toolPending = make(map[string]*jsToolPending)
+	k.mu.Unlock()
+
+	for _, tp := range toolPendings {
+		tp.deliver(jsToolReply{err: newKernelNotRunningError("js")})
 	}
 }
 
@@ -500,6 +544,9 @@ func (k *jsKernel) handleFrame(frame jsFrame) {
 		default:
 		}
 		return
+	case "tool_result":
+		k.handleToolResultFrame(frame)
+		return
 	}
 
 	k.mu.Lock()
@@ -554,6 +601,153 @@ func (k *jsKernel) handleFrame(frame jsFrame) {
 		}
 		k.mu.Unlock()
 		p.finish()
+	}
+}
+
+// handleToolResultFrame decodes a `type:"tool_result"` frame from js_runner.js
+// and wakes the waiting `invokeTool` caller without touching active cell state.
+// upstream: packages/coding-agent/src/eval/js/context-manager.ts:244-313
+func (k *jsKernel) handleToolResultFrame(frame jsFrame) {
+	k.mu.Lock()
+	tp := k.toolPending[frame.ID]
+	delete(k.toolPending, frame.ID)
+	k.mu.Unlock()
+	if tp == nil {
+		return
+	}
+	if !frame.OK {
+		errMsg := ""
+		if len(frame.Error) > 0 {
+			if err := json.Unmarshal(frame.Error, &errMsg); err != nil {
+				var errObj struct {
+					Name    string `json:"name"`
+					Message string `json:"message"`
+				}
+				if err := json.Unmarshal(frame.Error, &errObj); err == nil {
+					if errObj.Message != "" {
+						errMsg = errObj.Message
+					} else {
+						errMsg = errObj.Name
+					}
+				} else {
+					errMsg = string(frame.Error)
+				}
+			}
+		}
+		if errMsg == "" {
+			errMsg = "JavaScript tool request failed"
+		}
+		tp.deliver(jsToolReply{err: errors.New(errMsg)})
+		return
+	}
+	env := map[string]any{"ok": true}
+	if len(frame.Tools) > 0 {
+		var tools []any
+		if err := json.Unmarshal(frame.Tools, &tools); err == nil {
+			env["tools"] = tools
+		}
+	}
+	if len(frame.Missing) > 0 {
+		var missing []any
+		if err := json.Unmarshal(frame.Missing, &missing); err == nil {
+			env["missing"] = missing
+		}
+	}
+	if len(frame.Value) > 0 {
+		var val any
+		if err := json.Unmarshal(frame.Value, &val); err == nil {
+			env["value"] = val
+		}
+	}
+	tp.deliver(jsToolReply{envelope: env})
+}
+
+// invokeTool sends a concurrent `type:"tool"` describe/call request to this
+// retained JavaScript kernel and waits for its `tool_result` frame or cancellation.
+// upstream: packages/coding-agent/src/eval/js/context-manager.ts:244-313
+func (k *jsKernel) invokeTool(ctx context.Context, runID string, request map[string]any, bridge *bridgeServer, bridgeSession string) (map[string]any, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	tp := &jsToolPending{
+		ch: make(chan jsToolReply, 1),
+	}
+	k.mu.Lock()
+	if !k.alive || k.disposed {
+		k.mu.Unlock()
+		return nil, newKernelNotRunningError("js")
+	}
+	k.toolPending[runID] = tp
+	k.mu.Unlock()
+
+	payload := make(map[string]any, len(request)+3)
+	for key, val := range request {
+		payload[key] = val
+	}
+	payload["type"] = "tool"
+	payload["id"] = runID
+	if bridge != nil {
+		payload["bridge"] = map[string]any{
+			"url":     bridge.url,
+			"token":   bridge.token,
+			"session": bridgeSession,
+		}
+	}
+	writeErrCh := make(chan error, 1)
+	go func() {
+		writeErrCh <- k.writeLine(payload)
+	}()
+	select {
+	case err := <-writeErrCh:
+		if err != nil {
+			k.mu.Lock()
+			delete(k.toolPending, runID)
+			alive := k.alive && !k.disposed
+			k.mu.Unlock()
+			if !alive {
+				return nil, newKernelNotRunningError("js")
+			}
+			return nil, err
+		}
+	case <-ctx.Done():
+		k.mu.Lock()
+		delete(k.toolPending, runID)
+		k.mu.Unlock()
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return nil, errors.New("Tool invocation timed out")
+		}
+		return nil, errors.New("Tool invocation aborted")
+	case <-k.exited:
+		k.mu.Lock()
+		delete(k.toolPending, runID)
+		k.mu.Unlock()
+		return nil, newKernelNotRunningError("js")
+	}
+
+	select {
+	case res := <-tp.ch:
+		return res.envelope, res.err
+	case <-ctx.Done():
+		k.mu.Lock()
+		delete(k.toolPending, runID)
+		k.mu.Unlock()
+		go func() {
+			_ = k.tryWriteLine(map[string]any{"type": "tool_cancel", "id": runID})
+		}()
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return nil, errors.New("Tool invocation timed out")
+		}
+		return nil, errors.New("Tool invocation aborted")
+	case <-k.exited:
+		k.mu.Lock()
+		delete(k.toolPending, runID)
+		k.mu.Unlock()
+		select {
+		case res := <-tp.ch:
+			return res.envelope, res.err
+		default:
+			return nil, newKernelNotRunningError("js")
+		}
 	}
 }
 
@@ -612,6 +806,23 @@ func (k *jsKernel) writeLine(payload any) error {
 	}
 	raw = append(raw, '\n')
 	k.ctrlMu.Lock()
+	defer k.ctrlMu.Unlock()
+	if k.ctrlWrite == nil {
+		return errors.New("JS kernel control pipe closed")
+	}
+	_, err = k.ctrlWrite.Write(raw)
+	return err
+}
+
+func (k *jsKernel) tryWriteLine(payload any) error {
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	raw = append(raw, '\n')
+	if !k.ctrlMu.TryLock() {
+		return errors.New("JS kernel control pipe busy")
+	}
 	defer k.ctrlMu.Unlock()
 	if k.ctrlWrite == nil {
 		return errors.New("JS kernel control pipe closed")
@@ -780,18 +991,22 @@ func (k *jsKernel) shutdown() {
 	k.alive = false
 	k.mu.Unlock()
 
-	_ = k.writeLine(map[string]any{"type": "exit"})
-	k.ctrlMu.Lock()
-	if k.ctrlWrite != nil {
-		_ = k.ctrlWrite.Close()
-		k.ctrlWrite = nil
-	}
-	k.ctrlMu.Unlock()
+	k.abortToolPending()
 
-	select {
-	case <-k.exited:
-		return
-	case <-time.After(jsShutdownGrace):
+	if k.ctrlMu.TryLock() {
+		if k.ctrlWrite != nil {
+			if raw, err := json.Marshal(map[string]any{"type": "exit"}); err == nil {
+				_, _ = k.ctrlWrite.Write(append(raw, '\n'))
+			}
+			_ = k.ctrlWrite.Close()
+			k.ctrlWrite = nil
+		}
+		k.ctrlMu.Unlock()
+		select {
+		case <-k.exited:
+			return
+		case <-time.After(jsShutdownGrace):
+		}
 	}
 	killProcessTreeGraceful(k.cmd.Process, k.exited, jsShutdownGrace)
 	<-k.exited

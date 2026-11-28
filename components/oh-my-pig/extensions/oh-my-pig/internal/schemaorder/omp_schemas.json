@@ -1242,5 +1242,188 @@
       ],
       "additionalProperties": false
     }
+  },
+  "retain": {
+    "source": "derived",
+    "description_len": 0,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "description": "memories to retain",
+          "items": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string",
+                "description": "information to remember"
+              },
+              "context": {
+                "type": "string",
+                "description": "source context"
+              }
+            },
+            "required": [
+              "content"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "recall": {
+    "source": "derived",
+    "description_len": 0,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "natural language search query"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "reflect": {
+    "source": "derived",
+    "description_len": 0,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "question to answer"
+        },
+        "context": {
+          "type": "string",
+          "description": "optional context"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "memory_edit": {
+    "source": "derived",
+    "description_len": 0,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": [
+            "update",
+            "forget",
+            "invalidate"
+          ],
+          "description": "memory edit operation"
+        },
+        "id": {
+          "type": "string",
+          "description": "memory id from recall output"
+        },
+        "content": {
+          "type": "string",
+          "description": "replacement content for update"
+        },
+        "importance": {
+          "type": "number",
+          "description": "replacement importance for update (0–1)"
+        },
+        "replacement_id": {
+          "type": "string",
+          "description": "replacement memory id for invalidate"
+        }
+      },
+      "required": [
+        "op",
+        "id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "learn": {
+    "source": "derived",
+    "description_len": 0,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "memory": {
+          "type": "string",
+          "description": "the durable, self-contained lesson to remember (what, when, why)"
+        },
+        "context": {
+          "type": "string",
+          "description": "optional source context for the lesson"
+        },
+        "skill": {
+          "type": "object",
+          "description": "also create or enhance a managed skill in the same call",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "create",
+                "update"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "description": "kebab-case skill name"
+            },
+            "description": {
+              "type": "string",
+              "description": "one-line description of when to use the skill"
+            },
+            "body": {
+              "type": "string",
+              "description": "the SKILL.md body in markdown (no frontmatter)"
+            }
+          },
+          "required": [
+            "action",
+            "name",
+            "description",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "memory"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "think": {
+    "source": "derived",
+    "description_len": 38,
+    "parameters": {
+      "type": "object",
+      "description": "private scratchpad; not shown to user",
+      "properties": {
+        "thoughts": {
+          "type": "string",
+          "description": "private scratchpad; not shown to user"
+        }
+      },
+      "required": [
+        "thoughts"
+      ],
+      "additionalProperties": false
+    }
   }
 }

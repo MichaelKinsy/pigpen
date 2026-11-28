@@ -445,11 +445,12 @@ func TestOmpParity_NativeHeadMetadataRound2(t *testing.T) {
 
 // TestOmpParity_WelcomeBannerVersionAndTips verifies Finding 8:
 //   - Version row shows `v<PigletVersion>` (e.g. `v0.1.0`), never literal `oh-my-pig`.
-//   - No tip mentions unported commands (`/shake`, `/tan`, `/omfg`, `/collab`,
-//     `/join`, `/advisor`, `/cleanse`, `/usage reset`, `omp stats`, `omp -c`,
-//     `omp auth-broker`).
-//   - `{key:...}` placeholders expand to macOS keycaps (`⌃D`, `⇧⇥`) on darwin
-//     and word modifiers (`Ctrl+D`, `⇧⇥`) on non-darwin platforms.
+//   - No tip mentions unported commands (`/shake`, `/omfg`, `/collab`,
+//     `/join`, `/usage reset`, `omp stats`, `omp -c`, `omp auth-broker`,
+//     `omp cleanse`).
+//   - `{key:...}` and `{tap:...}` placeholders expand to macOS keycaps
+//     (`⌃D`, `⇧⇥`, `←←`) on darwin and word modifiers (`Ctrl+D`, `⇧⇥`) on
+//     non-darwin platforms.
 //
 // upstream: packages/tui/src/prompt/welcome.ts:109-119,355-376,530-544
 func TestOmpParity_WelcomeBannerVersionAndTips(t *testing.T) {
@@ -464,7 +465,7 @@ func TestOmpParity_WelcomeBannerVersionAndTips(t *testing.T) {
 	}
 
 	forbidden := []string{
-		"/shake", "/tan", "/omfg", "/collab", "/join", "/advisor", "/cleanse",
+		"/shake", "/omfg", "/collab", "/join",
 		"/usage reset", "omp stats", "omp -c", "omp auth-broker", "omp auth-gateway",
 		"omp cleanse", "PI_DIALECT",
 	}
@@ -479,11 +480,11 @@ func TestOmpParity_WelcomeBannerVersionAndTips(t *testing.T) {
 		}
 	}
 
-	if got := expandTipKeys("Press {key:ctrl+d} and {key:shift+tab} or {key:escape}", "darwin"); got != "Press ⌃D and ⇧⇥ or ⎋" {
-		t.Errorf("expandTipKeys(darwin) = %q, want %q", got, "Press ⌃D and ⇧⇥ or ⎋")
+	if got := expandTipKeys("Press {key:ctrl+d} and {key:shift+tab} or {key:escape} or {tap:left}", "darwin"); got != "Press ⌃D and ⇧⇥ or ⎋ or ←←" {
+		t.Errorf("expandTipKeys(darwin) = %q, want %q", got, "Press ⌃D and ⇧⇥ or ⎋ or ←←")
 	}
-	if got := expandTipKeys("Press {key:ctrl+d} and {key:shift+tab} or {key:escape}", "linux"); got != "Press Ctrl+D and ⇧⇥ or ⎋" {
-		t.Errorf("expandTipKeys(linux) = %q, want %q", got, "Press Ctrl+D and ⇧⇥ or ⎋")
+	if got := expandTipKeys("Press {key:ctrl+d} and {key:shift+tab} or {key:escape} or {tap:left}", "linux"); got != "Press Ctrl+D and ⇧⇥ or ⎋ or ←←" {
+		t.Errorf("expandTipKeys(linux) = %q, want %q", got, "Press Ctrl+D and ⇧⇥ or ⎋ or ←←")
 	}
 }
 

@@ -84,10 +84,10 @@ Plan mode is enforced only where a tool resolves a write target (as omp's `enfor
 Total built-in slash commands in omp `v19.1.1`: **89** (plus dynamic `/skill:<name>`, already supplied by PiG's built-in `ExpandSkillCommand` when `enableSkillCommands` is true, default true).
 
 Summary counts across the 89 built-in commands:
-- **PiG's own (built-in, not registered here to avoid collision)**: **17** (`settings`, `model`, `tree`, `export`, `share`, `copy`, `session`, `changelog`, `hotkeys`, `fork`, `login`, `logout`, `new`, `compact`, `resume`, `debug`, `quit`) — `/copy <arg>` is additionally intercepted in `EventInput` for omp's `code|cmd|link|local` subcommands.
-- **Ported here (`internal/modes`)**: **21** primary commands (+ 2 aliases: `/rewind`, `/q`) — `plan`, `plan-review`, `goal`, `guided-goal`, `loop`, `btw`, `context`, `usage`, `handoff`, `branch` (+ alias `rewind`), `clear`, `tools`, `effort`, `switch`, `rename`, `dump`, `jobs`, `queue`, `force`, `exit` (+ alias `q`), `commit`.
-- **Owned by another area**: **3** (`todo` in `internal/todo`, `ratchet` in `internal/ratchet`, `vibe` in `internal/vibe`; plus `/autoresearch` in `internal/autoresearch` as a built-in extension command).
-- **Not ported**: **48** (including `/add-dir`, `/remove-dir`, `/dirs` — removed because PiG SDK has no multi-root workspace prompt/tool integration).
+- **PiG's own (built-in, not registered here to avoid collision)**: **17** (`settings`, `model`, `tree`, `export`, `share`, `copy`, `session`, `changelog`, `hotkeys`, `fork`, `login`, `logout`, `new`, `compact`, `resume`, `debug`, `quit`) — `/copy <arg>` is additionally intercepted in `EventInput` for omp's `code|cmd|link|local` subcommands, and `/export --copy|copy|clipboard` + `/export --themes [path]` are intercepted in `EventInput` while bare `/export` and `/export <path>` stay on PiG's built-in handler.
+- **Ported here (`internal/modes`)**: **23** primary commands (+ 2 aliases: `/rewind`, `/q`) — `plan`, `plan-review`, `goal`, `guided-goal`, `loop`, `btw`, `context`, `usage`, `handoff`, `branch` (+ alias `rewind`), `clear`, `tools`, `effort`, `switch`, `rename`, `dump`, `jobs`, `queue`, `force`, `exit` (+ alias `q`), `commit`, `tan`, `cleanse`.
+- **Owned by another area**: **4** (`todo` in `internal/todo`, `ratchet` in `internal/ratchet`, `vibe` in `internal/vibe`, `advisor` in `internal/advisor`; plus `/autoresearch` in `internal/autoresearch` as a built-in extension command).
+- **Not ported**: **45** (including `/add-dir`, `/remove-dir`, `/dirs` — removed because PiG SDK has no multi-root workspace prompt/tool integration).
 
 | Command (aliases) | omp behaviour (`v19.1.1`) | State here | Notes / PiG differences / why not ported |
 |---|---|---|---|
@@ -116,7 +116,7 @@ Summary counts across the 89 built-in commands:
 | `/settings` | Open omp settings menu | **PiG's own (differs)** | PiG builtin opens PiG's settings menu (not omp's settings schema) |
 | `/model` (`models`) | Open model role/thinking selector | **PiG's own (differs)** | PiG builtin `/model [provider/model]` picks/switches model without omp's role-model hub; `models` alias absent in PiG |
 | `/tree` | Navigate session tree | **PiG's own (same)** | PiG builtin `/tree` navigates branches |
-| `/export [--themes] [path]` | Export session to HTML file | **PiG's own (differs)** | PiG builtin `/export [path]` exports `.html` or `.jsonl`; omp's `--themes` flag not in PiG |
+| `/export [--themes] [path]` | Export session to HTML file | **PiG's own + extended here** | Bare `/export` and `/export <path>` stay on PiG builtin; `/export --copy\|copy\|clipboard` prints `"Use /dump to copy the session to clipboard."` and `/export --themes [path]` writes a self-contained HTML export (`0600`, `~/` expanded) with static dark/light CSS variables (does not read user theme JSON files) via `EventInput` |
 | `/share` | Share session via encrypted server/gist | **PiG's own (differs)** | PiG builtin `/share` uploads to PiG's expiring gateway (not omp's encrypted share server/gist) |
 | `/copy [code\|cmd\|link\|local]` | Pick text/code/cmd/link/local to copy | **PiG's own + extended here** | Bare `/copy` copies last assistant message via PiG builtin (no interactive picker); `/copy code\|cmd\|link\|local` intercepted in `EventInput` here |
 | `/session [info\|delete\|pin]` | Session info, delete, and OAuth account pinning | **PiG's own (differs)** | PiG builtin `/session` takes no arguments and prints stats only; `delete` and `pin` subcommands not available (colliding builtin) |
@@ -135,7 +135,7 @@ Summary counts across the 89 built-in commands:
 | `/remove-dir <path>` | Remove workspace directory from session | **not ported** | Same as `/add-dir`: no multi-root workspace support in PiG SDK |
 | `/dirs` | List session workspace directories | **not ported** | Same as `/add-dir`: no multi-root workspace support in PiG SDK |
 | `/vibe [prompt]` | Persistent fast/good worker director mode | **ported (`internal/vibe`)** | Registered by `internal/vibe/register.go` with dynamic `vibe_*` worker tools and reverse mode lockouts |
-| `/advisor [on\|off\|status\|dump\|configure]` | Second-model turn advisor | **not ported** | Requires omp's background advisor runtime and `advise` tool |
+| `/advisor [on\|off\|status\|dump\|configure]` | Second-model turn advisor | **ported (`internal/advisor`)** | Registered by `internal/advisor/runtime.go`; `advisor.enabled` defaults to `false`, supports `WATCHDOG.yml` roster, background read-only child review with child-only `advise` tool, `<advisory>` injection, and JSONL spend persistence |
 | `/prewalk [into\|restart\|off]` | One-shot model handoff at next edit/write | **not ported** | Requires omp's prewalk classifier, model roles, and todo-gated mid-turn model swap |
 | `/fast [on\|ultra\|off\|status]` | Toggle provider priority/ultrafast service tier | **not ported** | PiG SDK has no API to set provider `service_tier` / `speed` |
 | `/slow [on\|off\|status]` | Toggle provider flex/low-priority service tier | **not ported** | PiG SDK has no API to set provider `service_tier` / low-priority fallback |
@@ -164,9 +164,9 @@ Summary counts across the 89 built-in commands:
 | `/shake [elide\|images\|thinking]` | Drop heavy content from context in place | **not ported** | PiG SDK has no API to rewrite past context entries outside compaction |
 | `/pin [session id]` | Pin session at top of resume list | **not ported** | PiG's `/resume` picker does not read omp's session-pins store |
 | `/unpin [session id]` | Unpin session from resume list | **not ported** | PiG's `/resume` picker does not read omp's session-pins store |
-| `/tan <work>` | Run background tangential agent | **not ported** | Requires omp's tan controller and subagent runner |
+| `/tan <work>` | Run background tangential agent | **ported here** | Forks session context into a detached background subagent via `modes.SpawnDetachedTask` (`agentDisplayName: "tan"`, sharing parent `local://`) while keeping the primary conversation unblocked |
 | `/omfg <complaint>` | Forge TTSR rule from complaint | **not ported** | Requires omp's TTSR rule engine |
-| `/cleanse [request] [--all]` | Fix diagnostics with parallel subagents | **not ported** | Requires omp's cleanse multi-agent loop |
+| `/cleanse [request] [--all]` | Fix diagnostics with parallel subagents | **ported here (partial)** | Parses `[request] [--all\|-a] [--tests\|-t] [-n\|--agents <N>] [-m\|--model <model>]`, discovers Go/JS/Rust/Python checkers, and dispatches a structured parallel cleanse workflow prompt (or custom `SpawnCleanse` hook) with atomic single-active-run guard and cancel support rather than upstream's fullscreen `CleansePanelComponent` overlay |
 | `/retry` | Retry last failed agent turn | **not ported** | PiG SDK has no `session.retry()` API |
 | `/memory <subcommand>` | Inspect/maintain memory backends | **not ported** | Requires omp's memory/hindsight backends |
 | `/move [<path>]` | Move session to another directory | **not ported** | PiG SDK cannot change host process cwd or relocate session files |

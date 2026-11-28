@@ -15,12 +15,16 @@ import (
 // upstream: packages/coding-agent/src/autolearn/controller.ts:1-153
 // upstream: packages/coding-agent/src/autolearn/settings.ts:10-38
 // upstream: packages/coding-agent/src/prompts/system/autolearn-guidance.md
+// upstream: packages/coding-agent/src/prompts/system/autolearn-guidance-learn.md
 // upstream: packages/coding-agent/src/prompts/system/autolearn-nudge-autocontinue.md
 
 const captureCustomType = "autolearn-capture"
 
 //go:embed prompts/autolearn-guidance.md
 var autolearnGuidance string
+
+//go:embed prompts/autolearn-guidance-learn.md
+var autolearnGuidanceLearn string
 
 //go:embed prompts/autolearn-nudge-autocontinue.md
 var autolearnNudgeAutoContinue string
@@ -33,6 +37,11 @@ var Setting func(ctx sdk.Context, key string) any
 // Wired by wiring.go -> modes.Current(ctx) == modes.ModeGoal. Defaults to nil (false).
 // upstream: packages/coding-agent/src/autolearn/controller.ts:78,123
 var GoalActive func(ctx sdk.Context) bool
+
+// LearnActive reports whether the `learn` tool is active for ctx's session.
+// Wired by wiring.go -> memory.LearnActive. Defaults to nil (false).
+// upstream: packages/coding-agent/src/autolearn/controller.ts:36-41
+var LearnActive func(ctx sdk.Context) bool
 
 // CaptureTurn dispatches the synthetic post-stop capture prompt.
 // Overridable in tests. Defaults to sending a hidden followUp message that triggers a turn.
@@ -54,7 +63,11 @@ func BuildInstructions(ctx sdk.Context) string {
 	if !IsEnabled(ctx) {
 		return ""
 	}
-	return strings.TrimSpace(autolearnGuidance)
+	parts := []string{strings.TrimSpace(autolearnGuidance)}
+	if LearnActive != nil && LearnActive(ctx) {
+		parts = append(parts, strings.TrimSpace(autolearnGuidanceLearn))
+	}
+	return strings.Join(parts, "\n\n")
 }
 
 type sessionControllerState struct {

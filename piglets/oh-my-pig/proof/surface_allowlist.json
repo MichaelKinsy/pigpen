@@ -264,67 +264,17 @@
     "kind": "tool_description",
     "target": "eval",
     "case": "*",
-    "regex": "(?:^- `%load`, `%pip`, `%bun add`, `budget`, `@tool`/`tool\\(fn\\)`: setup, installs, utilities → help://eval/helpers$|^- `%load`, `%pip`, `%bun add`, `budget`: setup, installs, utilities → help://eval/helpers$)",
+    "regex": "^- `dsm`: Open, inspect, edit, and script binary analysis databases\\. → help://eval/dsm$",
     "class": "LISTED",
     "ref_file": "internal/eval/UPSTREAM.md",
     "ref_term": [
-      "Kernel-defined subagent tools",
-      "@tool"
-    ],
-    "ref_subject": [
-      "@tool"
-    ],
-    "why": "Kernel-defined subagent tools (@tool/tool(fn)) are not ported, so eval.md omits them from the helpers line."
-  },
-  {
-    "kind": "tool_description",
-    "target": "eval",
-    "case": "*",
-    "regex": "(?:^- `archive`: Read-only local history: recent projects, past sessions with recaps, full-text session search, prompt history\\. → help://eval/archive$|^- `dsm`: Open, inspect, edit, and script binary analysis databases\\. → help://eval/dsm$)",
-    "class": "LISTED",
-    "ref_file": "internal/eval/UPSTREAM.md",
-    "ref_term": [
-      "Built-in eval namespaces: `archive`, `dsm`"
-    ],
-    "ref_subject": [
-      "archive",
+      "Built-in eval namespaces:",
       "dsm"
     ],
-    "why": "Built-in eval namespaces archive and dsm are not ported."
-  },
-  {
-    "kind": "tool_description",
-    "target": "task",
-    "case": "*",
-    "side": "omp",
-    "regex": "^- `tools`: eval-defined, run in your kernel\\.$",
-    "class": "LISTED",
-    "ref_file": "internal/agents/UPSTREAM.md",
-    "ref_term": [
-      "Eval-defined `@tool`/`tool(fn)` forwarding into child sessions",
-      "tasks[].tools"
-    ],
     "ref_subject": [
-      "tasks[].tools"
+      "dsm"
     ],
-    "why": "Eval-defined tasks[].tools forwarding is not ported."
-  },
-  {
-    "kind": "tool_schema",
-    "target": "task",
-    "case": "*",
-    "side": "omp",
-    "regex": "(?:^          \\},$|^          \"tools\": \\{$|^            \"type\": \"array\",$|^            \"items\": \\{$|^              \"type\": \"string\"$|^            \\}$)",
-    "class": "LISTED",
-    "ref_file": "internal/agents/UPSTREAM.md",
-    "ref_term": [
-      "Eval-defined `@tool`/`tool(fn)` forwarding into child sessions",
-      "tasks[].tools"
-    ],
-    "ref_subject": [
-      "tasks[].tools"
-    ],
-    "why": "Advertised task JSON schema omits tasks[].tools because eval-defined child tools are not ported."
+    "why": "Built-in eval namespace dsm is not ported."
   },
   {
     "kind": "tool_description",

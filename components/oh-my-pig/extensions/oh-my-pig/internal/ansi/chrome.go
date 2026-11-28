@@ -268,18 +268,22 @@ const (
 
 // welcomeTips holds omp's non-Tern tips from packages/tui/src/prompt/tips.txt,
 // filtered strictly to commands, CLI features, and shortcuts that exist in
-// oh-my-pig (unported commands like /shake, /tan, /omfg, /collab, /join,
-// /advisor, /cleanse, /usage reset, and omp CLI subcommands like `omp stats`
-// or `omp auth-broker` are omitted). Key placeholders `{key:...}` are expanded
-// at render time through expandTipKeys (upstream: prompt/welcome.ts:109-119).
+// oh-my-pig (unported commands like /shake, /omfg, /collab, /join,
+// /usage reset, and omp CLI subcommands like `omp stats`, `omp cleanse`,
+// or `omp auth-broker` are omitted). Key placeholders `{key:...}` and
+// `{tap:...}` are expanded at render time through expandTipKeys
+// (upstream: prompt/welcome.ts:109-119).
 var welcomeTips = []string{
 	`Tired of typing "keep going"? Just send a '.'`,
 	`Type / at the start of your prompt to browse every command`,
 	`Start your prompt with ! to run it as bash — !! runs it without adding the output to context`,
 	`You can /btw to ask a side question`,
+	`Use /tan to fork the current conversation into a background agent`,
 	`With default keybindings, {key:ctrl+d} deletes the character under the cursor instead of quitting your draft — see /hotkeys for your exit key`,
+	`Try task isolation to create CoW worktrees`,
 	`Need a cheap nested model call? Use completion(x...). Have a big batch of tasks? Ask the agent to use it!`,
 	`Drop the word ultrathink in your message for harder multi-step reasoning`,
+	`Agent overthinking? Say chillax — on models with per-message effort, thinking drops to the lowest level, even mid-turn`,
 	`Say orchestrate in your message to drive a multi-phase task with parallel subagents`,
 	`Say workflowz in your message to drive the task with parallel subagents in eval`,
 	`Bulk data to classify or triage? Say jevify in your message — the eval kernel's judge() processes the batch and you read only what it flags`,
@@ -287,38 +291,72 @@ var welcomeTips = []string{
 	`Press {key:ctrl+r} to search your prompt history and reuse a past message`,
 	`/force read pins the next turn to one specific tool when the model keeps reaching for the wrong one`,
 	`/copy code grabs the last code block to your clipboard — /copy cmd grabs the last shell/python command`,
+	`Turn on /advisor to attach a second model that reviews every turn and quietly injects advice`,
 	`Try starting your prompt with a ->, and writing a list (1. Do X, 2. Do Y)`,
 	`Press {key:shift+tab} to cycle through reasoning effort levels`,
+	`Lint/type errors piling up? /cleanse hunts project diagnostics and fixes them with parallel subagents — {key:escape} cancels`,
 }
 
-// expandTipKeys expands omp's `{key:...}` placeholders using platform-aware
-// unicode keycap glyphs (`⌃D` on macOS, `Ctrl+D` elsewhere; `⇧⇥`, `⎋`).
+// expandTipKeys expands omp's `{key:...}` and `{tap:...}` placeholders using
+// platform-aware unicode keycap glyphs (`⌃D` on macOS, `Ctrl+D` elsewhere;
+// `⇧⇥`, `⎋`, `←←`).
 // upstream: packages/tui/src/prompt/welcome.ts:109-119,
 //
-//	packages/tui/src/key-hint-format.ts:41-125
+//	packages/tui/src/key-hint-format.ts:41-137
 func expandTipKeys(tip string, goos string) string {
-	if !strings.Contains(tip, "{key:") {
+	if !strings.Contains(tip, "{key:") && !strings.Contains(tip, "{tap:") {
 		return tip
 	}
 	mac := goos == "darwin"
 	var b strings.Builder
 	for {
-		start := strings.Index(tip, "{key:")
+		kIdx := strings.Index(tip, "{key:")
+		tIdx := strings.Index(tip, "{tap:")
+		start := -1
+		kind := ""
+		switch {
+		case kIdx >= 0 && (tIdx < 0 || kIdx < tIdx):
+			start = kIdx
+			kind = "key"
+		case tIdx >= 0:
+			start = tIdx
+			kind = "tap"
+		}
 		if start < 0 {
 			b.WriteString(tip)
 			break
 		}
 		b.WriteString(tip[:start])
-		rest := tip[start+len("{key:"):]
+		prefixLen := len("{key:")
+		rest := tip[start+prefixLen:]
 		end := strings.IndexByte(rest, '}')
 		if end < 0 {
 			b.WriteString(tip[start:])
 			break
 		}
-		b.WriteString(formatKeyHintForOS(rest[:end], mac))
+		formatted := formatKeyHintForOS(rest[:end], mac)
+		if kind == "tap" {
+			if hasASCIIAlnum(formatted) {
+				b.WriteString(formatted + " " + formatted)
+			} else {
+				b.WriteString(formatted + formatted)
+			}
+		} else {
+			b.WriteString(formatted)
+		}
 		tip = rest[end+1:]
 	}
 	return b.String()
+}
+
+func hasASCIIAlnum(s string) bool {
+	for i := range len(s) {
+		c := s[i]
+		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') {
+			return true
+		}
+	}
+	return false
 }
 
 func formatKeyHintForOS(key string, mac bool) string {
@@ -2090,8 +2128,6 @@ func (s *chromeState) publishComposerMeta(ctx sdk.Context) {
 	}
 	hasVision := s.modelHasVision
 	prem := s.premiumRequests
-	advCost := s.advisorCost
-	advSub := s.advisorSub
 	tokPerSec := s.lastTokPerSec
 	s.mu.Unlock()
 
@@ -2101,15 +2137,13 @@ func (s *chromeState) publishComposerMeta(ctx sdk.Context) {
 	if hasBounds && specPct > 0 {
 		specState = "idle"
 	}
-	surface.SetComposerMeta(surface.ComposerMeta{
-		HasBoundaries:      hasBounds,
-		AutoCompactEnabled: p.Enabled && p.Strategy != "off",
-		ThresholdPercent:   threshPct,
-		SpeculationPercent: specPct,
-		SpeculationState:   specState,
-		PremiumRequests:    prem,
-		AdvisorCost:        advCost,
-		AdvisorSub:         advSub,
-		TokensPerSec:       tokPerSec,
+	surface.UpdateComposerMeta(func(m *surface.ComposerMeta) {
+		m.HasBoundaries = hasBounds
+		m.AutoCompactEnabled = p.Enabled && p.Strategy != "off"
+		m.ThresholdPercent = threshPct
+		m.SpeculationPercent = specPct
+		m.SpeculationState = specState
+		m.PremiumRequests = prem
+		m.TokensPerSec = tokPerSec
 	})
 }

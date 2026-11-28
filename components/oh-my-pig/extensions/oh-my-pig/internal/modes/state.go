@@ -223,6 +223,9 @@ type sessionState struct {
 	turnBudgetBaselineOut int
 	// /force:<tool> next-turn notice
 	forcedTool string
+	// /cleanse single-active-run guard
+	cleanseActive bool
+	cleanseCancel func()
 }
 
 // strictSessionID returns the session ID from ctx, or "" when it cannot be
@@ -259,8 +262,11 @@ func (m *manager) endSession(sessionID string) {
 	}
 	cancel := st.loopCondCancel
 	stopCh := st.loopResubmitStop
+	cleanseCancel := st.cleanseCancel
 	st.loopCondCancel = nil
 	st.loopResubmitStop = nil
+	st.cleanseActive = false
+	st.cleanseCancel = nil
 	delete(m.sessions, sessionID)
 	m.mu.Unlock()
 
@@ -269,6 +275,9 @@ func (m *manager) endSession(sessionID string) {
 	}
 	if cancel != nil {
 		cancel()
+	}
+	if cleanseCancel != nil {
+		cleanseCancel()
 	}
 	if stopCh != nil {
 		close(stopCh)

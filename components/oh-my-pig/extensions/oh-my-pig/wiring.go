@@ -10,9 +10,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/advisor"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/agents"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ansi"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/approval"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/archive"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ask"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ast"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/autolearn"
@@ -29,6 +31,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/intent"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/jobs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lsp"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/memory"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/modes"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prediction"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/prompt"
@@ -39,6 +42,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/shell"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/snapcompact"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/tern"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/think"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/todo"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/toolcmd"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
@@ -98,6 +102,23 @@ func wireSettings() {
 	modes.ClearForcedToolChoice = providerwire.ClearForcedToolChoice
 	todo.SetForcedToolChoice = providerwire.SetForcedToolChoice
 	todo.ForcedToolChoice = providerwire.ForcedToolChoice
+	modes.SpawnDetachedTask = func(ctx sdk.Context, req modes.DetachedTaskRequest) (modes.DetachedTaskResult, error) {
+		jobID, agentID, err := agents.SpawnDetached(ctx, agents.DetachedSpawnRequest{
+			Name:             req.Name,
+			AgentDisplayName: req.AgentDisplayName,
+			AgentType:        req.AgentType,
+			Label:            req.Label,
+			Context:          req.Context,
+			Task:             req.Task,
+			SolutionSpace:    req.SolutionSpace,
+			ModelSelector:    req.ModelSelector,
+			ShareParentLocal: req.ShareParentLocal,
+		})
+		if err != nil {
+			return modes.DetachedTaskResult{}, err
+		}
+		return modes.DetachedTaskResult{JobID: jobID, AgentID: agentID}, nil
+	}
 	agents.ResolveModelRole = func(ctx sdk.Context, selector string) (provider, id, thinking string, ok bool) {
 		// Resolve `@role` / `pi/<role>` for subagents only when that role is
 		// explicitly configured in `modelRoles`, preserving parent active-model
@@ -124,9 +145,12 @@ func wireSettings() {
 		return settings.Enabled(ctx, "skillful", true)
 	}
 	prompt.AutoLearnInstructions = autolearn.BuildInstructions
+	prompt.MemoryInstructions = memory.BuildMemoryPromptInstructions
+	prompt.MemoryBackend = memory.BackendFor
 	prompt.PrepareSystemPrompt = snapcompact.PrepareInlineSystemPrompt
 	web.Setting = settings.Any
 	eval.Setting = settings.Any
+	archive.Setting = settings.Any
 	commit.Setting = settings.Any
 	eval.ResolveModelRole = providerwire.ResolveRoleWithThinking
 	eval.TurnBudgetHook = modes.TurnBudgetSnapshot
@@ -146,6 +170,54 @@ func wireSettings() {
 	autothinking.Setting = settings.Any
 	autothinking.ResolveModelRole = providerwire.ResolveRoleWithThinking
 	autothinking.IsSubagent = agents.IsSubagent
+	think.Setting = settings.Any
+	think.IsSubagent = agents.IsSubagent
+	memory.Setting = func(ctx sdk.Context, key string) any {
+		switch key {
+		case "memory.backend", "hindsight.apiUrl", "hindsight.apiToken", "mnemopi.embeddingApiUrl", "mnemopi.embeddingApiKey", "mnemopi.dbPath":
+			return settings.OperatorAny(ctx, key)
+		default:
+			return settings.Any(ctx, key)
+		}
+	}
+	memory.IsSubagent = agents.IsSubagent
+	memory.ExplicitTools = agents.ExplicitTools
+	autolearn.LearnActive = memory.LearnActive
+	advisor.Setting = settings.Any
+	advisor.SetSetting = settings.Set
+	advisor.ResolveModelRole = providerwire.ResolveRoleWithThinking
+	advisor.IsSubagent = agents.IsSubagent
+	advisor.RegisterChildSession = func(childSessionID, parentSessionID string, explicitTools []string) {
+		if childSessionID == "" {
+			return
+		}
+		agents.DefaultRuntime().Registry.RegisterChildSession(childSessionID, agents.ChildSessionMeta{
+			ParentSessionID: parentSessionID,
+			Depth:           1,
+			AgentName:       "advisor",
+			ExplicitTools:   append([]string(nil), explicitTools...),
+		})
+	}
+	advisor.UnregisterChildSession = func(childSessionID string) {
+		if childSessionID == "" {
+			return
+		}
+		agents.DefaultRuntime().Registry.UnregisterChildSession(childSessionID)
+	}
+	advisor.AgentDirForContext = settings.AgentDirForContext
+	advisor.IsProjectTrusted = func(ctx sdk.Context) (trusted bool) {
+		var zero sdk.Context
+		if ctx == zero {
+			return false
+		}
+		defer func() {
+			if recover() != nil {
+				trusted = false
+			}
+		}()
+		v, err := ctx.IsProjectTrusted()
+		return err == nil && v
+	}
 	agents.ClassifyAutoThinking = func(goCtx context.Context, sdkCtx sdk.Context, targetModel map[string]any, solutionSpace, assignment, maxEffort string) (string, bool) {
 		lvl, err := autothinking.ClassifyDifficulty(goCtx, sdkCtx, autothinking.Input{
 			Request:       assignment,

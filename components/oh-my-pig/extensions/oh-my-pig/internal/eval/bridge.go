@@ -47,9 +47,10 @@ type bridgeRun struct {
 	onReply            func(string)
 	onFirstCallPrelude func(Prelude)
 	toolFallback       ToolExecutor
-	// activeEvalKeys tracks session+language slots currently executing in this call chain
-	// so nested `tool.eval` on the same kernel fails cleanly instead of deadlocking.
-	activeSlotKey string
+	// isLangRunning reports whether the given language ("py" or "js") is currently
+	// executing a cell in this session, preventing same-language and cross-language
+	// re-entrant `tool.eval` deadlocks on slot.mu.
+	isLangRunning func(lang string) bool
 }
 
 // bridgeServer is the shared loopback HTTP bridge for Python and JS subprocesses.
@@ -436,11 +437,13 @@ func dispatchSessionToolCall(run *bridgeRun, name string, rawArgs json.RawMessag
 		argsMap = map[string]any{}
 	}
 
-	// Guard against re-entrant `tool.eval` targeting the same kernel currently executing,
-	// which would otherwise deadlock waiting on slot.mu while the outer cell's watchdog is paused.
+	// Guard against re-entrant `tool.eval` targeting any kernel language currently executing
+	// in this session (same-language or cross-language cycle), which would otherwise deadlock
+	// waiting on slot.mu while the outer cell's watchdog is paused.
 	if name == "eval" {
-		if targetLang, _ := argsMap["language"].(string); targetLang == run.language {
-			err := fmt.Errorf("cannot invoke nested tool.eval for the same language (%s) while a cell is already running on this kernel", targetLang)
+		if targetLang, _ := argsMap["language"].(string); targetLang != "" &&
+			(targetLang == run.language || (run.isLangRunning != nil && run.isLangRunning(targetLang))) {
+			err := fmt.Errorf("cannot invoke nested tool.eval for language (%s) while a %s cell is already running in this session", targetLang, targetLang)
 			if run.emitStatus != nil {
 				run.emitStatus(EvalStatusEvent{"op": name, "error": err.Error()})
 			}

@@ -1498,16 +1498,22 @@ func ompStripSystemNoticeEnvelope(body string) string {
 }
 
 // ompWelcomeTips holds omp's TSP tips from packages/tui/src/prompt/tips.txt
-// filtered to features and commands registered in oh-my-pig (no /shake, /tan,
-// /omfg, /collab, /advisor, /cleanse, or omp CLI subcommands).
-// Key placeholders (`{key:...}`) are expanded with omp's key-hint icons and
-// split into `spans` matching `packages/tui/src/native/icons.ts:40-70`.
+// filtered to features and commands registered in oh-my-pig (no /shake,
+// /omfg, /collab, /join, /usage reset, or omp CLI subcommands).
+// Key placeholders (`{key:...}` and `{tap:...}`) are expanded with omp's
+// key-hint icons and split into `spans` matching
+// `packages/tui/src/native/icons.ts:40-70`.
 var ompWelcomeTips = []string{
 	`Tired of typing "keep going"? Just send a '.'`,
 	`Type / at the start of your prompt to browse every command`,
 	`Start your prompt with ! to run it as bash — !! runs it without adding the output to context`,
 	`You can /btw to ask a side question`,
 	`Try starting your prompt with a ->, and writing a list (1. Do X, 2. Do Y)`,
+	`Use /tan to fork the current conversation into a background agent`,
+	`Try task isolation to create CoW worktrees`,
+	`Agent overthinking? Say chillax — on models with per-message effort, thinking drops to the lowest level, even mid-turn`,
+	`Turn on /advisor to attach a second model that reviews every turn and quietly injects advice`,
+	`Lint/type errors piling up? /cleanse hunts project diagnostics and fixes them with parallel subagents — {key:escape} cancels`,
 	`Use /plan to plan before executing, or /goal to set an autonomous session objective`,
 	`Use /loop to re-submit your prompt after every yield until a condition passes`,
 	`Use /force read to pin the next turn to one specific tool`,
@@ -1519,17 +1525,33 @@ var ompWelcomeTips = []string{
 	`Press {key:shift+tab} to cycle through reasoning effort levels`,
 }
 
-var ompTipKeyPlaceholderRe = regexp.MustCompile(`\{key:([^}]+)\}`)
+var ompTipKeyPlaceholderRe = regexp.MustCompile(`\{(key|tap):([^}]+)\}`)
 
-// ompExpandTipKey expands `{key:...}` placeholders using omp's macOS/generic
-// nerd key glyphs (packages/tui/src/theme/symbols.ts:1179-1206).
+// ompExpandTipKey expands `{key:...}` and `{tap:...}` placeholders using omp's
+// macOS/generic nerd key glyphs (packages/tui/src/theme/symbols.ts:1179-1206).
 func ompExpandTipKey(tip string) string {
 	return ompTipKeyPlaceholderRe.ReplaceAllStringFunc(tip, func(match string) string {
 		sub := ompTipKeyPlaceholderRe.FindStringSubmatch(match)
-		if len(sub) < 2 {
+		if len(sub) < 3 {
 			return match
 		}
-		switch strings.ToLower(strings.TrimSpace(sub[1])) {
+		kind := strings.ToLower(strings.TrimSpace(sub[1]))
+		val := strings.ToLower(strings.TrimSpace(sub[2]))
+		if kind == "tap" {
+			switch val {
+			case "left":
+				return "← ←"
+			case "right":
+				return "→ →"
+			case "up":
+				return "↑ ↑"
+			case "down":
+				return "↓ ↓"
+			default:
+				return match
+			}
+		}
+		switch val {
 		case "shift+tab":
 			return "\U000f0636 \U000f0312"
 		case "alt+p":

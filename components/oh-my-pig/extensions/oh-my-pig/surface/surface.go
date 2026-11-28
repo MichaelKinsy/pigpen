@@ -569,6 +569,24 @@ func SetComposerMeta(m ComposerMeta) {
 	notifyComposerMeta()
 }
 
+// UpdateComposerMeta atomically mutates the published ComposerMeta snapshot
+// under surface's mutex and notifies listeners if any field changed.
+func UpdateComposerMeta(fn func(*ComposerMeta)) {
+	if fn == nil {
+		return
+	}
+	mu.Lock()
+	next := composerMeta
+	fn(&next)
+	if next == composerMeta {
+		mu.Unlock()
+		return
+	}
+	composerMeta = next
+	mu.Unlock()
+	notifyComposerMeta()
+}
+
 func notifyComposerMeta() {
 	composerNotifyMu.Lock()
 	defer composerNotifyMu.Unlock()

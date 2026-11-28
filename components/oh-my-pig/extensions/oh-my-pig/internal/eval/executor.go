@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -45,6 +46,7 @@ var WriteSpill func(ctx sdk.Context, label, content string) string
 type SessionSettings struct {
 	AllowPy           bool
 	AllowJS           bool
+	EvalToolsEnabled  bool
 	PythonInterpreter string
 	PythonKernelMode  string // "session" | "per-call"
 	MaxTimeout        float64
@@ -54,6 +56,7 @@ func readSessionSettings(ctx sdk.Context) SessionSettings {
 	s := SessionSettings{
 		AllowPy:          true,
 		AllowJS:          true,
+		EvalToolsEnabled: IsEvalToolsEnabled(ctx),
 		PythonKernelMode: "session",
 	}
 	if Setting != nil {
@@ -180,17 +183,47 @@ type Manager struct {
 }
 
 type pySessionSlot struct {
-	mu          sync.Mutex
+	mu          sync.Mutex // serializes cell execution & lifecycle mutations
+	kernelMu    sync.RWMutex
 	kernel      *pythonKernel
 	everStarted bool
 	wasDead     bool
+	running     atomic.Bool
+}
+
+func (s *pySessionSlot) liveKernel() *pythonKernel {
+	s.kernelMu.RLock()
+	k := s.kernel
+	s.kernelMu.RUnlock()
+	return k
+}
+
+func (s *pySessionSlot) setKernel(k *pythonKernel) {
+	s.kernelMu.Lock()
+	s.kernel = k
+	s.kernelMu.Unlock()
 }
 
 type jsSessionSlot struct {
-	mu          sync.Mutex
+	mu          sync.Mutex // serializes cell execution & lifecycle mutations
+	kernelMu    sync.RWMutex
 	kernel      *jsKernel
 	everStarted bool
 	wasDead     bool
+	running     atomic.Bool
+}
+
+func (s *jsSessionSlot) liveKernel() *jsKernel {
+	s.kernelMu.RLock()
+	k := s.kernel
+	s.kernelMu.RUnlock()
+	return k
+}
+
+func (s *jsSessionSlot) setKernel(k *jsKernel) {
+	s.kernelMu.Lock()
+	s.kernel = k
+	s.kernelMu.Unlock()
 }
 
 // NewManager creates an isolated eval kernel Manager (used by Register and tests).
@@ -224,6 +257,26 @@ func (m *Manager) jsSlot(key string) *jsSessionSlot {
 	return slot
 }
 
+// isSessionLangRunning reports whether any slot for sessionID+lang is currently executing a cell.
+func (m *Manager) isSessionLangRunning(sessionID, lang string) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	switch lang {
+	case "py":
+		prefix := "python:" + sessionID + "\x00"
+		for k, slot := range m.pySessions {
+			if strings.HasPrefix(k, prefix) && slot.running.Load() {
+				return true
+			}
+		}
+	case "js":
+		if slot, ok := m.jsSessions["js:"+sessionID]; ok && slot.running.Load() {
+			return true
+		}
+	}
+	return false
+}
+
 // ShutdownSession stops and removes ONLY the kernels belonging to sessionID.
 // Empty sessionID is a no-op (never shuts down other sessions).
 func (m *Manager) ShutdownSession(sessionID string) {
@@ -250,8 +303,8 @@ func (m *Manager) ShutdownSession(sessionID string) {
 	m.mu.Unlock()
 	for _, slot := range pyToStop {
 		slot.mu.Lock()
-		k := slot.kernel
-		slot.kernel = nil
+		k := slot.liveKernel()
+		slot.setKernel(nil)
 		slot.mu.Unlock()
 		if k != nil {
 			k.shutdown()
@@ -259,8 +312,8 @@ func (m *Manager) ShutdownSession(sessionID string) {
 	}
 	for _, slot := range jsToStop {
 		slot.mu.Lock()
-		k := slot.kernel
-		slot.kernel = nil
+		k := slot.liveKernel()
+		slot.setKernel(nil)
 		slot.mu.Unlock()
 		if k != nil {
 			k.shutdown()
@@ -285,8 +338,8 @@ func (m *Manager) ShutdownAll() {
 	m.mu.Unlock()
 	for _, slot := range pyToStop {
 		slot.mu.Lock()
-		k := slot.kernel
-		slot.kernel = nil
+		k := slot.liveKernel()
+		slot.setKernel(nil)
 		slot.mu.Unlock()
 		if k != nil {
 			k.shutdown()
@@ -294,8 +347,8 @@ func (m *Manager) ShutdownAll() {
 	}
 	for _, slot := range jsToStop {
 		slot.mu.Lock()
-		k := slot.kernel
-		slot.kernel = nil
+		k := slot.liveKernel()
+		slot.setKernel(nil)
 		slot.mu.Unlock()
 		if k != nil {
 			k.shutdown()
@@ -942,6 +995,8 @@ func (m *Manager) runPythonCell(
 	slot := m.pySlot(slotKey)
 	slot.mu.Lock()
 	defer slot.mu.Unlock()
+	slot.running.Store(true)
+	defer slot.running.Store(false)
 
 	// Do not start or execute a cell that was already cancelled while queued on slot.mu.
 	if runCtx.Err() != nil {
@@ -950,18 +1005,18 @@ func (m *Manager) runPythonCell(
 
 	var restartNotice string
 	if reset {
-		if slot.kernel != nil {
-			slot.kernel.shutdown()
-			slot.kernel = nil
+		if k := slot.liveKernel(); k != nil {
+			slot.setKernel(nil)
+			k.shutdown()
 		}
 		slot.wasDead = false
-	} else if slot.kernel != nil && !slot.kernel.isAlive() {
-		slot.kernel.shutdown()
-		slot.kernel = nil
+	} else if k := slot.liveKernel(); k != nil && !k.isAlive() {
+		slot.setKernel(nil)
+		k.shutdown()
 		slot.wasDead = true
 	}
 
-	if slot.kernel == nil {
+	if slot.liveKernel() == nil {
 		k, err := startPythonKernel(runCtx, cwd, settings.PythonInterpreter, strEnv)
 		if err != nil {
 			return kernelResult{}, "", err
@@ -969,11 +1024,10 @@ func (m *Manager) runPythonCell(
 		if slot.everStarted && slot.wasDead && !reset {
 			restartNotice = formatKernelRestartNotice("Python kernel")
 		}
-		slot.kernel = k
+		slot.setKernel(k)
 		slot.everStarted = true
 		slot.wasDead = false
 	}
-
 	if err := slot.kernel.syncPreludes(runCtx, preludes); err != nil {
 		return kernelResult{}, restartNotice, err
 	}
@@ -990,7 +1044,7 @@ func (m *Manager) runPythonCell(
 		onUpdate:           onUpdate,
 		onFirstCallPrelude: onFirstCallPrelude,
 		toolFallback:       m.toolFallback,
-		activeSlotKey:      slotKey,
+		isLangRunning:      func(lang string) bool { return m.isSessionLangRunning(sessionID, lang) },
 	})
 	defer unreg()
 
@@ -1021,6 +1075,8 @@ func (m *Manager) runJSCell(
 	slot := m.jsSlot(bridgeSession)
 	slot.mu.Lock()
 	defer slot.mu.Unlock()
+	slot.running.Store(true)
+	defer slot.running.Store(false)
 
 	if runCtx.Err() != nil {
 		return kernelResult{Cancelled: true}, "", nil
@@ -1028,18 +1084,18 @@ func (m *Manager) runJSCell(
 
 	var restartNotice string
 	if reset {
-		if slot.kernel != nil {
-			slot.kernel.shutdown()
-			slot.kernel = nil
+		if k := slot.liveKernel(); k != nil {
+			slot.setKernel(nil)
+			k.shutdown()
 		}
 		slot.wasDead = false
-	} else if slot.kernel != nil && !slot.kernel.isAlive() {
-		slot.kernel.shutdown()
-		slot.kernel = nil
+	} else if k := slot.liveKernel(); k != nil && !k.isAlive() {
+		slot.setKernel(nil)
+		k.shutdown()
 		slot.wasDead = true
 	}
 
-	if slot.kernel == nil {
+	if slot.liveKernel() == nil {
 		k, err := startJSKernel(runCtx, cwd, bridgeSession, localRoots, bridge)
 		if err != nil {
 			return kernelResult{}, "", err
@@ -1048,11 +1104,10 @@ func (m *Manager) runJSCell(
 			// upstream: packages/coding-agent/src/eval/js/context-manager.ts:229 ("JS worker")
 			restartNotice = formatKernelRestartNotice("JS worker")
 		}
-		slot.kernel = k
+		slot.setKernel(k)
 		slot.everStarted = true
 		slot.wasDead = false
 	}
-
 	runID := "js-" + newRandomID()
 	filename := prepared.Filename
 	if filename == "" {
@@ -1071,7 +1126,7 @@ func (m *Manager) runJSCell(
 		onUpdate:           onUpdate,
 		onFirstCallPrelude: onFirstCallPrelude,
 		toolFallback:       m.toolFallback,
-		activeSlotKey:      bridgeSession,
+		isLangRunning:      func(lang string) bool { return m.isSessionLangRunning(sessionID, lang) },
 	})
 	defer unreg()
 

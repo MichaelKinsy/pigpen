@@ -3,7 +3,9 @@ package agents
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -12,10 +14,13 @@ import (
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/approval"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/eval"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/gate"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/intent"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/jobs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/settings"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
 )
 
@@ -608,12 +613,20 @@ func TestAsyncChildCancelledOnSessionShutdown(t *testing.T) {
 		t.Fatalf("task spawn failed: %s", errMsg)
 	}
 	<-childStarted
-
+	j, ok := jobs.Get(h.opts.SessionID, "BgWorker")
+	if !ok {
+		t.Fatalf("expected BgWorker job in registry before session_shutdown")
+	}
 	h.fireEvent(sdk.EventSessionShutdown, map[string]any{})
 	select {
 	case <-childAborted:
 	case <-time.After(3 * time.Second):
 		t.Fatalf("background child was not aborted on session_shutdown")
+	}
+	select {
+	case <-j.Done():
+	case <-time.After(3 * time.Second):
+		t.Fatalf("background job did not settle after session_shutdown")
 	}
 }
 
@@ -940,7 +953,7 @@ func TestEvalAgentAndWorkpoolPreludes(t *testing.T) {
 		t.Fatalf("expected {id:EvalOne, agent:task}, got %+v", det)
 	}
 
-	// Refuse unported isolation controls (`isolated`, `apply`, `merge`) and kernel `@tool` forwarding (`tools`).
+	// Refuse unenabled isolation controls (`isolated`, `apply`, `merge`) and unknown kernel `@tool` names (`tools`).
 	if _, err := agentPrelude.Invoke(eval.PreludeCall{SDK: capturedCtx}, json.RawMessage(`{"prompt":"x","isolated":true}`)); err == nil || !strings.Contains(err.Error(), "task.isolation.enabled") {
 		t.Fatalf("expected omp isolation error, got %v", err)
 	}
@@ -950,8 +963,8 @@ func TestEvalAgentAndWorkpoolPreludes(t *testing.T) {
 	if _, err := agentPrelude.Invoke(eval.PreludeCall{SDK: capturedCtx}, json.RawMessage(`{"prompt":"x","merge":false}`)); err == nil || !strings.Contains(err.Error(), "isolation") {
 		t.Fatalf("expected merge refusal, got %v", err)
 	}
-	if _, err := agentPrelude.Invoke(eval.PreludeCall{SDK: capturedCtx}, json.RawMessage(`{"prompt":"x","tools":["my_py_tool"]}`)); err == nil || !strings.Contains(err.Error(), "Eval-defined tools") {
-		t.Fatalf("expected eval tools refusal, got %v", err)
+	if _, err := agentPrelude.Invoke(eval.PreludeCall{SDK: capturedCtx}, json.RawMessage(`{"prompt":"x","tools":["my_py_tool"]}`)); err == nil || !strings.Contains(err.Error(), "Unknown eval tool(s): my_py_tool") {
+		t.Fatalf("expected unknown eval tool error, got %v", err)
 	}
 
 	// Verify handle-bridge `{items:[{kind,id}]}` wait shape and `JobDetailer.Details()["evalResult"]`.
@@ -992,8 +1005,8 @@ func TestEvalAgentAndWorkpoolPreludes(t *testing.T) {
 	if _, err := wpPrelude.Invoke(eval.PreludeCall{SDK: capturedCtx}, json.RawMessage(`{"op":"status","name":"missing"}`)); err == nil || !strings.Contains(err.Error(), `unknown workpool "missing"`) {
 		t.Fatalf("expected unknown workpool error, got %v", err)
 	}
-	if _, err := wpPrelude.Invoke(eval.PreludeCall{SDK: capturedCtx}, json.RawMessage(`{"op":"create","agent":"scout","tools":["helper"]}`)); err == nil || !strings.Contains(err.Error(), "Eval-defined tools") {
-		t.Fatalf("expected workpool tools refusal, got %v", err)
+	if _, err := wpPrelude.Invoke(eval.PreludeCall{SDK: capturedCtx}, json.RawMessage(`{"op":"create","agent":"scout","tools":["helper"]}`)); err == nil || !strings.Contains(err.Error(), "Unknown eval tool(s): helper") {
+		t.Fatalf("expected unknown eval tool error on workpool, got %v", err)
 	}
 
 	createRes, err := wpPrelude.Invoke(eval.PreludeCall{SDK: capturedCtx}, json.RawMessage(`{"op":"create","agent":"scout"}`))
@@ -1556,3 +1569,542 @@ func TestMultiSessionLifecycleAndRepeatedRegister(t *testing.T) {
 
 // Ensure context unused import is never tripped.
 var _ = context.Background
+
+func hasPythonRuntimeForTest() bool {
+	for _, name := range []string{"python3", "python"} {
+		if _, err := exec.LookPath(name); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func hasJSRuntimeForTest() bool {
+	if _, err := exec.LookPath("bun"); err == nil {
+		return true
+	}
+	if _, err := exec.LookPath("node"); err == nil {
+		return true
+	}
+	return false
+}
+
+// upstream: packages/coding-agent/src/task/eval-tools.ts
+// Covers unit resolution rules: dual-kernel collision, unknown tool listing available tools,
+// eval.tools.enabled=false refusal, plan mode refusal, harness `i` stripping vs declared `i`,
+// resultText formatting (empty string, nil, string, JSON), dead kernel error result, and ended session.
+func TestResolveEvalCustomToolsUnitBehavior(t *testing.T) {
+	resetAllRegistries(t)
+	prevDesc := DescribeKernelToolsFn
+	prevCall := CallKernelToolFn
+	prevSetting := eval.Setting
+	t.Cleanup(func() {
+		DescribeKernelToolsFn = prevDesc
+		CallKernelToolFn = prevCall
+		eval.Setting = prevSetting
+	})
+
+	settingMap := map[string]any{}
+	eval.Setting = func(_ sdk.Context, key string) any { return settingMap[key] }
+
+	// 1. Plan mode refusal.
+	if _, err := ResolveEvalCustomTools(context.Background(), sdk.Context{}, []string{"foo"}, true); err == nil || !strings.Contains(err.Error(), "Eval-defined tools are unavailable in plan mode.") {
+		t.Fatalf("expected plan-mode refusal, got %v", err)
+	}
+
+	// 2. eval.tools.enabled=false refusal.
+	settingMap["eval.tools.enabled"] = false
+	if _, err := ResolveEvalCustomTools(context.Background(), sdk.Context{}, []string{"foo"}, false); err == nil || !strings.Contains(err.Error(), "Eval-defined tools are disabled; set eval.tools.enabled=true") {
+		t.Fatalf("expected disabled refusal, got %v", err)
+	}
+	delete(settingMap, "eval.tools.enabled")
+
+	// 3. Dual-kernel name collision.
+	DescribeKernelToolsFn = func(_ context.Context, _ sdk.Context, lang string, _ []string) (eval.EvalToolDescribeResult, error) {
+		l := eval.LangPython
+		if lang == "js" {
+			l = eval.LangJS
+		}
+		return eval.EvalToolDescribeResult{
+			Tools: []eval.EvalToolDescriptor{{
+				Name:        "dup_tool",
+				Description: "dup",
+				Parameters:  map[string]any{"type": "object", "properties": map[string]any{}},
+				Language:    l,
+			}},
+		}, nil
+	}
+	if _, err := ResolveEvalCustomTools(context.Background(), sdk.Context{}, []string{"dup_tool"}, false); err == nil || !strings.Contains(err.Error(), `eval tool "dup_tool" is defined in both the Python and JS kernels; undefine one`) {
+		t.Fatalf("expected dual-kernel collision error, got %v", err)
+	}
+
+	// 4. Unknown tool error lists available tools sorted across kernels.
+	DescribeKernelToolsFn = func(_ context.Context, _ sdk.Context, lang string, names []string) (eval.EvalToolDescribeResult, error) {
+		if lang == "py" {
+			if len(names) == 0 {
+				return eval.EvalToolDescribeResult{
+					Tools: []eval.EvalToolDescriptor{{Name: "zeta", Description: "z", Parameters: map[string]any{"type": "object"}, Language: eval.LangPython}},
+				}, nil
+			}
+			return eval.EvalToolDescribeResult{Missing: names}, nil
+		}
+		if len(names) == 0 {
+			return eval.EvalToolDescribeResult{
+				Tools: []eval.EvalToolDescriptor{{Name: "alpha", Description: "a", Parameters: map[string]any{"type": "object"}, Language: eval.LangJS}},
+			}, nil
+		}
+		return eval.EvalToolDescribeResult{Missing: names}, nil
+	}
+	if _, err := ResolveEvalCustomTools(context.Background(), sdk.Context{}, []string{"nope"}, false); err == nil ||
+		!strings.Contains(err.Error(), "Unknown eval tool(s): nope") ||
+		!strings.Contains(err.Error(), "Available: alpha, zeta") {
+		t.Fatalf("expected unknown tool listing Available: alpha, zeta, got %v", err)
+	}
+
+	// 5. Harness `i` stripping (undeclared `i` stripped; declared `i` kept), result formatting,
+	// dead kernel error result, and tool exception error result.
+	var lastArgs map[string]any
+	var callBehavior func(name string, args map[string]any) (eval.EvalToolInvokeResult, error)
+	DescribeKernelToolsFn = func(_ context.Context, _ sdk.Context, lang string, _ []string) (eval.EvalToolDescribeResult, error) {
+		if lang == "js" {
+			return eval.EvalToolDescribeResult{}, eval.ErrKernelNotRunning
+		}
+		return eval.EvalToolDescribeResult{
+			Tools: []eval.EvalToolDescriptor{
+				{
+					Name:        "no_i",
+					Description: "Does not declare i",
+					Parameters:  map[string]any{"type": "object", "properties": map[string]any{"x": map[string]any{"type": "number"}}},
+					Language:    eval.LangPython,
+				},
+				{
+					Name:        "owns_i",
+					Description: "Declares i",
+					Parameters:  map[string]any{"type": "object", "properties": map[string]any{"i": map[string]any{"type": "integer"}}},
+					Language:    eval.LangPython,
+				},
+			},
+		}, nil
+	}
+	CallKernelToolFn = func(_ context.Context, _ sdk.Context, _ string, name string, args map[string]any) (eval.EvalToolInvokeResult, error) {
+		lastArgs = args
+		return callBehavior(name, args)
+	}
+
+	defs, err := ResolveEvalCustomTools(context.Background(), sdk.Context{}, []string{"no_i", "owns_i"}, false)
+	if err != nil || len(defs) != 2 {
+		t.Fatalf("expected 2 custom tools, got %d err=%v", len(defs), err)
+	}
+	// Undeclared `i` is stripped.
+	callBehavior = func(_ string, _ map[string]any) (eval.EvalToolInvokeResult, error) {
+		return eval.EvalToolInvokeResult{OK: true, Value: ""}, nil
+	}
+	outRaw, err := defs[0].Execute(sdk.Context{}, map[string]any{"i": "harness intent", "x": 5})
+	if err != nil {
+		t.Fatalf("no_i execute err: %v", err)
+	}
+	if _, hasI := lastArgs["i"]; hasI || lastArgs["x"] != 5 {
+		t.Fatalf("expected harness i stripped from no_i args, got %+v", lastArgs)
+	}
+	if tr := outRaw.(sdk.ToolResult); tr.IsError || tr.Content != "(empty result)" {
+		t.Fatalf("expected (empty result), got %+v", tr)
+	}
+	// Declared `i` is preserved; nil formats to "(no result)".
+	callBehavior = func(_ string, _ map[string]any) (eval.EvalToolInvokeResult, error) {
+		return eval.EvalToolInvokeResult{OK: true, Value: nil}, nil
+	}
+	outRaw, _ = defs[1].Execute(sdk.Context{}, map[string]any{"i": 7})
+	if lastArgs["i"] != 7 {
+		t.Fatalf("expected declared i preserved on owns_i, got %+v", lastArgs)
+	}
+	if tr := outRaw.(sdk.ToolResult); tr.IsError || tr.Content != "(no result)" {
+		t.Fatalf("expected (no result), got %+v", tr)
+	}
+	// Object formats as indented JSON.
+	callBehavior = func(_ string, _ map[string]any) (eval.EvalToolInvokeResult, error) {
+		return eval.EvalToolInvokeResult{OK: true, Value: map[string]any{"ok": true}}, nil
+	}
+	outRaw, _ = defs[0].Execute(sdk.Context{}, map[string]any{"x": 1})
+	if tr := outRaw.(sdk.ToolResult); tr.IsError || tr.Content != "{\n  \"ok\": true\n}" {
+		t.Fatalf("expected indented JSON, got %+v", tr)
+	}
+	// Kernel not running returns IsError: true instead of Go error.
+	callBehavior = func(_ string, _ map[string]any) (eval.EvalToolInvokeResult, error) {
+		return eval.EvalToolInvokeResult{}, eval.ErrKernelNotRunning
+	}
+	outRaw, err = defs[0].Execute(sdk.Context{}, map[string]any{"x": 1})
+	if err != nil {
+		t.Fatalf("dead kernel should return ToolResult{IsError:true}, not Go error: %v", err)
+	}
+	if tr := outRaw.(sdk.ToolResult); !tr.IsError || !strings.Contains(tr.Content, "kernel is not running") {
+		t.Fatalf("expected IsError with kernel-not-running text, got %+v", tr)
+	}
+	// Tool exception returns IsError: true.
+	callBehavior = func(_ string, _ map[string]any) (eval.EvalToolInvokeResult, error) {
+		return eval.EvalToolInvokeResult{OK: false, Error: "ValueError: bad input"}, nil
+	}
+	outRaw, err = defs[0].Execute(sdk.Context{}, map[string]any{"x": 1})
+	if err != nil {
+		t.Fatalf("tool exception should return ToolResult{IsError:true}, not Go error: %v", err)
+	}
+	if tr := outRaw.(sdk.ToolResult); !tr.IsError || !strings.Contains(tr.Content, "ValueError: bad input") {
+		t.Fatalf("expected IsError with ValueError text, got %+v", tr)
+	}
+}
+
+// End-to-end test: real Python `@tool` + `task` tool (on restricted `scout` agent with
+// explicit `tools:` allowlist) + real `eval` cell `await wait(agent(..., tools=[...]))`
+// + `workpool(..., tools=[...])`, verifying zero deadlock and full child invocation.
+func allowEvalAgentApprovalForTest(t *testing.T) {
+	t.Helper()
+	prevSetting := approval.Setting
+	prevSession := approval.SessionSetting
+	t.Cleanup(func() {
+		approval.Setting = prevSetting
+		approval.SessionSetting = prevSession
+	})
+	fn := func(_ sdk.Context, key string) any {
+		if key == "tools.approvalMode" {
+			return "yolo"
+		}
+		return nil
+	}
+	approval.Setting = fn
+	approval.SessionSetting = fn
+}
+
+func TestPythonEvalToolsWithTaskAgentAndWorkpoolNoDeadlock(t *testing.T) {
+	if !hasPythonRuntimeForTest() {
+		t.Skip("python3 unavailable")
+	}
+	resetAllRegistries(t)
+	allowEvalAgentApprovalForTest(t)
+	eval.DefaultManager().ShutdownAll()
+	t.Cleanup(eval.DefaultManager().ShutdownAll)
+	cfg := DefaultConfig()
+	cfg.AsyncEnabled = false
+	rt := NewRuntime(cfg)
+	ext := sdk.New("test-py-subagent-eval-tools")
+	eval.Register(ext)
+	RegisterWithRuntime(ext, rt)
+
+	var capturedChildTools []string
+	var capturedChildCustomNames []string
+	var childMu sync.Mutex
+
+	h := startFakeHost(t, ext, fakeHostOptions{
+		SessionID: "sess-py-subagent-tools",
+		OnChild: func(h *fakeHost, child *fakeChildState, promptText string) error {
+			childMu.Lock()
+			capturedChildTools = nil
+			if rawTools, ok := child.createArgs["tools"].([]any); ok {
+				for _, item := range rawTools {
+					if s, ok := item.(string); ok {
+						capturedChildTools = append(capturedChildTools, s)
+					}
+				}
+			}
+			capturedChildCustomNames = nil
+			if rawCustom, ok := child.createArgs["customTools"].([]any); ok {
+				for _, item := range rawCustom {
+					if m, ok := item.(map[string]any); ok {
+						if s, ok := m["name"].(string); ok {
+							capturedChildCustomNames = append(capturedChildCustomNames, s)
+						}
+					}
+				}
+			}
+			childMu.Unlock()
+
+			// Child invokes the parent's Python @tool over PiG's child customTool channel!
+			toolRes, errMsg := h.callChildCustomTool(child.id, "py_double", map[string]any{
+				"i": "doubling value",
+				"n": 21,
+			})
+			if errMsg != "" {
+				return errors.New("child py_double call failed: " + errMsg)
+			}
+			content, _ := toolRes["content"].(string)
+			if strings.Contains(promptText, "<workpool") {
+				_, _ = h.callChildCustomTool(child.id, "yield", map[string]any{
+					"key":  1,
+					"data": "wp:" + content,
+				})
+				h.finishChildWithText(child, "wp:"+content)
+				return nil
+			}
+			h.finishChildWithText(child, "child-got:"+content)
+			return nil
+		},
+	})
+	h.fireEvent("session_start", nil)
+
+	// 1. Define Python @tool in parent session's retained kernel.
+	defRes, errMsg := h.callTool("eval", map[string]any{
+		"language": "py",
+		"code":     "@tool\nasync def py_double(n: int) -> int:\n    '''Double n.'''\n    return n * 2\n",
+	})
+	if errMsg != "" || defRes["is_error"] == true {
+		t.Fatalf("define python @tool failed: errMsg=%q res=%+v", errMsg, defRes)
+	}
+
+	// 2. Spawn restricted `scout` via `task` with `tools: ["py_double"]`.
+	taskRes, errMsg := h.callTool("task", map[string]any{
+		"context": "Use eval tool",
+		"tasks": []any{
+			map[string]any{
+				"name":          "PyScout",
+				"agent":         "scout",
+				"task":          "call py_double",
+				"solutionSpace": "fixed",
+				"tools":         []any{"py_double"},
+			},
+		},
+	})
+	if errMsg != "" || taskRes["is_error"] == true {
+		t.Fatalf("task with python @tool failed: errMsg=%q res=%+v", errMsg, taskRes)
+	}
+	if txt, _ := taskRes["content"].(string); !strings.Contains(txt, "child-got:42") {
+		t.Fatalf("expected child-got:42 in task result, got:\n%s", txt)
+	}
+	childMu.Lock()
+	gotTools := append([]string(nil), capturedChildTools...)
+	gotCustom := append([]string(nil), capturedChildCustomNames...)
+	childMu.Unlock()
+	if !strings.Contains(strings.Join(gotTools, ","), "py_double") {
+		t.Fatalf("expected scout allowlist to admit custom tool py_double, got tools=%v", gotTools)
+	}
+	if !strings.Contains(strings.Join(gotCustom, ","), "py_double") {
+		t.Fatalf("expected customTools to include py_double, got %v", gotCustom)
+	}
+
+	// 3. Parent Python eval cell calls `wait(agent(..., tools=["py_double"]))` — MUST NOT DEADLOCK!
+	evalRes, errMsg := h.callTool("eval", map[string]any{
+		"language": "py",
+		"code":     "h = agent('from py cell', agent='scout', tools=['py_double'])\nprint(wait(h)[0])",
+	})
+	if errMsg != "" || evalRes["is_error"] == true {
+		t.Fatalf("python cell wait(agent(..., tools=[...])) failed: errMsg=%q res=%+v", errMsg, evalRes)
+	}
+	if txt, _ := evalRes["content"].(string); !strings.Contains(txt, "child-got:42") {
+		t.Fatalf("expected child-got:42 from wait(agent()), got:\n%s", txt)
+	}
+
+	// 4. Parent Python eval cell creates a workpool with `tools=['py_double']` and pushes work.
+	wpRes, errMsg := h.callTool("eval", map[string]any{
+		"language": "py",
+		"code":     "p = workpool('scout', name='py-wp', tools=['py_double'])\np.push('item 1')\nprint(wait('agent://py-wp')[0])",
+	})
+	if errMsg != "" || wpRes["is_error"] == true {
+		t.Fatalf("python workpool with tools failed: errMsg=%q res=%+v", errMsg, wpRes)
+	}
+	if txt, _ := wpRes["content"].(string); !strings.Contains(txt, "wp:42") {
+		t.Fatalf("expected wp:42 from workpool(tools=[...]), got:\n%s", txt)
+	}
+}
+
+// End-to-end test: real JS `tool(fn, opts)` called by a subagent spawned inside
+// a JS eval cell blocked on `await wait(agent(..., { tools: [...] }))` — proves
+// js_runner.js dispatches `type:"tool"` concurrently outside `processingQueue`!
+func TestJSEvalToolsWithAgentWaitNoDeadlock(t *testing.T) {
+	if !hasJSRuntimeForTest() {
+		t.Skip("bun/node unavailable")
+	}
+	resetAllRegistries(t)
+	allowEvalAgentApprovalForTest(t)
+	eval.DefaultManager().ShutdownAll()
+	t.Cleanup(eval.DefaultManager().ShutdownAll)
+
+	cfg := DefaultConfig()
+	rt := NewRuntime(cfg)
+	ext := sdk.New("test-js-subagent-eval-tools")
+	eval.Register(ext)
+	RegisterWithRuntime(ext, rt)
+
+	h := startFakeHost(t, ext, fakeHostOptions{
+		SessionID: "sess-js-subagent-tools",
+		OnChild: func(h *fakeHost, child *fakeChildState, _ string) error {
+			toolRes, errMsg := h.callChildCustomTool(child.id, "js_triple", map[string]any{
+				"i": "tripling",
+				"n": 14,
+			})
+			if errMsg != "" {
+				return errors.New("child js_triple call failed: " + errMsg)
+			}
+			content, _ := toolRes["content"].(string)
+			h.finishChildWithText(child, "js-child:"+content)
+			return nil
+		},
+	})
+	h.fireEvent("session_start", nil)
+
+	defRes, errMsg := h.callTool("eval", map[string]any{
+		"language": "js",
+		"code":     "tool(async function js_triple({ n }) { return n * 3; }, { description: 'Triple n' });",
+	})
+	if errMsg != "" || defRes["is_error"] == true {
+		t.Fatalf("define JS tool() failed: errMsg=%q res=%+v", errMsg, defRes)
+	}
+
+	// Outer JS cell spawns subagent with `tools: ["js_triple"]` and awaits `wait(h)`.
+	// The child invokes `js_triple` on the same JS kernel while `runCell` is parked in `wait()`!
+	evalRes, errMsg := h.callTool("eval", map[string]any{
+		"language": "js",
+		"code":     "const h = await agent('from js cell', { agent: 'scout', tools: ['js_triple'] });\nconst [res] = await wait(h);\nprint(res);",
+	})
+	if errMsg != "" || evalRes["is_error"] == true {
+		t.Fatalf("JS cell await wait(agent(..., { tools })) failed: errMsg=%q res=%+v", errMsg, evalRes)
+	}
+	if txt, _ := evalRes["content"].(string); !strings.Contains(txt, "js-child:42") {
+		t.Fatalf("expected js-child:42 from JS wait(agent()), got:\n%s", txt)
+	}
+}
+
+// Verifies `eval.tools.enabled=false` via live settings hides `tasks[].tools` from
+// `task` schema & description and refuses `tasks[].tools` at call time.
+func TestTaskHonorsEvalToolsEnabledSetting(t *testing.T) {
+	resetAllRegistries(t)
+	settings.ResetForTests()
+	t.Cleanup(settings.ResetForTests)
+
+	store, err := settings.NewIsolated(nil)
+	if err != nil {
+		t.Fatalf("settings.NewIsolated: %v", err)
+	}
+	settings.SetStoreForTests(func(_ sdk.Context) *settings.Store { return store })
+
+	rt := newDefaultRuntime()
+	ext := sdk.New("test-eval-tools-setting-task")
+	RegisterWithRuntime(ext, rt)
+
+	h := startFakeHost(t, ext, fakeHostOptions{SessionID: "sess-eval-tools-setting"})
+	h.fireEvent(sdk.EventSessionStart, map[string]any{})
+
+	// Default: tasks[].tools is present in task schema and description.
+	h.mu.Lock()
+	descOn := h.toolDescs["task"]
+	paramsOn := h.toolParams["task"]
+	h.mu.Unlock()
+	if !strings.Contains(descOn, "- `tools`: eval-defined, run in your kernel.") {
+		t.Fatalf("expected default task description to include tools bullet:\n%s", descOn)
+	}
+	itemPropsOn := paramsOn["properties"].(map[string]any)["tasks"].(map[string]any)["items"].(map[string]any)["properties"].(map[string]any)
+	if _, ok := itemPropsOn["tools"]; !ok {
+		t.Fatalf("expected default task schema to include tasks[].tools")
+	}
+
+	// Flip eval.tools.enabled=false via live settings store and refresh on before_agent_start.
+	if err := store.Set("eval.tools.enabled", false, false); err != nil {
+		t.Fatalf("store.Set eval.tools.enabled=false failed: %v", err)
+	}
+	h.fireEvent(sdk.EventBeforeAgentStart, map[string]any{"systemPromptOptions": map[string]any{}})
+	h.mu.Lock()
+	descOff := h.toolDescs["task"]
+	paramsOff := h.toolParams["task"]
+	h.mu.Unlock()
+	if strings.Contains(descOff, "- `tools`: eval-defined") {
+		t.Fatalf("expected tools bullet omitted when eval.tools.enabled=false:\n%s", descOff)
+	}
+	itemPropsOff := paramsOff["properties"].(map[string]any)["tasks"].(map[string]any)["items"].(map[string]any)["properties"].(map[string]any)
+	if _, ok := itemPropsOff["tools"]; ok {
+		t.Fatalf("expected tasks[].tools omitted from schema when eval.tools.enabled=false")
+	}
+
+	// Calling task with tools while disabled returns omp's disabled error.
+	res, errMsg := h.callTool("task", map[string]any{
+		"context": "Disabled tools",
+		"tasks": []any{
+			map[string]any{
+				"name":          "T1",
+				"task":          "do work",
+				"solutionSpace": "bounded",
+				"tools":         []any{"my_tool"},
+			},
+		},
+	})
+	if errMsg != "" {
+		t.Fatalf("unexpected protocol error: %s", errMsg)
+	}
+	if res["is_error"] != true || !strings.Contains(res["content"].(string), "Eval-defined tools are disabled") {
+		t.Fatalf("expected Eval-defined tools are disabled error, got %+v", res)
+	}
+}
+
+func TestWrapSubagentCustomToolStrictSchemaWithHarnessIntent(t *testing.T) {
+	origCall := CallKernelToolFn
+	origEnabled := intent.Enabled
+	t.Cleanup(func() {
+		CallKernelToolFn = origCall
+		intent.Enabled = origEnabled
+	})
+
+	var capturedArgs map[string]any
+	CallKernelToolFn = func(_ context.Context, _ sdk.Context, _, _ string, args map[string]any) (eval.EvalToolInvokeResult, error) {
+		capturedArgs = args
+		return eval.EvalToolInvokeResult{OK: true, Value: map[string]any{"html": "<b>a & b</b>"}}, nil
+	}
+
+	desc := eval.EvalToolDescriptor{
+		Name:        "strict_py_tool",
+		Description: "Strict schema Python tool",
+		Language:    eval.LangPython,
+		Parameters: map[string]any{
+			"type":                 "object",
+			"additionalProperties": false,
+			"properties": map[string]any{
+				"x": map[string]any{"type": "string"},
+			},
+			"required": []string{"x"},
+		},
+	}
+	base := evalCustomTool(sdk.Context{}, "", desc)
+
+	// Case 1: intent.Enabled = true -> wrapped with intent.Tool so schema includes `i`,
+	// and Execute strips `i` before forwarding to the kernel.
+	intent.Enabled = func(sdk.Context) bool { return true }
+	wrappedOn := wrapSubagentCustomTool(sdk.Context{}, base)
+	if !intent.SchemaDefinesProperty(wrappedOn.Parameters, intent.Field) {
+		t.Fatalf("expected wrapped schema to declare %q when intent.Enabled=true, got %+v", intent.Field, wrappedOn.Parameters)
+	}
+	capturedArgs = nil
+	resOn, err := wrappedOn.Execute(sdk.Context{}, map[string]any{"x": "hello", intent.Field: "Checking tool"})
+	if err != nil {
+		t.Fatalf("Execute(intent=true) error: %v", err)
+	}
+	trOn := resOn.(sdk.ToolResult)
+	if trOn.IsError {
+		t.Fatalf("unexpected tool error: %+v", trOn)
+	}
+	if _, leaked := capturedArgs[intent.Field]; leaked {
+		t.Fatalf("harness %q leaked into kernel args: %+v", intent.Field, capturedArgs)
+	}
+	if !strings.Contains(trOn.Content, "<b>a & b</b>") {
+		t.Fatalf("expected unescaped HTML in JSON output (L2), got: %s", trOn.Content)
+	}
+
+	// Case 2: intent.Enabled = false -> PrepareArguments strips undeclared `i` before
+	// validation so additionalProperties:false accepts the call cleanly.
+	intent.Enabled = func(sdk.Context) bool { return false }
+	wrappedOff := wrapSubagentCustomTool(sdk.Context{}, base)
+	if wrappedOff.PrepareArguments == nil {
+		t.Fatalf("expected PrepareArguments wrapper when intent.Enabled=false")
+	}
+	prepared, err := wrappedOff.PrepareArguments(map[string]any{"x": "world", intent.Field: "Checking tool"})
+	if err != nil {
+		t.Fatalf("PrepareArguments error: %v", err)
+	}
+	if _, stillHasI := prepared[intent.Field]; stillHasI {
+		t.Fatalf("expected PrepareArguments to strip undeclared %q, got %+v", intent.Field, prepared)
+	}
+	if prepared["x"] != "world" {
+		t.Fatalf("expected x=world preserved, got %+v", prepared)
+	}
+	capturedArgs = nil
+	resOff, err := wrappedOff.Execute(sdk.Context{}, prepared)
+	if err != nil {
+		t.Fatalf("Execute(intent=false) error: %v", err)
+	}
+	if resOff.(sdk.ToolResult).IsError {
+		t.Fatalf("unexpected tool error: %+v", resOff)
+	}
+}

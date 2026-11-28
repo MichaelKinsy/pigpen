@@ -493,7 +493,7 @@ func DefaultConfig() Config {
 		SoftRequestBudgetNotice: true,
 		AgentIdleTTLMs:          420_000,
 		PerCallModel:            "off",
-		EvalToolsEnabled:        false,
+		EvalToolsEnabled:        true,
 		CrossInstance:           false,
 		WaitFloorMs:             5_000,
 		WaitTopMs:               240_000,

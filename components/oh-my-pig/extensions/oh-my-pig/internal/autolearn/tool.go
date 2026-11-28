@@ -154,7 +154,10 @@ func agentDirForContext(ctx sdk.Context) string {
 	return DefaultAgentDir()
 }
 
-func isAuthoredCollision(ctx sdk.Context, sanitizedName, agentDir string) bool {
+// IsAuthoredSkillCollision reports whether sanitizedName is already claimed by
+// a user-authored (non-managed) skill in ctx.
+// upstream: packages/coding-agent/src/tools/manage-skill.ts:78, learn.ts:154
+func IsAuthoredSkillCollision(ctx sdk.Context, sanitizedName, agentDir string) bool {
 	if fn := IsNameClaimedByAuthoredSkill; fn != nil {
 		return fn(ctx, sanitizedName, agentDir)
 	}
@@ -207,7 +210,7 @@ func ExecuteManageSkill(ctx sdk.Context, params ManageSkillParams) (*sdk.ToolRes
 		if err != nil {
 			return nil, err
 		}
-		if params.Action == "create" && isAuthoredCollision(ctx, sanitized, agentDir) {
+		if params.Action == "create" && IsAuthoredSkillCollision(ctx, sanitized, agentDir) {
 			return &sdk.ToolResult{
 				Content: fmt.Sprintf(
 					"Cannot create managed skill %q: an authored skill of that name already exists, and managed skills cannot override authored ones. Choose a different name.",

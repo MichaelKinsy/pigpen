@@ -6,6 +6,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/approval"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/gate"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/jobs"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
 	"net/http"
 	"os"
 	"os/exec"
@@ -13,16 +19,10 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
-
-	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
-	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/approval"
-	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/gate"
-	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/jobs"
-	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
-	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
 )
 
 type wireToolResult struct {
@@ -211,11 +211,15 @@ func TestDescriptionLinksEnabledPreludes(t *testing.T) {
 
 // Golden exact-match check of the default eval.md rendering against omp's exact template output.
 func TestDescriptionGoldenDefaultRender(t *testing.T) {
+	defaultOpts := DefaultDescriptionOptions(nil)
+	if !defaultOpts.EvalTools {
+		t.Fatalf("expected DefaultDescriptionOptions().EvalTools == true")
+	}
 	got := RenderDescription(DescriptionOptions{
 		Py:        true,
 		JS:        true,
 		Spawns:    false,
-		EvalTools: false,
+		EvalTools: true,
 		WaitTool:  true,
 	})
 	want := strings.Join([]string{
@@ -245,7 +249,7 @@ func TestDescriptionGoldenDefaultRender(t *testing.T) {
 		"<namespaces>",
 		"More globals; `read` the linked docs before first use:",
 		"- `judge`, `judge_batch`, `completion`: classification, bulk judgment, model calls → help://eval/judge",
-		"- `%load`, `%pip`, `%bun add`, `budget`: setup, installs, utilities → help://eval/helpers",
+		"- `%load`, `%pip`, `%bun add`, `budget`, `@tool`/`tool(fn)`: setup, installs, utilities → help://eval/helpers",
 		"</namespaces>",
 		"",
 		"<critical>",
@@ -2340,5 +2344,481 @@ func TestPreludeApprovalForDispatch(t *testing.T) {
 	}
 	if invoked != 1 {
 		t.Fatalf("Invoke should not have run on invalid params; invoked=%d", invoked)
+	}
+}
+
+// Verifies eval.tools.enabled defaults to true and gates `@tool`/`tool(fn)` in
+// session_start description + help://eval/helpers when set to false.
+func TestEvalToolsSettingDefaultAndDisable(t *testing.T) {
+	prevSetting := Setting
+	t.Cleanup(func() { Setting = prevSetting })
+
+	store := map[string]any{}
+	Setting = func(_ sdk.Context, key string) any {
+		return store[key]
+	}
+
+	ext := sdk.New("test-eval-tools-setting")
+	mgr := NewManager()
+	t.Cleanup(mgr.ShutdownAll)
+	registerWithManager(ext, mgr)
+
+	var capturedCtx sdk.Context
+	ext.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		capturedCtx = ctx
+		return nil, nil
+	})
+
+	h := startHost(t, ext, hostOptions{})
+	if _, errMsg := h.emitEvent("session_start", nil); errMsg != "" {
+		t.Fatalf("session_start failed: %s", errMsg)
+	}
+	if !IsEvalToolsEnabled(capturedCtx) {
+		t.Fatalf("expected IsEvalToolsEnabled default true")
+	}
+	h.mu.Lock()
+	enabledDesc := h.tools["eval"].Description
+	h.mu.Unlock()
+	if !strings.Contains(enabledDesc, "`@tool`/`tool(fn)`") {
+		t.Fatalf("expected default eval description to advertise @tool/tool(fn):\n%s", enabledDesc)
+	}
+	enabledTopics := DocTopics(descriptionOptionsForSession(capturedCtx, nil))
+	if !strings.Contains(enabledTopics["helpers"], "@tool / tool(fn") {
+		t.Fatalf("expected default helpers topic to include @tool docs:\n%s", enabledTopics["helpers"])
+	}
+
+	// Disable eval.tools.enabled=false and verify session_start description + helpers hide @tool.
+	store["eval.tools.enabled"] = false
+	if IsEvalToolsEnabled(capturedCtx) {
+		t.Fatalf("expected IsEvalToolsEnabled false when setting disabled")
+	}
+	if _, errMsg := h.emitEvent("session_start", nil); errMsg != "" {
+		t.Fatalf("second session_start failed: %s", errMsg)
+	}
+	h.mu.Lock()
+	disabledDesc := h.tools["eval"].Description
+	h.mu.Unlock()
+	if strings.Contains(disabledDesc, "@tool") {
+		t.Fatalf("expected disabled eval description to omit @tool:\n%s", disabledDesc)
+	}
+	disabledTopics := DocTopics(descriptionOptionsForSession(capturedCtx, nil))
+	if strings.Contains(disabledTopics["helpers"], "@tool") {
+		t.Fatalf("expected disabled helpers topic to omit @tool:\n%s", disabledTopics["helpers"])
+	}
+}
+
+// upstream: packages/coding-agent/src/eval/py/executor.ts:539-577, py/runner.py:2798-2919
+// Verifies Python @tool describe, sync & async calls, concurrent parallel calls,
+// nested tool.read host bridge callback inside @tool, cancellation, and dead/reset kernel errors.
+func TestPythonKernelEvalToolsEndToEnd(t *testing.T) {
+	if !hasPython3(t) {
+		t.Skip("python3 unavailable")
+	}
+	ext := sdk.New("test-py-eval-tools")
+	mgr := NewManager()
+	t.Cleanup(mgr.ShutdownAll)
+	registerWithManager(ext, mgr)
+
+	var capturedCtx sdk.Context
+	ext.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		capturedCtx = ctx
+		return nil, nil
+	})
+	// Host proxy tool simulating a child custom tool handler whose sdk.Context has toolCallID.
+	ext.RegisterTool(sdk.ToolDefinition{
+		Name:        "invoke_kernel_tool",
+		Description: "test proxy",
+		Parameters:  sdk.Schema{"type": "object", "properties": map[string]any{}},
+		Execute: func(toolCtx sdk.Context, params map[string]any) (any, error) {
+			lang, _ := params["lang"].(string)
+			name, _ := params["name"].(string)
+			args, _ := params["args"].(map[string]any)
+			res, err := mgr.CallKernelToolWithBridgeContext(context.Background(), capturedCtx, toolCtx, lang, name, args)
+			if err != nil {
+				return nil, err
+			}
+			if !res.OK {
+				return sdk.ToolResult{Content: res.Error, IsError: true}, nil
+			}
+			s, _ := res.Value.(string)
+			return sdk.ToolResult{Content: s}, nil
+		},
+	})
+
+	cwd := t.TempDir()
+	h := startHost(t, ext, hostOptions{
+		Cwd: cwd,
+		OnExecTool: func(name string, args map[string]any) sdk.AgentToolCallOutcome {
+			if name == "read" {
+				p, _ := args["path"].(string)
+				return sdk.AgentToolCallOutcome{
+					Result: sdk.AgentToolResult{
+						Content: []sdk.ToolResultContent{{Type: "text", Text: "bridged:" + p}},
+					},
+				}
+			}
+			return sdk.AgentToolCallOutcome{IsError: true, Result: sdk.AgentToolResult{Content: []sdk.ToolResultContent{{Type: "text", Text: "unknown tool"}}}}
+		},
+	})
+	if _, errMsg := h.emitEvent("session_start", nil); errMsg != "" {
+		t.Fatalf("session_start failed: %s", errMsg)
+	}
+
+	// Before any Python cell runs, DescribeKernelTools and CallKernelTool fail with ErrKernelNotRunning.
+	if _, err := mgr.DescribeKernelTools(context.Background(), capturedCtx, "py", []string{"add"}); !errors.Is(err, ErrKernelNotRunning) {
+		t.Fatalf("expected ErrKernelNotRunning before start, got %v", err)
+	}
+	if _, err := mgr.CallKernelTool(context.Background(), capturedCtx, "py", "add", nil); !errors.Is(err, ErrKernelNotRunning) {
+		t.Fatalf("expected ErrKernelNotRunning on call before start, got %v", err)
+	}
+
+	defineCode := strings.Join([]string{
+		"import asyncio",
+		"from typing import Annotated",
+		"LOCK = asyncio.Lock()",
+		"",
+		"@tool",
+		"def add(a: int, b: Annotated[int, 'second'] = 2) -> int:",
+		"    '''Add two integers.'''",
+		"    return a + b",
+		"",
+		"@tool(name='async_echo', description='Async echo tool')",
+		"async def _echo(tag: str, delay: float = 0.02) -> dict:",
+		"    async with LOCK:",
+		"        await asyncio.sleep(delay)",
+		"    return {'tag': tag, 'ok': True}",
+		"",
+		"@tool",
+		"async def read_bridge(path: str) -> str:",
+		"    res = await tool.read({'path': path})",
+		"    return res['text'] if isinstance(res, dict) else res",
+		"@tool",
+		"def fail_tool() -> str:",
+		"    raise ValueError('boom py')",
+		"",
+		"@tool",
+		"async def slow_cancel() -> str:",
+		"    await asyncio.sleep(30)",
+		"    return 'done'",
+	}, "\n")
+	raw, errMsg := h.callTool("eval", map[string]any{"language": "py", "code": defineCode})
+	if errMsg != "" {
+		t.Fatalf("define cell failed: %s", errMsg)
+	}
+	text, _, _, isErr := decodeToolResult(t, raw)
+	if isErr {
+		t.Fatalf("define cell returned error: %s", text)
+	}
+
+	// Describe requested tools including a missing name.
+	desc, err := mgr.DescribeKernelTools(context.Background(), capturedCtx, "py", []string{"add", "async_echo", "no_such"})
+	if err != nil {
+		t.Fatalf("DescribeKernelTools failed: %v", err)
+	}
+	if len(desc.Tools) != 2 || len(desc.Missing) != 1 || desc.Missing[0] != "no_such" {
+		t.Fatalf("unexpected describe result: %+v", desc)
+	}
+	if desc.Tools[0].Name != "add" || desc.Tools[0].Description != "Add two integers." || desc.Tools[0].Language != LangPython {
+		t.Fatalf("unexpected add descriptor: %+v", desc.Tools[0])
+	}
+
+	// Sync call.
+	addRes, err := mgr.CallKernelTool(context.Background(), capturedCtx, "py", "add", map[string]any{"a": 40})
+	if err != nil || !addRes.OK || addRes.Value != float64(42) {
+		t.Fatalf("unexpected add result: res=%+v err=%v", addRes, err)
+	}
+
+	// Concurrent async calls sharing asyncio.Lock on _TOOL_LOOP.
+	const workers = 5
+	var wg sync.WaitGroup
+	errs := make(chan error, workers)
+	for i := range workers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			tag := "w" + string(rune('0'+i))
+			r, callErr := mgr.CallKernelTool(context.Background(), capturedCtx, "py", "async_echo", map[string]any{"tag": tag})
+			if callErr != nil || !r.OK {
+				errs <- errors.New("async_echo failed: " + r.Error)
+				return
+			}
+			m, _ := r.Value.(map[string]any)
+			if m["tag"] != tag || m["ok"] != true {
+				errs <- errors.New("async_echo payload mismatch")
+			}
+		}()
+	}
+	wg.Wait()
+	close(errs)
+	for e := range errs {
+		t.Fatal(e)
+	}
+
+	// Nested tool.read bridge callback from inside @tool (invoked with an active tool-call sdk.Context).
+	bridgeRaw, bridgeErrMsg := h.callTool("invoke_kernel_tool", map[string]any{
+		"lang": "py",
+		"name": "read_bridge",
+		"args": map[string]any{"path": "notes.txt"},
+	})
+	if bridgeErrMsg != "" {
+		t.Fatalf("nested tool.read inside Python @tool failed: %s", bridgeErrMsg)
+	}
+	bridgeText, _, _, bridgeIsErr := decodeToolResult(t, bridgeRaw)
+	if bridgeIsErr || bridgeText != "bridged:notes.txt" {
+		t.Fatalf("nested tool.read inside Python @tool mismatch: isErr=%v text=%q", bridgeIsErr, bridgeText)
+	}
+
+	// Exception inside @tool becomes OK=false result without killing kernel.
+	failRes, err := mgr.CallKernelTool(context.Background(), capturedCtx, "py", "fail_tool", nil)
+	if err != nil || failRes.OK || !strings.Contains(failRes.Error, "boom py") {
+		t.Fatalf("expected boom py error result, got res=%+v err=%v", failRes, err)
+	}
+
+	// Cancellation sends tool_cancel and returns promptly without killing kernel.
+	cancelCtx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
+	defer cancel()
+	cancelRes, err := mgr.CallKernelTool(cancelCtx, capturedCtx, "py", "slow_cancel", nil)
+	if err != nil || cancelRes.OK || !strings.Contains(strings.ToLower(cancelRes.Error), "timed out") {
+		t.Fatalf("expected timeout error result on cancelled async tool, got res=%+v err=%v", cancelRes, err)
+	}
+	// Kernel is still alive after tool_cancel.
+	afterRes, err := mgr.CallKernelTool(context.Background(), capturedCtx, "py", "add", map[string]any{"a": 1, "b": 2})
+	if err != nil || !afterRes.OK || afterRes.Value != float64(3) {
+		t.Fatalf("kernel should stay alive after tool_cancel: res=%+v err=%v", afterRes, err)
+	}
+
+	// Resetting kernel drops previously defined tools.
+	_, resetErr := h.callTool("eval", map[string]any{"language": "py", "code": "x = 1", "reset": true})
+	if resetErr != "" {
+		t.Fatalf("reset cell failed: %s", resetErr)
+	}
+	afterReset, err := mgr.DescribeKernelTools(context.Background(), capturedCtx, "py", []string{"add"})
+	if err != nil || len(afterReset.Tools) != 0 || len(afterReset.Missing) != 1 {
+		t.Fatalf("expected add missing after reset, got %+v err=%v", afterReset, err)
+	}
+
+	// Shutting down session causes ErrKernelNotRunning.
+	mgr.ShutdownSession(h.opts.SessionID)
+	if _, err := mgr.CallKernelTool(context.Background(), capturedCtx, "py", "add", nil); !errors.Is(err, ErrKernelNotRunning) {
+		t.Fatalf("expected ErrKernelNotRunning after ShutdownSession, got %v", err)
+	}
+}
+
+// upstream: packages/coding-agent/src/eval/js/worker-core.ts:421-475, context-manager.ts:244-313
+// Verifies JS tool(fn, opts) describe, sync & async calls, concurrent calls while a cell is
+// parked on an active bridge call (proving no processingQueue deadlock!), nested tool.read,
+// exception handling, tool_cancel, and shutdown behavior.
+func TestJSKernelEvalToolsEndToEndAndNoDeadlock(t *testing.T) {
+	if !hasJSRuntime(t) {
+		t.Skip("no bun or node 22+ runtime found")
+	}
+	ext := sdk.New("test-js-eval-tools")
+	mgr := NewManager()
+	t.Cleanup(mgr.ShutdownAll)
+	registerWithManager(ext, mgr)
+
+	var capturedCtx sdk.Context
+	ext.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		capturedCtx = ctx
+		return nil, nil
+	})
+	ext.RegisterTool(sdk.ToolDefinition{
+		Name:        "invoke_kernel_tool",
+		Description: "test proxy",
+		Parameters:  sdk.Schema{"type": "object", "properties": map[string]any{}},
+		Execute: func(toolCtx sdk.Context, params map[string]any) (any, error) {
+			lang, _ := params["lang"].(string)
+			name, _ := params["name"].(string)
+			args, _ := params["args"].(map[string]any)
+			timeoutMs, _ := params["timeoutMs"].(float64)
+			callCtx := context.Background()
+			var cancel context.CancelFunc
+			if timeoutMs > 0 {
+				callCtx, cancel = context.WithTimeout(callCtx, time.Duration(timeoutMs)*time.Millisecond)
+				defer cancel()
+			}
+			res, err := mgr.CallKernelToolWithBridgeContext(callCtx, capturedCtx, toolCtx, lang, name, args)
+			if err != nil {
+				return nil, err
+			}
+			if !res.OK {
+				return sdk.ToolResult{Content: res.Error, IsError: true}, nil
+			}
+			s, _ := res.Value.(string)
+			return sdk.ToolResult{Content: s}, nil
+		},
+	})
+
+	blockGate := make(chan struct{})
+	inBlockedTool := make(chan struct{}, 1)
+	cwd := t.TempDir()
+	h := startHost(t, ext, hostOptions{
+		Cwd: cwd,
+		OnExecTool: func(name string, args map[string]any) sdk.AgentToolCallOutcome {
+			switch name {
+			case "read":
+				p, _ := args["path"].(string)
+				return sdk.AgentToolCallOutcome{
+					Result: sdk.AgentToolResult{
+						Content: []sdk.ToolResultContent{{Type: "text", Text: "js-bridged:" + p}},
+					},
+				}
+			case "hold_cell":
+				select {
+				case inBlockedTool <- struct{}{}:
+				default:
+				}
+				<-blockGate
+				return sdk.AgentToolCallOutcome{
+					Result: sdk.AgentToolResult{
+						Content: []sdk.ToolResultContent{{Type: "text", Text: "released"}},
+					},
+				}
+			}
+			return sdk.AgentToolCallOutcome{IsError: true, Result: sdk.AgentToolResult{Content: []sdk.ToolResultContent{{Type: "text", Text: "unknown"}}}}
+		},
+	})
+	if _, errMsg := h.emitEvent("session_start", nil); errMsg != "" {
+		t.Fatalf("session_start failed: %s", errMsg)
+	}
+
+	if _, err := mgr.DescribeKernelTools(context.Background(), capturedCtx, "js", []string{"mul"}); !errors.Is(err, ErrKernelNotRunning) {
+		t.Fatalf("expected ErrKernelNotRunning before JS start, got %v", err)
+	}
+
+	defineCode := strings.Join([]string{
+		"tool(function mul({ a, b }) { return a * b; }, {",
+		"  description: 'Multiply two numbers',",
+		"  parameters: { type: 'object', properties: { a: { type: 'number' }, b: { type: 'number' } }, required: ['a', 'b'] }",
+		"});",
+		"tool(async function readViaBridge({ path }) {",
+		"  const res = await tool.read({ path });",
+		"  return typeof res === 'string' ? res : res.text;",
+		"});",
+		"tool(function boom() { throw new Error('boom js'); });",
+		"tool(function retUndef() {});",
+		"tool(async function blockBridge() {",
+		"  const res = await tool.hold_cell({});",
+		"  return typeof res === 'string' ? res : res.text;",
+		"});",
+	}, "\n")
+	raw, errMsg := h.callTool("eval", map[string]any{"language": "js", "code": defineCode})
+	if errMsg != "" {
+		t.Fatalf("JS define cell failed: %s", errMsg)
+	}
+	text, _, _, isErr := decodeToolResult(t, raw)
+	if isErr {
+		t.Fatalf("JS define cell returned error: %s", text)
+	}
+
+	desc, err := mgr.DescribeKernelTools(context.Background(), capturedCtx, "js", []string{"mul", "missing_js"})
+	if err != nil {
+		t.Fatalf("DescribeKernelTools js failed: %v", err)
+	}
+	if len(desc.Tools) != 1 || desc.Tools[0].Name != "mul" || desc.Tools[0].Language != LangJS || len(desc.Missing) != 1 || desc.Missing[0] != "missing_js" {
+		t.Fatalf("unexpected JS describe: %+v", desc)
+	}
+
+	// Sync call + undefined return value + nested tool.read + thrown error.
+	mulRes, err := mgr.CallKernelTool(context.Background(), capturedCtx, "js", "mul", map[string]any{"a": 6, "b": 7})
+	if err != nil || !mulRes.OK || mulRes.Value != float64(42) {
+		t.Fatalf("unexpected mul result: %+v err=%v", mulRes, err)
+	}
+	undefRes, err := mgr.CallKernelTool(context.Background(), capturedCtx, "js", "retUndef", nil)
+	if err != nil || !undefRes.OK || undefRes.Value != nil {
+		t.Fatalf("unexpected retUndef result: %+v err=%v", undefRes, err)
+	}
+	bridgeRaw, bridgeErrMsg := h.callTool("invoke_kernel_tool", map[string]any{
+		"lang": "js",
+		"name": "readViaBridge",
+		"args": map[string]any{"path": "hello.md"},
+	})
+	if bridgeErrMsg != "" {
+		t.Fatalf("nested tool.read inside JS tool() failed: %s", bridgeErrMsg)
+	}
+	bridgeText, _, _, bridgeIsErr := decodeToolResult(t, bridgeRaw)
+	if bridgeIsErr || bridgeText != "js-bridged:hello.md" {
+		t.Fatalf("nested tool.read inside JS tool() mismatch: isErr=%v text=%q", bridgeIsErr, bridgeText)
+	}
+	boomRes, err := mgr.CallKernelTool(context.Background(), capturedCtx, "js", "boom", nil)
+	if err != nil || boomRes.OK || !strings.Contains(boomRes.Error, "boom js") {
+		t.Fatalf("expected boom js error result, got %+v err=%v", boomRes, err)
+	}
+
+	// Start a JS cell that awaits a blocking host bridge call (simulating `await wait(agent(...))`).
+	// While that cell is parked inside `runCell`, concurrent `tool` RPCs MUST complete immediately
+	// without blocking on `processingQueue`!
+	_, cellCh := h.startToolCallAsync("eval", map[string]any{
+		"language": "js",
+		"code":     "await tool.hold_cell({})",
+	})
+	select {
+	case <-inBlockedTool:
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for JS cell to enter hold_cell")
+	}
+
+	// Invoke mul AND readViaBridge concurrently while the outer JS cell is still running!
+	var wg sync.WaitGroup
+	concErrs := make(chan error, 4)
+	for i := range 4 {
+		n := i + 1
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			r, e := mgr.CallKernelTool(context.Background(), capturedCtx, "js", "mul", map[string]any{"a": n, "b": 10})
+			if e != nil || !r.OK || r.Value != float64(n*10) {
+				concErrs <- errors.New("concurrent mul failed during active cell")
+			}
+		}()
+	}
+	wg.Wait()
+	close(concErrs)
+	for e := range concErrs {
+		t.Fatal(e)
+	}
+	concReadRaw, concReadErr := h.callTool("invoke_kernel_tool", map[string]any{
+		"lang": "js",
+		"name": "readViaBridge",
+		"args": map[string]any{"path": "while-waiting.txt"},
+	})
+	if concReadErr != "" {
+		t.Fatalf("concurrent JS tool bridge call during active cell failed: %s", concReadErr)
+	}
+	concReadText, _, _, concReadIsErr := decodeToolResult(t, concReadRaw)
+	if concReadIsErr || concReadText != "js-bridged:while-waiting.txt" {
+		t.Fatalf("concurrent JS tool bridge call mismatch: isErr=%v text=%q", concReadIsErr, concReadText)
+	}
+
+	// Release the blocked outer JS cell and confirm it finishes cleanly.
+	close(blockGate)
+	select {
+	case cellRaw := <-cellCh:
+		cellTxt, _, _, cellIsErr := decodeToolResult(t, cellRaw)
+		if cellIsErr || !strings.Contains(cellTxt, "released") {
+			t.Fatalf("unexpected outer JS cell result: isErr=%v text=%q", cellIsErr, cellTxt)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for outer JS cell to finish")
+	}
+
+	// Verify tool_cancel aborts a pending JS tool call promptly and leaves kernel alive.
+	blockGate = make(chan struct{})
+	cancelRaw, cancelErrMsg := h.callTool("invoke_kernel_tool", map[string]any{
+		"lang":      "js",
+		"name":      "blockBridge",
+		"timeoutMs": 150,
+	})
+	close(blockGate)
+	if cancelErrMsg != "" {
+		t.Fatalf("unexpected protocol error on cancelled JS tool call: %s", cancelErrMsg)
+	}
+	cancelText, _, _, cancelIsErr := decodeToolResult(t, cancelRaw)
+	if !cancelIsErr || !strings.Contains(strings.ToLower(cancelText), "timed out") {
+		t.Fatalf("expected timeout on cancelled JS tool call, got isErr=%v text=%q", cancelIsErr, cancelText)
+	}
+	aliveRes, err := mgr.CallKernelTool(context.Background(), capturedCtx, "js", "mul", map[string]any{"a": 2, "b": 3})
+	if err != nil || !aliveRes.OK || aliveRes.Value != float64(6) {
+		t.Fatalf("JS kernel should stay alive after tool_cancel: %+v err=%v", aliveRes, err)
 	}
 }

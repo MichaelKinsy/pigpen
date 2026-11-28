@@ -207,6 +207,7 @@ func descriptionOptionsForSession(ctx sdk.Context, toolNames []string) Descripti
 	settings := readSessionSettings(ctx)
 	opts.Py = settings.AllowPy
 	opts.JS = settings.AllowJS
+	opts.EvalTools = settings.EvalToolsEnabled
 	opts.MaxTimeout = settings.MaxTimeout
 	return opts
 }

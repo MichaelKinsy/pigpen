@@ -103,6 +103,16 @@ var Skillful func(ctx sdk.Context) bool
 // upstream: packages/coding-agent/src/autolearn/controller.ts:36-41
 var AutoLearnInstructions func(ctx sdk.Context) string
 
+// MemoryInstructions returns standing memory guidance for the system prompt
+// when a memory backend is active (`memory.backend` != "off"), or "" otherwise.
+// Nil by default (no-op on default sessions).
+var MemoryInstructions func(ctx sdk.Context) string
+
+// MemoryBackend reports the active memory backend name for ctx ("off", "local",
+// "mnemopi", "hindsight", ...), feeding urls.SchemeHost.MemoryBackend. Nil by
+// default ("" -> off, zero change on default sessions).
+var MemoryBackend func(ctx sdk.Context) string
+
 // PrepareSystemPrompt optionally transforms the rendered system prompt before
 // returning it from `before_agent_start` (used by `snapcompact.PrepareInlineSystemPrompt`
 // for `snapcompact.systemPrompt: "all"|"agents-md"`). Nil or default setting is a no-op.
@@ -211,6 +221,8 @@ type BuildOptions struct {
 	SettingsApproval bool
 	// OutReplies advertises `out://` in # Internal URLs (feeds urls.SchemeHost).
 	OutReplies bool
+	// MemoryBackend advertises `memory://` in # Internal URLs when "local" (feeds urls.SchemeHost).
+	MemoryBackend string
 	// IncludeWorkspaceTree enables scanning and rendering <workspace-tree> and <dir-context>.
 	// Defaults to false, matching omp's `includeWorkspaceTree` setting.
 	IncludeWorkspaceTree bool
@@ -340,6 +352,7 @@ func RenderTemplate(tmpl string, opts BuildOptions) string {
 		host := urls.SchemeHost{
 			SkillURIAccess:   hasTool("read") && len(opts.Skills) > 0,
 			RuleCount:        len(opts.Rules),
+			MemoryBackend:    opts.MemoryBackend,
 			SettingsApproval: opts.SettingsApproval,
 			OutReplies:       opts.OutReplies,
 			Subagent:         opts.Subagent,
@@ -1072,6 +1085,15 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 			skills = skillsFromOptions(options)
 		}
 		appendPrompt, _ := options["appendSystemPrompt"].(string)
+		if MemoryInstructions != nil {
+			if guidance := strings.TrimSpace(MemoryInstructions(ctx)); guidance != "" {
+				if strings.TrimSpace(appendPrompt) != "" {
+					appendPrompt = strings.TrimRight(appendPrompt, "\n") + "\n\n" + guidance
+				} else {
+					appendPrompt = guidance
+				}
+			}
+		}
 		if AutoLearnInstructions != nil && (slices.Contains(activeTools, "manage_skill") || slices.Contains(mountedCommands, "manage_skill")) {
 			if guidance := strings.TrimSpace(AutoLearnInstructions(ctx)); guidance != "" {
 				if strings.TrimSpace(appendPrompt) != "" {
@@ -1108,6 +1130,10 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 
 		settingsApproval := SettingsApproval != nil && SettingsApproval(ctx)
 		outReplies := OutReplies != nil && OutReplies(ctx)
+		memoryBackend := ""
+		if MemoryBackend != nil {
+			memoryBackend = MemoryBackend(ctx)
+		}
 		// upstream: sdk.ts:4664, irc/messaging.ts:16-20 — true for subagents and for
 		// top-level sessions able to spawn peers (default task.maxRecursionDepth=2).
 		taskIRCEnabled := true
@@ -1134,6 +1160,7 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 			TaskIRCEnabled:       taskIRCEnabled,
 			SettingsApproval:     settingsApproval,
 			OutReplies:           outReplies,
+			MemoryBackend:        memoryBackend,
 			IntentTracing:        intentTracing,
 			IntentField:          intentField,
 			IntentGuidance:       intentGuidance,

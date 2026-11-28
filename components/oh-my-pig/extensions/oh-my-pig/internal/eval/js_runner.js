@@ -12,6 +12,8 @@
 // Host -> runner:
 //   {"type": "init", "cwd": str, "sessionId": str, "preludeSource": str, "localRoots": {}, "bridge": {"url": str, "token": str, "session": str}}
 //   {"type": "run", "id": str, "code": str, "filename": str, "cwd": str, "localRoots": {}, "bridge": {...}, "preludes": [...]}
+//   {"type": "tool", "id": str, "op": "describe"|"call", "names"?: [str], "name"?: str, "args"?: {}, "bridge"?: {...}}
+//   {"type": "tool_cancel", "id": str}
 //   {"type": "exit"}
 //
 // Runner -> host:
@@ -22,7 +24,7 @@
 //   {"type": "image", "id": str, "image": {"mimeType": str, "data": str, ...}}
 //   {"type": "status", "id": str, "event": {...}}
 //   {"type": "done", "id": str, "ok": bool, "error"?: {"name": str, "message": str, "stack"?: str}}
-//
+//   {"type": "tool_result", "id": str, "ok": bool, "tools"?: [...], "missing"?: [str], "value"?: any, "error"?: str}
 // Ported from omp (https://github.com/can1357/oh-my-pi, MIT, v19.1.1):
 //   packages/coding-agent/src/eval/js/shared/runtime.ts, helpers.ts, prelude.txt,
 //   worker-core.ts; cell rewriter, indirectEval, awaitMaybePromise and
@@ -452,10 +454,14 @@ const helperBundle = {
 // Host HTTP loopback bridge call
 // ---------------------------------------------------------------------------
 
-function bridgePost(bridge, runId, name, args) {
+function bridgePost(bridge, runId, name, args, signal) {
 	return new Promise((resolve, reject) => {
 		if (!bridge || !bridge.url || !bridge.token || !bridge.session) {
 			reject(new Error("tool bridge is unavailable in this kernel"));
+			return;
+		}
+		if (signal && signal.aborted) {
+			reject(signal.reason instanceof Error ? signal.reason : new Error(String(signal.reason || "Tool invocation aborted")));
 			return;
 		}
 		const target = new URL("/v1/tool", bridge.url);
@@ -468,6 +474,13 @@ function bridgePost(bridge, runId, name, args) {
 			}),
 			"utf8",
 		);
+		let settled = false;
+		const finish = (fn, val) => {
+			if (settled) return;
+			settled = true;
+			if (signal) signal.removeEventListener("abort", onAbort);
+			fn(val);
+		};
 		const req = http.request(
 			{
 				hostname: target.hostname,
@@ -489,18 +502,27 @@ function bridgePost(bridge, runId, name, args) {
 					try {
 						parsed = JSON.parse(body);
 					} catch {
-						reject(new Error(`bridge call ${JSON.stringify(name)}: non-JSON response: ${body.slice(0, 200)}`));
+						finish(reject, new Error(`bridge call ${JSON.stringify(name)}: non-JSON response: ${body.slice(0, 200)}`));
 						return;
 					}
 					if (!parsed || !parsed.ok) {
-						reject(new Error((parsed && parsed.error) || `bridge call ${JSON.stringify(name)} failed`));
+						finish(reject, new Error((parsed && parsed.error) || `bridge call ${JSON.stringify(name)} failed`));
 						return;
 					}
-					resolve(parsed.value);
+					finish(resolve, parsed.value);
 				});
 			},
 		);
-		req.on("error", err => reject(err));
+		const onAbort = () => {
+			const err =
+				signal && signal.reason instanceof Error
+					? signal.reason
+					: new Error(String((signal && signal.reason) || "Tool invocation aborted"));
+			req.destroy(err);
+			finish(reject, err);
+		};
+		if (signal) signal.addEventListener("abort", onAbort, { once: true });
+		req.on("error", err => finish(reject, err));
 		req.write(payload);
 		req.end();
 	});
@@ -971,16 +993,22 @@ function initRuntime(msg) {
 		__omp_call_tool__: async (name, args) => {
 			const run = activeRun();
 			if (!run) throw new Error(`bridge call ${JSON.stringify(name)} ran outside an executing cell`);
-			const val = await bridgePost(run.bridge || runtimeState.bridge, run.runId, name, args);
+			const val = await bridgePost(run.bridge || runtimeState.bridge, run.runId, name, args, run.signal);
 			return surfaceBridgedToolImages(val, run.runId);
 		},
 		__omp_prelude__: async (name, parameters) => {
 			const run = activeRun();
 			if (!run) throw new Error(`prelude call ${JSON.stringify(name)} ran outside an executing cell`);
-			const val = await bridgePost(run.bridge || runtimeState.bridge, run.runId, "__prelude__", {
-				name,
-				parameters,
-			});
+			const val = await bridgePost(
+				run.bridge || runtimeState.bridge,
+				run.runId,
+				"__prelude__",
+				{
+					name,
+					parameters,
+				},
+				run.signal,
+			);
 			return surfaceBridgedToolImages(val, run.runId);
 		},
 		__omp_import__: async (source, options) => {
@@ -1166,6 +1194,130 @@ async function runCell(msg) {
 	}
 }
 
+// Active `type:"tool"` invocations tracked by request id for `tool_cancel` abort support.
+const activeToolControllers = new Map();
+
+function isKernelToolSpec(value) {
+	if (value === null || typeof value !== "object") return false;
+	return (
+		typeof Reflect.get(value, "name") === "string" &&
+		typeof Reflect.get(value, "fn") === "function" &&
+		typeof Reflect.get(value, "description") === "string" &&
+		Reflect.get(value, "parameters") !== null &&
+		typeof Reflect.get(value, "parameters") === "object"
+	);
+}
+
+// Convert a kernel tool return value into a JSON-safe value without failing the request.
+// Matches omp worker-core.ts:460-465 (structuredClone / JSON-safe fallback to String(value))
+// while ensuring `undefined` serializes to `null` (so JSON always preserves `"value"`).
+function serializeToolReturnValue(value) {
+	if (value === undefined) return null;
+	try {
+		const cloned = typeof structuredClone === "function" ? structuredClone(value) : value;
+		const encoded = JSON.stringify(cloned);
+		if (encoded === undefined) return String(value);
+		return JSON.parse(encoded);
+	} catch {
+		return String(value);
+	}
+}
+
+// Describe or invoke a kernel-defined JS tool concurrently outside `processingQueue`
+// so a JS cell waiting in `await wait(...)` on a subagent that calls a JS `tool(fn)`
+// never deadlocks.
+// upstream: packages/coding-agent/src/eval/js/worker-core.ts:421-475
+async function invokeKernelTool(msg) {
+	const runId = String(msg.id || "");
+	const controller = new AbortController();
+	activeToolControllers.set(runId, controller);
+	const runCtx = {
+		runId,
+		cwd: runtimeState.cwd,
+		filename: `tool-${runId}`,
+		localRoots: runtimeState.localRoots,
+		bridge: msg.bridge || runtimeState.bridge,
+		signal: controller.signal,
+		finalExpressionSet: false,
+		finalExpressionValue: undefined,
+		callOccurrences: new Map(),
+	};
+
+	try {
+		if (!runtimeState.initialized) {
+			throw new Error("JavaScript kernel is not running");
+		}
+		const rawRegistry = globalThis.__omp_tools__;
+		const tools = new Map();
+		if (rawRegistry instanceof Map) {
+			for (const [name, value] of rawRegistry) {
+				if (typeof name === "string" && isKernelToolSpec(value)) {
+					tools.set(name, value);
+				}
+			}
+		}
+		if (msg.op === "describe") {
+			const requested = Array.isArray(msg.names) && msg.names.length > 0 ? msg.names : [...tools.keys()];
+			const described = [];
+			const missing = [];
+			for (const name of requested) {
+				const spec = tools.get(name);
+				if (spec) {
+					described.push({
+						name: spec.name,
+						description: spec.description,
+						parameters: spec.parameters,
+					});
+				} else {
+					missing.push(name);
+				}
+			}
+			emitFrame({
+				type: "tool_result",
+				id: runId,
+				ok: true,
+				tools: described,
+				missing,
+			});
+			return;
+		}
+		if (msg.op === "call") {
+			const name = typeof msg.name === "string" ? msg.name : "";
+			const spec = tools.get(name);
+			if (!spec) {
+				throw new Error(`tool ${JSON.stringify(name)} is not defined`);
+			}
+			const callArgs = isRecord(msg.args) ? msg.args : {};
+			const value = await als.run(runCtx, async () => await spec.fn(callArgs));
+			emitFrame({
+				type: "tool_result",
+				id: runId,
+				ok: true,
+				value: serializeToolReturnValue(value),
+			});
+			return;
+		}
+		throw new Error(`unknown tool operation ${JSON.stringify(msg.op)}`);
+	} catch (err) {
+		const errMsg = err instanceof Error ? err.message || err.name : String(err);
+		emitFrame({
+			type: "tool_result",
+			id: runId,
+			ok: false,
+			error: errMsg || "JavaScript tool request failed",
+		});
+	} finally {
+		activeToolControllers.delete(runId);
+	}
+}
+
+function cancelKernelTool(runId) {
+	const controller = activeToolControllers.get(runId);
+	if (controller) {
+		controller.abort(new Error("Tool invocation aborted"));
+	}
+}
+
 process.on("unhandledRejection", reason => {
 	const run = activeRun();
 	const msg = reason instanceof Error ? reason.stack || reason.message : String(reason);
@@ -1229,6 +1381,14 @@ rl.on("line", rawLine => {
 	if (msg.type === "exit") {
 		rl.close();
 		process.exit(0);
+	}
+	if (msg.type === "tool") {
+		void invokeKernelTool(msg);
+		return;
+	}
+	if (msg.type === "tool_cancel") {
+		cancelKernelTool(String(msg.id || ""));
+		return;
 	}
 	pendingMessages.push(msg);
 	dispatchNext();
