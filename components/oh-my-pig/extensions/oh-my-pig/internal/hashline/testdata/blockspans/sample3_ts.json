@@ -1,0 +1,2704 @@
+{
+  "lang": "ts",
+  "sample": "sample3",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample3",
+  "total": 455,
+  "omp_resolved": 138,
+  "omp_refused": 317,
+  "cases": [
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 1,
+      "refused": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`."
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 11,
+      "span": [
+        11,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 20,
+      "span": [
+        20,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 28,
+      "span": [
+        28,
+        32
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 36,
+      "span": [
+        36,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 42,
+      "refused": "line 1: `CUT 42*` could not resolve a syntactic block beginning on line 42 (blank/closer line, or parse error). Use `CUT 42.=M` with explicit lines. The nearest enclosing multi-line block begins at line 36 and ends at line 42; use `CUT 36*` to target it."
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 52,
+      "span": [
+        52,
+        61
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 63,
+      "span": [
+        63,
+        72
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 65,
+      "span": [
+        65,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 67,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 71,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 75,
+      "span": [
+        75,
+        85
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 77,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 79,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 87,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 88,
+      "span": [
+        88,
+        94
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 91,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 96,
+      "span": [
+        96,
+        115
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 101,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 103,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 113,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 117,
+      "span": [
+        117,
+        133
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-transfer-local-copy.test.ts",
+      "anchor": 126,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 5,
+      "span": [
+        5,
+        11
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 15,
+      "span": [
+        15,
+        17
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 22,
+      "span": [
+        22,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 37,
+      "span": [
+        37,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 42,
+      "span": [
+        42,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 47,
+      "span": [
+        47,
+        49
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 52,
+      "span": [
+        52,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 57,
+      "span": [
+        57,
+        59
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 62,
+      "span": [
+        62,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 66,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 67,
+      "span": [
+        67,
+        73
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 69,
+      "span": [
+        69,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 76,
+      "span": [
+        76,
+        78
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 78,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 83,
+      "span": [
+        83,
+        85
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 89,
+      "span": [
+        89,
+        100
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 91,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 99,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 105,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 108,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 112,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 114,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 120,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 125,
+      "span": [
+        125,
+        128
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 126,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__tui__src__keybinding-matchers.ts",
+      "anchor": 133,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 1,
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 32,
+      "span": [
+        32,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 76,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 77,
+      "span": [
+        77,
+        88
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 90,
+      "span": [
+        90,
+        92
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 97,
+      "span": [
+        97,
+        99
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 101,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 107,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 117,
+      "span": [
+        117,
+        119
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 127,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 131,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 134,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 146,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 156,
+      "span": [
+        156,
+        204
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 161,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 172,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 178,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 190,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 192,
+      "span": [
+        192,
+        195
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 206,
+      "span": [
+        206,
+        208
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 218,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 220,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 224,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 230,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 244,
+      "span": [
+        244,
+        247
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 250,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 257,
+      "span": [
+        257,
+        303
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 267,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 279,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 284,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__web__scrapers__discogs.ts",
+      "anchor": 293,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 10,
+      "span": [
+        10,
+        12
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 53,
+      "span": [
+        53,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 58,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 61,
+      "span": [
+        61,
+        63
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 66,
+      "span": [
+        66,
+        77
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 79,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 83,
+      "span": [
+        83,
+        87
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 91,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 96,
+      "span": [
+        96,
+        127
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 100,
+      "span": [
+        100,
+        106
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 104,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 107,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 111,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 121,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 122,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 129,
+      "span": [
+        129,
+        134
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 137,
+      "span": [
+        137,
+        138
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 141,
+      "span": [
+        141,
+        145
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 152,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 153,
+      "span": [
+        153,
+        158
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 161,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 167,
+      "span": [
+        167,
+        169
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_chord__nextnode__plugins__node__pi__chord__src__state__batch.ts",
+      "anchor": 171,
+      "span": [
+        171,
+        173
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 1,
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 37,
+      "span": [
+        37,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 54,
+      "span": [
+        54,
+        73
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 66,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 75,
+      "span": [
+        75,
+        314
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 76,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 87,
+      "span": [
+        87,
+        116
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 102,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 110,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 120,
+      "span": [
+        120,
+        124
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 144,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 149,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 174,
+      "span": [
+        174,
+        193
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 180,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 186,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 206,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 217,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 224,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 238,
+      "span": [
+        238,
+        243
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 252,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 255,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 266,
+      "span": [
+        266,
+        270
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 290,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 293,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 317,
+      "span": [
+        317,
+        388
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 325,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 332,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 359,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pigpen_components__ahp__proof__oracle__test__reconnect.test.ts",
+      "anchor": 371,
+      "span": [
+        371,
+        376
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 1,
+      "span": [
+        1,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 69,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 79,
+      "span": [
+        79,
+        86
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 101,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 107,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 117,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 128,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 137,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 140,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 152,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 172,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 176,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 185,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 204,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 209,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 211,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 221,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 242,
+      "span": [
+        242,
+        249
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 244,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 256,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 270,
+      "span": [
+        270,
+        273
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 278,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 288,
+      "span": [
+        288,
+        290
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 305,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 314,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 316,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 330,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 343,
+      "span": [
+        343,
+        345
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 354,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__src__thread__services__model-registry-mirror.ts",
+      "anchor": 371,
+      "span": [
+        371,
+        373
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 11,
+      "span": [
+        11,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 16,
+      "span": [
+        16,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 24,
+      "span": [
+        24,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 27,
+      "span": [
+        27,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 35,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 41,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 42,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/pig_durable__core__host__cf__src__recipe.ts",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 25,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 33,
+      "span": [
+        33,
+        123
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 49,
+      "span": [
+        49,
+        52
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 71,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 77,
+      "span": [
+        77,
+        97
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 85,
+      "span": [
+        85,
+        96
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 94,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 95,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 104,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 113,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 119,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 127,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 140,
+      "span": [
+        140,
+        179
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 143,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 144,
+      "span": [
+        144,
+        147
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 162,
+      "span": [
+        162,
+        165
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 166,
+      "span": [
+        166,
+        172
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 177,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 186,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 189,
+      "span": [
+        189,
+        192
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 191,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 200,
+      "span": [
+        200,
+        221
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 205,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 214,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 215,
+      "span": [
+        215,
+        220
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 223,
+      "span": [
+        223,
+        236
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 236,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 240,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__cli__skill-list.test.ts",
+      "anchor": 249,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 112,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 141,
+      "span": [
+        141,
+        158
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 216,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 228,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 278,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 331,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 337,
+      "span": [
+        337,
+        353
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 378,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 427,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 458,
+      "span": [
+        458,
+        480
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 466,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 514,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 568,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 574,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 624,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 679,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 691,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 724,
+      "span": [
+        724,
+        727
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 772,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 819,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 821,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 878,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 934,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 937,
+      "span": [
+        937,
+        940
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 984,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 1031,
+      "span": [
+        1031,
+        1036
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 1058,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 1086,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 1149,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 1169,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__eval__completion-bridge.test.ts",
+      "anchor": 1213,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 10,
+      "span": [
+        10,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 11,
+      "span": [
+        11,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 18,
+      "span": [
+        18,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 22,
+      "span": [
+        22,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 24,
+      "span": [
+        24,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 30,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 32,
+      "span": [
+        32,
+        35
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 35,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 37,
+      "span": [
+        37,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 43,
+      "span": [
+        43,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 48,
+      "span": [
+        48,
+        62
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 51,
+      "span": [
+        51,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 54,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 55,
+      "span": [
+        55,
+        60
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 58,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 62,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 64,
+      "span": [
+        64,
+        69
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__rpc-input-hooks.test.ts",
+      "anchor": 67,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 23,
+      "span": [
+        23,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 38,
+      "span": [
+        38,
+        43
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 71,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 89,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 104,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 116,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 136,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 154,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 166,
+      "span": [
+        166,
+        192
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 189,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 204,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 217,
+      "span": [
+        217,
+        244
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 241,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 254,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 261,
+      "span": [
+        261,
+        265
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 283,
+      "span": [
+        283,
+        288
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 305,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 306,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 330,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 352,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 361,
+      "span": [
+        361,
+        367
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 386,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 402,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 416,
+      "span": [
+        416,
+        421
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 441,
+      "span": [
+        441,
+        449
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 448,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 467,
+      "span": [
+        467,
+        475
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 491,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 498,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__session-manager__continue-relocation.test.ts",
+      "anchor": 514,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 1,
+      "span": [
+        1,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 25,
+      "span": [
+        25,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 37,
+      "span": [
+        37,
+        65
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 40,
+      "span": [
+        40,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 43,
+      "span": [
+        43,
+        45
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 49,
+      "span": [
+        49,
+        59
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 50,
+      "span": [
+        50,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 55,
+      "span": [
+        55,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 60,
+      "span": [
+        60,
+        63
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 65,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 67,
+      "span": [
+        67,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 78,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 80,
+      "span": [
+        80,
+        82
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 81,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 85,
+      "span": [
+        85,
+        101
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 91,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 94,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 103,
+      "span": [
+        103,
+        117
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 105,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 110,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 116,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 119,
+      "span": [
+        119,
+        136
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 124,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__coding-agent__test__issue-4324-repro.test.ts",
+      "anchor": 128,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 3,
+      "span": [
+        3,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 83,
+      "span": [
+        83,
+        111
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 102,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 119,
+      "span": [
+        119,
+        121
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 161,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 165,
+      "span": [
+        165,
+        227
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 199,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 238,
+      "span": [
+        238,
+        390
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 240,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 271,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 301,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 322,
+      "span": [
+        322,
+        389
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 324,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 364,
+      "span": [
+        364,
+        367
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 396,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 410,
+      "span": [
+        410,
+        411
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 428,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 458,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 475,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 477,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 512,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 548,
+      "span": [
+        548,
+        553
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 583,
+      "span": [
+        583,
+        629
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 609,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 623,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 652,
+      "span": [
+        652,
+        656
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 686,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 696,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 741,
+      "span": [
+        741,
+        754
+      ]
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 765,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 770,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/ts/omp_packages__utils__src__readability__readability.ts",
+      "anchor": 809,
+      "refused_kind": "single_line"
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`.",
+    "unresolved": "line 1: `CUT 42*` could not resolve a syntactic block beginning on line 42 (blank/closer line, or parse error). Use `CUT 42.=M` with explicit lines. The nearest enclosing multi-line block begins at line 36 and ends at line 42; use `CUT 36*` to target it."
+  }
+}

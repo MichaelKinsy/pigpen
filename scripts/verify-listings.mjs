@@ -172,7 +172,7 @@ function verifyPiglet(listing, { pig, env, cwd, dir, home }) {
     const host = hostTarget();
     const built = build(pig, found.name, out, host, found.file);
     if (built.error) throw new Error(`build: ${built.error}`);
-    const bad = smokeBinary(built.target).filter((check) => !check.ok);
+    const bad = smokeBinary(built.target, { name: found.name }).filter((check) => !check.ok);
     if (bad.length) throw new Error(bad.map((check) => `${check.name}: ${check.detail}`).join('\n'));
   });
   return steps;

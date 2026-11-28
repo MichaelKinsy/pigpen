@@ -33,6 +33,10 @@ type pickerCatalog struct {
 // usually come in the catalog's order (a selection move resends them all),
 // so the entry after the last one found is tried before the index.
 func (c *pickerCatalog) update(sel fe.Selector) {
+	c.updateWith(sel, pickerItem)
+}
+
+func (c *pickerCatalog) updateWith(sel fe.Selector, build func(fe.SelectorItem) map[string]any) {
 	if c.at == nil {
 		c.at = map[string]int{}
 	}
@@ -54,11 +58,11 @@ func (c *pickerCatalog) update(sel fe.Selector) {
 			copied = true
 		}
 		if ok {
-			c.items[i], c.seen[i] = pickerItem(item), item
+			c.items[i], c.seen[i] = build(item), item
 			continue
 		}
 		c.at[item.ID] = len(c.items)
-		c.items = append(c.items, pickerItem(item))
+		c.items = append(c.items, build(item))
 		c.seen = append(c.seen, item)
 	}
 }
@@ -192,6 +196,10 @@ func rowsOf(sel fe.Selector, prev *rawProps) pickerRows {
 // ones as current, the selection, and the query while the selector
 // searches. Typing over a long list sends the order, not the items.
 func (s *session) queuePicker(e *entry, sel fe.Selector, rows pickerRows, fresh bool) {
+	if s.ompRoles && ompIsModelPicker(sel, rows.tree) {
+		s.queueOmpModelPicker(e, sel, fresh)
+		return
+	}
 	e.catalog.update(sel)
 	changed := map[string]any{}
 	if fresh || !sameSlice(e.catalog.items, e.raw.items) {
@@ -241,18 +249,37 @@ func nullable(value string) any {
 func (s *session) pickerHandlers(id string) tern.Handlers {
 	dismiss := func(*tern.Action) { s.act(id, fe.Dismiss, "", "") }
 	choose := func(*tern.Action) { s.act(id, fe.Choose, "", "") }
+	actions := map[string]func(*tern.Action){
+		"close": dismiss, "cancel": dismiss,
+		"choose": choose, "confirm": choose,
+		"clear": func(*tern.Action) { s.act(id, fe.Filter, "", "") },
+		"tab":   func(e *tern.Action) { s.act(id, fe.SwitchTab, e.Value, "") },
+	}
+	if s.ompRoles {
+		actions["scope"] = func(e *tern.Action) {
+			v, _ := e.Value.(string)
+			s.ompModelPickerSetScope(id, v)
+		}
+		actions["level"] = func(e *tern.Action) {
+			v, _ := e.Value.(string)
+			s.ompModelPickerSetThinking(id, v)
+		}
+	}
 	return tern.Handlers{
-		OnSelect:   func(e *tern.Select) { s.act(id, fe.Highlight, e.Item, "") },
-		OnActivate: func(e *tern.Activate) { s.act(id, fe.Choose, e.Item, "") },
-		OnAction: map[string]func(*tern.Action){
-			"close": dismiss, "cancel": dismiss,
-			"choose": choose, "confirm": choose,
-			"clear": func(*tern.Action) { s.act(id, fe.Filter, "", "") },
-			"tab":   func(e *tern.Action) { s.act(id, fe.SwitchTab, e.Value, "") },
+		OnSelect: func(e *tern.Select) {
+			s.act(id, fe.Highlight, e.Item, "")
 		},
+		OnActivate: func(e *tern.Activate) {
+			if s.ompRoles && e.Item != "" {
+				s.mu.Lock()
+				s.recordRecentModel(e.Item)
+				s.mu.Unlock()
+			}
+			s.act(id, fe.Choose, e.Item, "")
+		},
+		OnAction: actions,
 	}
 }
-
 func joinNonEmpty(sep string, parts ...string) string {
 	var kept []string
 	for _, part := range parts {

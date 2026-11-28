@@ -1,0 +1,38 @@
+[
+  {
+    "name": "eval-py-state-print-error",
+    "description": "Python eval cells: print, persistent top-level state across cells, and runtime error.",
+    "setup": "",
+    "calls": [
+      { "tool": "eval", "arguments": { "language": "py", "code": "x = 21\nprint('hello_py', x)", "title": "py init" } },
+      { "tool": "eval", "arguments": { "language": "py", "code": "print('doubled', x * 2)", "title": "py state" } },
+      { "tool": "eval", "arguments": { "language": "py", "code": "1 / 0", "title": "py error" } }
+    ]
+  },
+  {
+    "name": "eval-js-state-print-error",
+    "description": "JavaScript (Bun) eval cells: print, persistent top-level state across cells, and runtime error.",
+    "setup": "",
+    "calls": [
+      { "tool": "eval", "arguments": { "language": "js", "code": "const y = 19;\nprint('hello_js', y);", "title": "js init" } },
+      { "tool": "eval", "arguments": { "language": "js", "code": "print('plus_one', y + 1);", "title": "js state" } },
+      { "tool": "eval", "arguments": { "language": "js", "code": "throw new Error('js_boom');", "title": "js error" } }
+    ]
+  },
+  {
+    "name": "eval-reset-timeout",
+    "description": "Exercise eval timeout, state survival/reset, syntax error, sh() prelude, JS return value, JS timeout, and unsupported language.",
+    "setup": "",
+    "calls": [
+      { "tool": "eval", "arguments": { "language": "py", "code": "keep = 7\nprint('set')" } },
+      { "tool": "eval", "arguments": { "language": "py", "code": "import time\ntime.sleep(10)\nprint('late')", "timeout": 1 } },
+      { "tool": "eval", "arguments": { "language": "py", "code": "print('keep' in globals())" } },
+      { "tool": "eval", "arguments": { "language": "py", "code": "print('keep' in globals())", "reset": true } },
+      { "tool": "eval", "arguments": { "language": "py", "code": "def f(:\n  pass" } },
+      { "tool": "eval", "arguments": { "language": "py", "code": "print(sh('echo from_sh'))" } },
+      { "tool": "eval", "arguments": { "language": "js", "code": "return 6 * 7" } },
+      { "tool": "eval", "arguments": { "language": "js", "code": "await new Promise(r => setTimeout(r, 10000))", "timeout": 1 } },
+      { "tool": "eval", "arguments": { "language": "rb", "code": "puts 1" } }
+    ]
+  }
+]

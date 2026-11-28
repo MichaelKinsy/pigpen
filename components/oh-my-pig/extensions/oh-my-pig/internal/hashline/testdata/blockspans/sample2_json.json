@@ -1,0 +1,3034 @@
+{
+  "lang": "json",
+  "sample": "sample2",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample2",
+  "total": 452,
+  "omp_resolved": 253,
+  "omp_refused": 199,
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 4*` resolved a single-line block — line 4 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 4`. The nearest enclosing multi-line block begins at line 3 and ends at line 5; use `CUT 3*` to target it.",
+    "unresolved": "line 1: `CUT 8*` could not resolve a syntactic block beginning on line 8 (blank/closer line, or parse error). Use `CUT 8.=M` with explicit lines. The nearest enclosing multi-line block begins at line 6 and ends at line 8; use `CUT 6*` to target it."
+  },
+  "cases": [
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 1,
+      "span": [
+        1,
+        65
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 2,
+      "span": [
+        2,
+        17
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 3,
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 4,
+      "refused": "line 1: `CUT 4*` resolved a single-line block — line 4 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 4`. The nearest enclosing multi-line block begins at line 3 and ends at line 5; use `CUT 3*` to target it."
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 6,
+      "span": [
+        6,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 8,
+      "refused": "line 1: `CUT 8*` could not resolve a syntactic block beginning on line 8 (blank/closer line, or parse error). Use `CUT 8.=M` with explicit lines. The nearest enclosing multi-line block begins at line 6 and ends at line 8; use `CUT 6*` to target it."
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 9,
+      "span": [
+        9,
+        11
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 12,
+      "span": [
+        12,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 18,
+      "span": [
+        18,
+        33
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 19,
+      "span": [
+        19,
+        21
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 22,
+      "span": [
+        22,
+        24
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 25,
+      "span": [
+        25,
+        27
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 28,
+      "span": [
+        28,
+        31
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 34,
+      "span": [
+        34,
+        49
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 35,
+      "span": [
+        35,
+        37
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 38,
+      "span": [
+        38,
+        40
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 40,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 41,
+      "span": [
+        41,
+        43
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 44,
+      "span": [
+        44,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 50,
+      "span": [
+        50,
+        64
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 51,
+      "span": [
+        51,
+        53
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 53,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 54,
+      "span": [
+        54,
+        56
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 57,
+      "span": [
+        57,
+        59
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 60,
+      "span": [
+        60,
+        62
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-15-summary-border-skill.json",
+      "anchor": 62,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 1,
+      "span": [
+        1,
+        255
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 2,
+      "span": [
+        2,
+        17
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 6,
+      "span": [
+        6,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 18,
+      "span": [
+        18,
+        33
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 25,
+      "span": [
+        25,
+        27
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 28,
+      "span": [
+        28,
+        31
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 38,
+      "span": [
+        38,
+        40
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 50,
+      "span": [
+        50,
+        65
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 60,
+      "span": [
+        60,
+        63
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 70,
+      "span": [
+        70,
+        72
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 72,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 82,
+      "span": [
+        82,
+        84
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 91,
+      "span": [
+        91,
+        94
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 95,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 101,
+      "span": [
+        101,
+        103
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 114,
+      "span": [
+        114,
+        116
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 118,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 123,
+      "span": [
+        123,
+        126
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 133,
+      "span": [
+        133,
+        135
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 141,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 145,
+      "span": [
+        145,
+        147
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 154,
+      "span": [
+        154,
+        157
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 164,
+      "span": [
+        164,
+        166
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 167,
+      "span": [
+        167,
+        169
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 177,
+      "span": [
+        177,
+        179
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 186,
+      "span": [
+        186,
+        188
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 188,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 198,
+      "span": [
+        198,
+        200
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 209,
+      "span": [
+        209,
+        211
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 211,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 218,
+      "span": [
+        218,
+        221
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 231,
+      "span": [
+        231,
+        233
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 234,
+      "span": [
+        234,
+        236
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-39-tui-members2.json",
+      "anchor": 240,
+      "span": [
+        240,
+        242
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1,
+      "span": [
+        1,
+        1902
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 74,
+      "span": [
+        74,
+        79
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 154,
+      "span": [
+        154,
+        159
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 174,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 234,
+      "span": [
+        234,
+        239
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 310,
+      "span": [
+        310,
+        313
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 347,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 380,
+      "span": [
+        380,
+        383
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 450,
+      "span": [
+        450,
+        453
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 520,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 528,
+      "span": [
+        528,
+        533
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 608,
+      "span": [
+        608,
+        613
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 688,
+      "span": [
+        688,
+        693
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 693,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 768,
+      "span": [
+        768,
+        773
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 848,
+      "span": [
+        848,
+        853
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 866,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 935,
+      "span": [
+        935,
+        939
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1015,
+      "span": [
+        1015,
+        1019
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1039,
+      "span": [
+        1039,
+        1046
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1095,
+      "span": [
+        1095,
+        1099
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1175,
+      "span": [
+        1175,
+        1179
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1212,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1255,
+      "span": [
+        1255,
+        1259
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1335,
+      "span": [
+        1335,
+        1339
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1384,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1415,
+      "span": [
+        1415,
+        1419
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1495,
+      "span": [
+        1495,
+        1499
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1557,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1575,
+      "span": [
+        1575,
+        1579
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1655,
+      "span": [
+        1655,
+        1659
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1730,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1735,
+      "span": [
+        1735,
+        1739
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1815,
+      "span": [
+        1815,
+        1819
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 1,
+      "span": [
+        1,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 2,
+      "span": [
+        2,
+        10
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 5,
+      "span": [
+        5,
+        7
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 11,
+      "span": [
+        11,
+        19
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 14,
+      "span": [
+        14,
+        16
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__designout-port-ported-rows.json",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 1,
+      "span": [
+        1,
+        54
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 9,
+      "span": [
+        9,
+        13
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 14,
+      "span": [
+        14,
+        16
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 17,
+      "span": [
+        17,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 25,
+      "span": [
+        25,
+        31
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 31,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 32,
+      "span": [
+        32,
+        34
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 35,
+      "span": [
+        35,
+        37
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 37,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 38,
+      "span": [
+        38,
+        42
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 42,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 43,
+      "span": [
+        43,
+        53
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 44,
+      "span": [
+        44,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 48,
+      "span": [
+        48,
+        51
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 51,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__wire__package.json",
+      "anchor": 53,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 1,
+      "span": [
+        1,
+        23
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 2,
+      "span": [
+        2,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 3,
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 6,
+      "span": [
+        6,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 8,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 9,
+      "span": [
+        9,
+        12
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 13,
+      "span": [
+        13,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 15,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 16,
+      "span": [
+        16,
+        19
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-19-resolve-cli-model-result.json",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 1,
+      "span": [
+        1,
+        156
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 7,
+      "span": [
+        7,
+        13
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 15,
+      "span": [
+        15,
+        18
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 23,
+      "span": [
+        23,
+        28
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 29,
+      "span": [
+        29,
+        78
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 34,
+      "span": [
+        34,
+        40
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 42,
+      "span": [
+        42,
+        44
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 44,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 48,
+      "span": [
+        48,
+        50
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 53,
+      "span": [
+        53,
+        68
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 56,
+      "span": [
+        56,
+        59
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 59,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 61,
+      "span": [
+        61,
+        63
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 70,
+      "span": [
+        70,
+        75
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 79,
+      "span": [
+        79,
+        154
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 84,
+      "span": [
+        84,
+        93
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 87,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 95,
+      "span": [
+        95,
+        98
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 99,
+      "span": [
+        99,
+        102
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 101,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 103,
+      "span": [
+        103,
+        110
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 104,
+      "span": [
+        104,
+        109
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 114,
+      "span": [
+        114,
+        116
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 116,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 120,
+      "span": [
+        120,
+        122
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 126,
+      "span": [
+        126,
+        129
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 130,
+      "span": [
+        130,
+        151
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 131,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 138,
+      "span": [
+        138,
+        150
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 142,
+      "span": [
+        142,
+        145
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-extractor__schema__inventory.schema.json",
+      "anchor": 145,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 1,
+      "span": [
+        1,
+        4271
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 2,
+      "span": [
+        2,
+        1087
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 121,
+      "span": [
+        121,
+        129
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 310,
+      "span": [
+        310,
+        318
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 390,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 499,
+      "span": [
+        499,
+        507
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 688,
+      "span": [
+        688,
+        696
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 778,
+      "span": [
+        778,
+        786
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 862,
+      "span": [
+        862,
+        874
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 1041,
+      "span": [
+        1041,
+        1049
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 1166,
+      "span": [
+        1166,
+        1174
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 1167,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 1355,
+      "span": [
+        1355,
+        1363
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 1544,
+      "span": [
+        1544,
+        1552
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 1555,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 1733,
+      "span": [
+        1733,
+        1741
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 1922,
+      "span": [
+        1922,
+        1930
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 1943,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 2120,
+      "span": [
+        2120,
+        2128
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 2245,
+      "span": [
+        2245,
+        2253
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 2331,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 2434,
+      "span": [
+        2434,
+        2442
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 2623,
+      "span": [
+        2623,
+        2631
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 2719,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 2812,
+      "span": [
+        2812,
+        2820
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 3001,
+      "span": [
+        3001,
+        3009
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 3107,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 3190,
+      "span": [
+        3190,
+        3198
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 3315,
+      "span": [
+        3315,
+        3323
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 3495,
+      "span": [
+        3495,
+        3503
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 3504,
+      "span": [
+        3504,
+        3512
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 3693,
+      "span": [
+        3693,
+        3701
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 3882,
+      "span": [
+        3882,
+        3890
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 3884,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_bench__durable__report__gate__bafe0c18bf__report.json",
+      "anchor": 4071,
+      "span": [
+        4071,
+        4079
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 1,
+      "span": [
+        1,
+        590
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 22,
+      "span": [
+        22,
+        28
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 45,
+      "span": [
+        45,
+        49
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 55,
+      "span": [
+        55,
+        65
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 67,
+      "span": [
+        67,
+        73
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 89,
+      "span": [
+        89,
+        95
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 105,
+      "span": [
+        105,
+        109
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 109,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 129,
+      "span": [
+        129,
+        132
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 151,
+      "span": [
+        151,
+        155
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 163,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 181,
+      "span": [
+        181,
+        187
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 203,
+      "span": [
+        203,
+        208
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 216,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 233,
+      "span": [
+        233,
+        277
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 251,
+      "span": [
+        251,
+        253
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 270,
+      "span": [
+        270,
+        272
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 278,
+      "span": [
+        278,
+        299
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 300,
+      "span": [
+        300,
+        324
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 323,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 327,
+      "span": [
+        327,
+        337
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 351,
+      "span": [
+        351,
+        359
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 377,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 385,
+      "span": [
+        385,
+        391
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 415,
+      "span": [
+        415,
+        428
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 430,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 440,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 464,
+      "span": [
+        464,
+        495
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 484,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 496,
+      "span": [
+        496,
+        518
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 521,
+      "span": [
+        521,
+        530
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 537,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 547,
+      "span": [
+        547,
+        559
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-vectors__pi-coding-agent__sessionEntryToContextMessages.json",
+      "anchor": 563,
+      "span": [
+        563,
+        572
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 1,
+      "span": [
+        1,
+        24
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 2,
+      "span": [
+        2,
+        9
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 4,
+      "span": [
+        4,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 8,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 9,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 10,
+      "span": [
+        10,
+        19
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 12,
+      "span": [
+        12,
+        18
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 20,
+      "span": [
+        20,
+        23
+      ]
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/omp_packages__coding-agent__src__prompts__judge__auto-thinking.json",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 1,
+      "span": [
+        1,
+        82
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 6,
+      "span": [
+        6,
+        81
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 7,
+      "span": [
+        7,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 9,
+      "span": [
+        9,
+        13
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 14,
+      "span": [
+        14,
+        19
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 21,
+      "span": [
+        21,
+        34
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 23,
+      "span": [
+        23,
+        27
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 28,
+      "span": [
+        28,
+        33
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 35,
+      "span": [
+        35,
+        48
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 37,
+      "span": [
+        37,
+        41
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 41,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 42,
+      "span": [
+        42,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 49,
+      "span": [
+        49,
+        62
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 51,
+      "span": [
+        51,
+        55
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 55,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 56,
+      "span": [
+        56,
+        61
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 63,
+      "span": [
+        63,
+        71
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 65,
+      "span": [
+        65,
+        69
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 69,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 72,
+      "span": [
+        72,
+        80
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 74,
+      "span": [
+        74,
+        78
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__sdk-bulk__test__parity__sdk-vectors__pi-tui__okhslColor.json",
+      "anchor": 79,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 1,
+      "span": [
+        1,
+        65
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 2,
+      "span": [
+        2,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 3,
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 6,
+      "span": [
+        6,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 9,
+      "span": [
+        9,
+        12
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 13,
+      "span": [
+        13,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 15,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 16,
+      "span": [
+        16,
+        19
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 23,
+      "span": [
+        23,
+        43
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 24,
+      "span": [
+        24,
+        26
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 27,
+      "span": [
+        27,
+        29
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 30,
+      "span": [
+        30,
+        33
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 34,
+      "span": [
+        34,
+        36
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 36,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 37,
+      "span": [
+        37,
+        40
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 44,
+      "span": [
+        44,
+        64
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 45,
+      "span": [
+        45,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 47,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 48,
+      "span": [
+        48,
+        50
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 51,
+      "span": [
+        51,
+        54
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 55,
+      "span": [
+        55,
+        57
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 58,
+      "span": [
+        58,
+        61
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__interface-closure__specs__batch-32-extension-types3.json",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 1,
+      "span": [
+        1,
+        263
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 2,
+      "span": [
+        2,
+        11
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 5,
+      "span": [
+        5,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 15,
+      "span": [
+        15,
+        17
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 33,
+      "span": [
+        33,
+        35
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 39,
+      "span": [
+        39,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 51,
+      "span": [
+        51,
+        58
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 65,
+      "span": [
+        65,
+        71
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 74,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 78,
+      "span": [
+        78,
+        83
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 87,
+      "span": [
+        87,
+        100
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 97,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 99,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 117,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 121,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 122,
+      "span": [
+        122,
+        136
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 140,
+      "span": [
+        140,
+        157
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 145,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 158,
+      "span": [
+        158,
+        171
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 168,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 170,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 182,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 187,
+      "span": [
+        187,
+        194
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 192,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 201,
+      "span": [
+        201,
+        205
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 212,
+      "span": [
+        212,
+        216
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 216,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 223,
+      "span": [
+        223,
+        227
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 234,
+      "span": [
+        234,
+        237
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 240,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 244,
+      "span": [
+        244,
+        248
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_test__parity__unit-evidence__follow-d5b.json",
+      "anchor": 252,
+      "span": [
+        252,
+        262
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 1,
+      "span": [
+        1,
+        307
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 2,
+      "span": [
+        2,
+        306
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 3,
+      "span": [
+        3,
+        103
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 4,
+      "span": [
+        4,
+        6
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 7,
+      "span": [
+        7,
+        38
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 38,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 39,
+      "span": [
+        39,
+        66
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 67,
+      "span": [
+        67,
+        102
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 104,
+      "span": [
+        104,
+        204
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 105,
+      "span": [
+        105,
+        107
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 106,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 108,
+      "span": [
+        108,
+        139
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 123,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 139,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 140,
+      "span": [
+        140,
+        167
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 157,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 168,
+      "span": [
+        168,
+        203
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 174,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 190,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 205,
+      "span": [
+        205,
+        305
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 206,
+      "span": [
+        206,
+        208
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 208,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 209,
+      "span": [
+        209,
+        240
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 225,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 241,
+      "span": [
+        241,
+        268
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 242,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 258,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 269,
+      "span": [
+        269,
+        304
+      ]
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 275,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/json/pig_durable__core__contracttest__counts__budget.json",
+      "anchor": 291,
+      "refused_kind": "single_line"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import (
 	"math"
 	"slices"
 	"strings"
+	"time"
 
 	fe "github.com/MichaelKinsy/PiG/extensions/sdk/frontend"
 	"github.com/stencil-hq/tern-sdk/go/tern"
@@ -36,27 +37,30 @@ type entry struct {
 	// render runs no builder, with the node's handlers. tree reports a
 	// picker view laid out as a tree. unsent reports a fresh view no render
 	// took yet, which a change builds again whole.
-	view     tern.Node
-	handlers tern.Handlers
-	tree     bool
-	unsent   bool
-	// raw are the raw props last queued on the rendered node.
-	raw rawProps
-	// A sheet's state: the picker's catalog, and the prefs row whose
-	// choice menu is open, or "".
-	catalog pickerCatalog
-	editing string
+	view           tern.Node
+	ompDockWidgets *ompDockWidgets
+	handlers       tern.Handlers
+	tree           bool
+	unsent         bool
+	raw            rawProps
+	// startedAt is when a dock working indicator started (ompRoles elapsed timer).
+	startedAt time.Time
+	// A sheet's state: the picker's catalog, omp model picker state, and the
+	// prefs row whose choice menu is open, or "".
+	catalog  pickerCatalog
+	ompModel *ompModelPickerState
+	editing  string
 }
 
 // rawProps are the props of a dock node sent as raw ops.
 type rawProps struct {
 	// text is the editor's, the dock lines' or a spinnerless indicator's
-	// text, and cursor the editor's cursor.
+	// text, cursor the editor's cursor, and ghost the editor's inline ghost.
 	text   string
 	cursor int
+	ghost  string
 	// hot are the dock lines' or the spinner's other props.
-	hot hot
-	// A picker's rows and query.
+	hot             hot
 	items           []any
 	order, current  []string
 	selected, query string
@@ -136,6 +140,15 @@ func (s *session) applyDock(op fe.Op) {
 			s.dirty = true
 			s.dockNodeChanged(e, e.node, nil)
 			s.dropViewRules(e.tid)
+			if s.ompRoles {
+				if e.id == "dock" {
+					s.setOmpPredictions(nil)
+				}
+				if e.id == "dock.below" && s.autocomplete != nil {
+					s.autocomplete = nil
+					s.syncOmpEditorGhost()
+				}
+			}
 		}
 		return
 	}
@@ -180,15 +193,57 @@ func kindOf(node fe.Node) int {
 // node removed or replaced by another kind are dropped.
 func (s *session) dockNodeChanged(e *entry, prev, next fe.Node) {
 	_, wasEditor := prev.(fe.Editor)
+	editorToggled := false
 	if editor, ok := next.(fe.Editor); ok {
+		if !s.hasEditor {
+			editorToggled = true
+		}
 		s.editor, s.hasEditor = editor, true
+		if s.ompRoles && editor.Text != s.insertedPrediction {
+			s.insertedPrediction = ""
+		}
 	} else if wasEditor {
 		s.editor, s.hasEditor = fe.Editor{}, false
+		editorToggled = true
+		if s.ompRoles && s.autocomplete != nil {
+			s.autocomplete = nil
+			s.dirty = true
+		}
+	}
+	if sel, isSel := next.(fe.Selector); isSel && kindOf(prev) != kindOf(next) && s.ompRoles && ompIsModelPicker(sel, e.tree) && s.lastEditorView != nil {
+		// Clear any slash-command draft (e.g. "/model") from the retained
+		// composer backdrop so it shows clean placeholder behind the picker.
+		s.queue(tern.OpText("dock.editor.editor.line.input", "replace", ""))
+	}
+	if editorToggled && s.ompRoles {
+		s.syncOmpFooterMount()
+	}
+	_, wasFooter := prev.(fe.Footer)
+	footerChanged := false
+	if footer, ok := next.(fe.Footer); ok {
+		if !s.hasFooter || !sameFooterComposerData(s.footer, footer) {
+			footerChanged = true
+		}
+		s.footer, s.hasFooter = footer, true
+	} else if wasFooter {
+		s.footer, s.hasFooter = fe.Footer{}, false
+		footerChanged = true
 	}
 	_, wasWorking := prev.(fe.Working)
 	_, isWorking := next.(fe.Working)
 	if isWorking != wasWorking {
 		s.setProgress(isWorking)
+		if isWorking {
+			e.startedAt = s.now()
+		} else {
+			e.startedAt = time.Time{}
+		}
+		if s.ompRoles {
+			s.rebuildOmpEditor()
+		}
+	}
+	if footerChanged && s.ompRoles {
+		s.rebuildOmpEditor()
 	}
 	if kindOf(prev) == kindOf(next) {
 		return
@@ -197,11 +252,26 @@ func (s *session) dockNodeChanged(e *entry, prev, next fe.Node) {
 		s.dropPending(e.tid)
 	}
 	if next != nil {
-		e.catalog, e.editing = pickerCatalog{}, ""
+		e.catalog, e.ompModel, e.editing = pickerCatalog{}, nil, ""
 		e.handlers = s.handlers(e, next)
 		e.tid = "dock." + e.id
+		if s.ompRoles {
+			switch next.(type) {
+			case fe.Working:
+				e.tid = "dock.activity.status.working"
+			case fe.Editor:
+				e.tid = "dock.editor.editor"
+			case fe.Lines:
+				if e.id == "dock.below" {
+					e.tid = "dock.below.dock.below"
+				}
+			}
+		}
 		if isLayerNode(next) {
 			e.tid = "layer." + e.id
+			if s.agentHubUI != nil && s.agentHubUI.open {
+				s.closeAgentHubLocked(false)
+			}
 		}
 	}
 }
@@ -209,14 +279,17 @@ func (s *session) dockNodeChanged(e *entry, prev, next fe.Node) {
 // restructured reports whether next needs another view than prev, the node
 // e's view was last made for: another kind, or other fixed props. rows are
 // a selector's rows.
-func restructured(e *entry, prev, next fe.Node, rows pickerRows) bool {
+func (s *session) restructured(e *entry, prev, next fe.Node, rows pickerRows) bool {
 	switch n := next.(type) {
 	case fe.Editor:
 		p, ok := prev.(fe.Editor)
 		return !ok || p.Placeholder != n.Placeholder || p.Sendable != n.Sendable
 	case fe.Working:
 		p, ok := prev.(fe.Working)
-		return !ok || spinnerless(p) != spinnerless(n)
+		if !ok || spinnerless(p) != spinnerless(n) {
+			return true
+		}
+		return s.ompRoles && (p.Kind == fe.WorkingCompaction) != (n.Kind == fe.WorkingCompaction)
 	case fe.Footer:
 		p, ok := prev.(fe.Footer)
 		return !ok || len(p.ExtensionStatuses) != len(n.ExtensionStatuses)
@@ -255,10 +328,59 @@ func (s *session) rebuild(e *entry, prev fe.Node, restructure bool) {
 		rows = rowsOf(sel, &e.raw)
 	}
 	fresh := false
-	if e.unsent || restructure || restructured(e, prev, e.node, rows) {
+	if e.unsent || restructure || s.restructured(e, prev, e.node, rows) {
 		e.tree = rows.tree
+		if _, isFooter := e.node.(fe.Footer); isFooter && s.ompFooterSuppressed() {
+			// Under ompRoles, the composer carries the footer's facts, so
+			// dock.footer is not mounted while the editor is shown.
+			s.dropPending(e.tid)
+			e.view, e.unsent, e.raw = tern.Node{}, true, rawProps{}
+			s.dirty = true
+			ft := e.node.(fe.Footer)
+			s.reportCwd(ft.Cwd)
+			s.reportOmpTabTitle(ft.SessionName)
+			return
+		}
+		if s.ompRoles && e.id == "dock" {
+			if lines, ok := e.node.(fe.Lines); ok && validView(lines.View, lines.Lines) {
+				if widgets, matched := s.ompDockWidgetParts(e.tid, lines.View, lines.Lines); matched {
+					e.ompDockWidgets = &widgets
+					e.view, e.unsent = tern.Node{}, false
+					s.dirty = true
+					s.setOmpPredictions(widgets.predictions)
+					return
+				}
+			}
+			s.setOmpPredictions(nil)
+		}
+		if s.ompRoles && e.id == "dock.below" {
+			if lines, ok := e.node.(fe.Lines); ok && !validView(lines.View, lines.Lines) {
+				if ac := parseOmpAutocomplete(s.editor, lines.Lines); ac != nil {
+					if !ac.equal(s.autocomplete) {
+						s.autocomplete = ac
+						s.dirty = true
+					}
+					s.dropPending(e.tid)
+					e.view, e.unsent = tern.Node{}, false
+					s.syncOmpEditorGhost()
+					return
+				}
+			}
+			if s.autocomplete != nil {
+				s.autocomplete = nil
+				s.dirty = true
+				s.syncOmpEditorGhost()
+			}
+		}
+		e.ompDockWidgets = nil
 		view := buildNode(s.element(e, true))
-		view.Handlers = e.handlers
+		if _, isEditor := e.node.(fe.Editor); !isEditor || !s.ompRoles {
+			view.Handlers = e.handlers
+		}
+		if _, isEditor := e.node.(fe.Editor); isEditor && s.ompRoles {
+			cp := view
+			s.lastEditorView = &cp
+		}
 		fresh = e.unsent || e.view.Kind != view.Kind
 		if _, ok := e.node.(fe.Footer); ok && !fresh {
 			// The segments kept show their raw props; their views stay
@@ -276,7 +398,7 @@ func (s *session) rebuild(e *entry, prev fe.Node, restructure bool) {
 	case fe.Editor:
 		s.queueEditor(e, n, fresh)
 		if fresh {
-			s.queue(tern.OpFocus(e.tid))
+			s.queue(tern.OpFocus(s.editorInputID(e)))
 		}
 	case fe.Working:
 		s.queueWorking(e, n, fresh)
@@ -284,6 +406,27 @@ func (s *session) rebuild(e *entry, prev fe.Node, restructure bool) {
 		p, _ := prev.(fe.Footer)
 		s.queueFooter(e, p, n, fresh)
 	case fe.Lines:
+		if s.ompRoles && e.id == "dock.below" && !validView(n.View, n.Lines) {
+			ac := parseOmpAutocomplete(s.editor, n.Lines)
+			if ac != nil {
+				if !ac.equal(s.autocomplete) {
+					s.autocomplete = ac
+					s.dirty = true
+				}
+				s.dropPending(e.tid)
+				e.view, e.unsent = tern.Node{}, false
+				s.syncOmpEditorGhost()
+				return
+			}
+			if s.autocomplete != nil {
+				s.autocomplete = nil
+				s.dirty = true
+				e.unsent = true
+				s.rebuild(e, prev, true)
+				s.syncOmpEditorGhost()
+				return
+			}
+		}
 		s.queueLines(e, prev, n, fresh)
 	case fe.Selector:
 		s.queuePicker(e, sel, rows, fresh)
@@ -350,6 +493,9 @@ func (s *session) applyOverlay(op fe.Op) {
 // view is the surface's view: main is an empty list, so the reconciler adds
 // the region root and never touches the transcript's raw nodes under it.
 func (s *session) view() tern.View {
+	if s.ompRoles {
+		return s.ompView()
+	}
 	dock := make(tern.Nodes, 0, len(s.dock))
 	layer := make(tern.Nodes, 0, len(s.overlays)+1)
 	for _, e := range s.overlays {
@@ -358,10 +504,148 @@ func (s *session) view() tern.View {
 	for _, e := range s.dock {
 		if isLayerNode(e.node) {
 			layer = append(layer, e.view)
-		} else {
-			dock = append(dock, e.view)
+			continue
+		}
+		dock = append(dock, e.view)
+	}
+	return tern.View{Main: tern.Nodes{}, Dock: dock, Layer: layer}
+}
+
+// ompView lays out RegionDock in omp's fixed `nativeDock` slot order
+// (upstream: packages/coding-agent/src/modes/interactive-mode.ts:2820-2835,
+// 1772-1805):
+//
+//	btw, omfg, cleanse, errorBanner, modelCycle, deferred, above,
+//	activity (col[omp.hud.status](row[omp.working]) + checklist[omp.hud.todo]),
+//	pending, editor, below.
+//
+// Each slot is an anonymous `col` container (empty when unused, rendered as
+// `sf-void` by Tern so it adds zero height), except `activity` which becomes
+// `row[omp.hud.activity]` whenever working or todo is present (and an empty
+// `col` otherwise, matching `EMPTY_HUD`).
+func (s *session) ompView() tern.View {
+	layer := make(tern.Nodes, 0, len(s.overlays)+3)
+	for _, e := range s.overlays {
+		layer = append(layer, e.view)
+	}
+	if s.hasEditor && s.autocomplete != nil {
+		layer = append(layer, s.ompAutocompleteOverlay(s.autocomplete))
+	}
+	if s.agentHubUI != nil && s.agentHubUI.open {
+		if hubNode, ok := s.ompAgentHubLayerNode(); ok {
+			layer = append(layer, hubNode)
 		}
 	}
+	var (
+		errorBannerChildren []tern.Element
+		aboveChildren       []tern.Element
+		workingNode         *tern.Node
+		todoNode            *tern.Node
+		editorChildren      []tern.Element
+		belowChildren       []tern.Element
+	)
+	for _, e := range s.dock {
+		if _, isFooter := e.node.(fe.Footer); isFooter && s.ompFooterSuppressed() {
+			continue
+		}
+		if isLayerNode(e.node) {
+			layer = append(layer, e.view)
+			continue
+		}
+		if e.id == "dock" && e.ompDockWidgets != nil {
+			if e.ompDockWidgets.errorBanner != nil {
+				errorBannerChildren = append(errorBannerChildren, *e.ompDockWidgets.errorBanner)
+			}
+			for _, n := range e.ompDockWidgets.other {
+				aboveChildren = append(aboveChildren, n)
+			}
+			if e.ompDockWidgets.todo != nil {
+				todoNode = e.ompDockWidgets.todo
+			}
+			continue
+		}
+		switch e.node.(type) {
+		case fe.Working:
+			n := e.view
+			workingNode = &n
+		case fe.Editor:
+			editorChildren = append(editorChildren, e.view)
+		case fe.Lines:
+			if e.id == "dock.below" {
+				if e.view.Kind != "" && s.autocomplete == nil {
+					belowChildren = append(belowChildren, e.view)
+				}
+			} else if !e.raw.hot.hidden && e.view.Kind != "" {
+				aboveChildren = append(aboveChildren, e.view)
+			}
+		default:
+			if e.view.Kind != "" {
+				aboveChildren = append(aboveChildren, e.view)
+			}
+		}
+	}
+	// When PiG replaces the dock editor with a composer-anchored model picker,
+	// keep the last rendered composer visible in the editor slot (non-interactive
+	// behind the modal picker) so Tern can anchor `.sf-picker.at-composer`
+	// directly above `[data-role='omp.editor']` just like omp.
+	if len(editorChildren) == 0 && s.lastEditorView != nil {
+		for _, e := range s.dock {
+			if sel, ok := e.node.(fe.Selector); ok && ompIsModelPicker(sel, e.tree) {
+				editorChildren = append(editorChildren, *s.lastEditorView)
+				break
+			}
+		}
+	}
+
+	slot := func(key string, children ...tern.Element) tern.Node {
+		return tern.Node{Kind: tern.KindCol, Props: map[string]any{"key": key}, Children: children}
+	}
+
+	var activitySlot tern.Node
+	if workingNode != nil || todoNode != nil {
+		parts := make([]tern.Element, 0, 2)
+		if workingNode != nil {
+			parts = append(parts, tern.Node{
+				Kind:     tern.KindCol,
+				Props:    map[string]any{"key": "status", "role": "omp.hud.status"},
+				Children: []tern.Element{*workingNode},
+			})
+		}
+		if todoNode != nil {
+			parts = append(parts, *todoNode)
+		}
+		activitySlot = tern.Node{
+			Kind: tern.KindRow,
+			Props: map[string]any{
+				"key":   "activity",
+				"role":  "omp.hud.activity",
+				"align": "center",
+				"gap":   "sm",
+			},
+			Children: parts,
+		}
+	} else {
+		activitySlot = slot("activity")
+	}
+
+	dock := make(tern.Nodes, 0, 13)
+	if hudNode, ok := s.ompHudPillsNode(); ok {
+		dock = append(dock, hudNode)
+	}
+	dock = append(dock,
+		slot("btw"),
+		slot("omfg"),
+		slot("cleanse"),
+		slot("errorBanner", errorBannerChildren...),
+		slot("modelCycle"),
+		slot("deferred"),
+		slot("progressHud", s.ompJudgeHudNode(), s.ompDownloadsHudNode(), s.ompCompactionHudNode()),
+		slot("above", aboveChildren...),
+		activitySlot,
+		slot("pending"),
+		slot("editor", editorChildren...),
+		slot("below", belowChildren...),
+	)
 	return tern.View{Main: tern.Nodes{}, Dock: dock, Layer: layer}
 }
 
@@ -386,17 +670,29 @@ func (s *session) element(e *entry, clicks bool) tern.Element {
 	}
 	switch n := e.node.(type) {
 	case fe.Editor:
+		if s.ompRoles {
+			return s.ompComposerElement(e, n, clicks)
+		}
 		return ui.Editor{Common: ui.Common{Key: e.id}, Field: ui.Field{Placeholder: ui.T(n.Placeholder), Sendable: n.Sendable}}
 	case fe.Working:
 		if s.ompRoles {
-			return ompWorkingElement(e.id, n)
+			return s.ompWorkingElement(e.id, n, e.startedAt)
 		}
 		return workingElement(e.id, n)
 	case fe.Footer:
-		return footerElement(e.id, n, s.ompRoles, s.runCommand)
+		if s.ompRoles {
+			return ompFooterElement(e.id, n, s.runCommand)
+		}
+		return footerElement(e.id, n, false, s.runCommand)
 	case fe.Selector:
+		if s.ompRoles {
+			return s.ompPickerElement(e.id, n, e.tree)
+		}
 		return pickerElement(e.id, n, e.tree)
 	case fe.Settings:
+		if s.ompRoles {
+			return ompPrefsElement(e.id, n, e.editing)
+		}
 		return prefsElement(e.id, n, e.editing)
 	case fe.Overlay:
 		var body tern.Element
@@ -419,11 +715,21 @@ func (s *session) element(e *entry, clicks bool) tern.Element {
 
 // runCommand runs one of PiG's slash commands from a click, through the
 // path Enter takes (Env.Send), as if typed into an empty editor; the draft
-// stays. It runs only while the editor takes a prompt and PiG is idle: a
-// command sent while PiG works would steer the run as a prompt.
+// stays. While PiG works, only safe slash commands are allowed under ompRoles:
+// PiG builtins (/model, /thinking) always, plus /context and /usage when
+// running as a derived Piglet (ompDerived / Options.Omp).
 func (s *session) runCommand(command string) {
 	s.mu.Lock()
-	ok := s.sendable() && !s.progress && !s.closed && !s.fellBack
+	allowWhileWorking := false
+	if s.ompRoles {
+		switch command {
+		case "/model", "/thinking":
+			allowWhileWorking = true
+		case "/context", "/usage", "/jobs":
+			allowWhileWorking = s.ompDerived
+		}
+	}
+	ok := s.sendable() && (!s.progress || allowWhileWorking) && !s.closed && !s.fellBack
 	s.mu.Unlock()
 	if ok && s.env.Send != nil {
 		s.env.Send(command)
@@ -466,15 +772,31 @@ func (s *session) queueLines(e *entry, prev fe.Node, lines fe.Lines, fresh bool)
 // queueEditor queues the editor's text and cursor. PiG's editor owns them:
 // keys still reach PiG on the pty and come back as new text and cursor.
 func (s *session) queueEditor(e *entry, editor fe.Editor, fresh bool) {
+	tid := s.editorInputID(e)
 	if fresh {
 		if editor.Text != "" {
-			s.queue(tern.OpText(e.tid, "replace", editor.Text))
+			s.queue(tern.OpText(tid, "replace", editor.Text))
 		}
 	} else {
-		s.patchText(e.tid, e.raw.text, editor.Text)
+		s.patchText(tid, e.raw.text, editor.Text)
 	}
 	if fresh || editor.Cursor != e.raw.cursor {
-		s.queue(tern.OpSet(e.tid, map[string]any{"cursor": editor.Cursor}))
+		s.queue(tern.OpSet(tid, map[string]any{"cursor": editor.Cursor}))
+	}
+	if s.ompRoles {
+		nextGhost := s.ompPredictionSuffix(editor)
+		if fresh {
+			// Fresh view already carries Field.Ghost; record it so subsequent
+			// updates only send a raw op when it changes.
+			e.raw.ghost = nextGhost
+		} else if nextGhost != e.raw.ghost {
+			if nextGhost == "" {
+				s.queue(tern.OpSet(tid, map[string]any{"ghost": nil}))
+			} else {
+				s.queue(tern.OpSet(tid, map[string]any{"ghost": nextGhost}))
+			}
+			e.raw.ghost = nextGhost
+		}
 	}
 	e.raw.text, e.raw.cursor = editor.Text, editor.Cursor
 }
@@ -506,7 +828,7 @@ func (s *session) editorHandlers(e *entry) tern.Handlers {
 		OnFocus: func(*tern.Focus) {
 			s.mu.Lock()
 			defer s.mu.Unlock()
-			s.queue(tern.OpFocus(e.tid))
+			s.queue(tern.OpFocus(s.editorInputID(e)))
 			_ = s.flushLocked()
 		},
 	}

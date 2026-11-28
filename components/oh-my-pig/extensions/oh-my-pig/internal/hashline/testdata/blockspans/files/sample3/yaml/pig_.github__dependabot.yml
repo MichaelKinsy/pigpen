@@ -1,0 +1,140 @@
+# SPDX-License-Identifier: MIT
+
+# One grouped pull request per ecosystem per month. Security updates are not
+# affected: GitHub opens them as soon as an advisory applies. The cooldown
+# waits for new releases to settle before proposing them.
+#
+# The parity oracle (extensions/sdk-ts, the ci-parity image, and the interface
+# extractor) and test fixtures take security updates only: changing an oracle
+# dependency changes what PiG is compared against and needs a parity rebaseline.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directories:
+      - /
+      # extensions/sdk has no dependencies; Dependabot would only rewrite its
+      # go directive, which breaks modules that declare go 1.26.
+      - /piglets/porter/extensions/pig-porter
+      - /piglets/standard
+      - /examples/extensions/go-factory
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+    groups:
+      go:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directories:
+      - /automation/images/npm-runtime
+    schedule:
+      interval: monthly
+    ignore:
+      # npm 12 in this image is built on undici 6; take undici majors with npm.
+      - dependency-name: undici
+        update-types: ["version-update:semver-major"]
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+    groups:
+      npm:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: pip
+    directory: /extensions/sdk-py
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+    groups:
+      python:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: pip
+    directory: /test/term-engines/pyte
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+    groups:
+      python:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: cargo
+    directories:
+      - /extensions/sdk-rs
+      - /examples/extensions/rust-factory
+      - /test/term-engines/alacritty
+      - /test/term-engines/wezterm
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+    groups:
+      rust:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+
+  # The evaluator images' base-image digests (internal/evals/docker/Dockerfile). The Go release in the golang tag is the one
+  # .go-version pin (make compliance rejects any other), so version bumps of golang are ignored here and only a rebuilt tag's
+  # new digest is proposed; the Go pin moves with .go-version.
+  - package-ecosystem: docker
+    directory: /internal/evals/docker
+    schedule:
+      interval: monthly
+    ignore:
+      - dependency-name: golang
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+    groups:
+      docker:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 3
+    groups:
+      actions:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+
+  # Security updates only (no version-update pull requests).
+  - package-ecosystem: npm
+    directories:
+      - /extensions/sdk-ts
+      - /automation/images/ci-parity
+      - /test/parity/interface-extractor
+      - /test/term-engines/xterm
+      - /automation/ci/npm-toolchain
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 0
+
+  - package-ecosystem: gomod
+    directories:
+      - /coding/cli/testdata/login-preview
+      - /coding/extension/host/subprocess/testdata/sdk-fixture
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 0
+
+  - package-ecosystem: cargo
+    directory: /test/extension-conformance/testdata/rust-sdk-fixture
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 0

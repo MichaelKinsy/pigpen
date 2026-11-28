@@ -1,0 +1,2915 @@
+{
+  "lang": "json",
+  "sample": "sample3",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample3",
+  "total": 457,
+  "omp_resolved": 205,
+  "omp_refused": 252,
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 2*` resolved a single-line block — line 2 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 2`. The nearest enclosing multi-line block begins at line 1 and ends at line 40; use `CUT 1*` to target it.",
+    "unresolved": "line 1: `CUT 12*` could not resolve a syntactic block beginning on line 12 (blank/closer line, or parse error). Use `CUT 12.=M` with explicit lines. The nearest enclosing multi-line block begins at line 5 and ends at line 12; use `CUT 5*` to target it."
+  },
+  "cases": [
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 1,
+      "span": [
+        1,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 2,
+      "refused": "line 1: `CUT 2*` resolved a single-line block — line 2 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 2`. The nearest enclosing multi-line block begins at line 1 and ends at line 40; use `CUT 1*` to target it."
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 5,
+      "span": [
+        5,
+        12
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 12,
+      "refused": "line 1: `CUT 12*` could not resolve a syntactic block beginning on line 12 (blank/closer line, or parse error). Use `CUT 12.=M` with explicit lines. The nearest enclosing multi-line block begins at line 5 and ends at line 12; use `CUT 5*` to target it."
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 15,
+      "span": [
+        15,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 21,
+      "span": [
+        21,
+        23
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 24,
+      "span": [
+        24,
+        26
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 27,
+      "span": [
+        27,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 35,
+      "span": [
+        35,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 36,
+      "span": [
+        36,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 38,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__ahp__package.json",
+      "anchor": 39,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 1,
+      "span": [
+        1,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 6,
+      "span": [
+        6,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 7,
+      "span": [
+        7,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 9,
+      "span": [
+        9,
+        12
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 15,
+      "span": [
+        15,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 17,
+      "span": [
+        17,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 23,
+      "span": [
+        23,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 25,
+      "span": [
+        25,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 28,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 31,
+      "span": [
+        31,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 33,
+      "span": [
+        33,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 36,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 38,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 39,
+      "span": [
+        39,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 41,
+      "span": [
+        41,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 44,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 46,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 47,
+      "span": [
+        47,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 49,
+      "span": [
+        49,
+        52
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 52,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__hyperlink.json",
+      "anchor": 54,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 1,
+      "span": [
+        1,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 2,
+      "span": [
+        2,
+        35
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 3,
+      "span": [
+        3,
+        7
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 8,
+      "span": [
+        8,
+        10
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 11,
+      "span": [
+        11,
+        13
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 14,
+      "span": [
+        14,
+        17
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 20,
+      "span": [
+        20,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 21,
+      "span": [
+        21,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 22,
+      "span": [
+        22,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 25,
+      "span": [
+        25,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 28,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 29,
+      "span": [
+        29,
+        31
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 33,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 36,
+      "span": [
+        36,
+        52
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 37,
+      "span": [
+        37,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 42,
+      "span": [
+        42,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 45,
+      "span": [
+        45,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 48,
+      "span": [
+        48,
+        50
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 52,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 53,
+      "span": [
+        53,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 54,
+      "span": [
+        54,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 58,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 59,
+      "span": [
+        59,
+        61
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 62,
+      "span": [
+        62,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 65,
+      "span": [
+        65,
+        68
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-27-frames.json",
+      "anchor": 68,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 1,
+      "span": [
+        1,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 2,
+      "span": [
+        2,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/omp_tsconfig.base.json",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 1,
+      "span": [
+        1,
+        100
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 2,
+      "span": [
+        2,
+        43
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 3,
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 6,
+      "span": [
+        6,
+        8
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 9,
+      "span": [
+        9,
+        11
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 17,
+      "span": [
+        17,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 19,
+      "span": [
+        19,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 22,
+      "span": [
+        22,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 30,
+      "span": [
+        30,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 31,
+      "span": [
+        31,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 34,
+      "span": [
+        34,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 37,
+      "span": [
+        37,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 45,
+      "span": [
+        45,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 48,
+      "span": [
+        48,
+        50
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 54,
+      "span": [
+        54,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 58,
+      "span": [
+        58,
+        83
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 60,
+      "span": [
+        60,
+        62
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 63,
+      "span": [
+        63,
+        65
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 67,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 71,
+      "span": [
+        71,
+        82
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 72,
+      "span": [
+        72,
+        74
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 76,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 78,
+      "span": [
+        78,
+        80
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 84,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 85,
+      "span": [
+        85,
+        99
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 89,
+      "span": [
+        89,
+        91
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 92,
+      "span": [
+        92,
+        94
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__batch-90-tui-keybinding-types.json",
+      "anchor": 94,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 1,
+      "span": [
+        1,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 5,
+      "span": [
+        5,
+        11
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 12,
+      "span": [
+        12,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_automation__images__ci-parity__package.json",
+      "anchor": 15,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1,
+      "span": [
+        1,
+        1540
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 62,
+      "span": [
+        62,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 127,
+      "span": [
+        127,
+        132
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 141,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 188,
+      "span": [
+        188,
+        191
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 243,
+      "span": [
+        243,
+        246
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 281,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 306,
+      "span": [
+        306,
+        311
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 371,
+      "span": [
+        371,
+        376
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 421,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 436,
+      "span": [
+        436,
+        441
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 501,
+      "span": [
+        501,
+        506
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 561,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 566,
+      "span": [
+        566,
+        571
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 631,
+      "span": [
+        631,
+        636
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 696,
+      "span": [
+        696,
+        701
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 702,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 769,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 834,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 841,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 899,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 964,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 981,
+      "span": [
+        981,
+        989
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1029,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1094,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1121,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1159,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1224,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1261,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1289,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1354,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1401,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1419,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__backgroundAnsi.json",
+      "anchor": 1482,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 1,
+      "span": [
+        1,
+        76
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 2,
+      "span": [
+        2,
+        10
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 5,
+      "span": [
+        5,
+        7
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 11,
+      "span": [
+        11,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 14,
+      "span": [
+        14,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 20,
+      "span": [
+        20,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 23,
+      "span": [
+        23,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 29,
+      "span": [
+        29,
+        37
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 32,
+      "span": [
+        32,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 38,
+      "span": [
+        38,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 41,
+      "span": [
+        41,
+        43
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 46,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 47,
+      "span": [
+        47,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 50,
+      "span": [
+        50,
+        52
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 52,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 56,
+      "span": [
+        56,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 59,
+      "span": [
+        59,
+        61
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 65,
+      "span": [
+        65,
+        75
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 68,
+      "span": [
+        68,
+        72
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__codex-tests-modes.json",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1,
+      "span": [
+        1,
+        1902
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 74,
+      "span": [
+        74,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 154,
+      "span": [
+        154,
+        159
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 174,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 234,
+      "span": [
+        234,
+        239
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 310,
+      "span": [
+        310,
+        313
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 347,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 380,
+      "span": [
+        380,
+        383
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 450,
+      "span": [
+        450,
+        453
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 520,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 528,
+      "span": [
+        528,
+        533
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 608,
+      "span": [
+        608,
+        613
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 688,
+      "span": [
+        688,
+        693
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 693,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 768,
+      "span": [
+        768,
+        773
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 848,
+      "span": [
+        848,
+        853
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 866,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 935,
+      "span": [
+        935,
+        939
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1015,
+      "span": [
+        1015,
+        1019
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1039,
+      "span": [
+        1039,
+        1046
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1095,
+      "span": [
+        1095,
+        1099
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1175,
+      "span": [
+        1175,
+        1179
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1212,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1255,
+      "span": [
+        1255,
+        1259
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1335,
+      "span": [
+        1335,
+        1339
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1384,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1415,
+      "span": [
+        1415,
+        1419
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1495,
+      "span": [
+        1495,
+        1499
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1557,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1575,
+      "span": [
+        1575,
+        1579
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1655,
+      "span": [
+        1655,
+        1659
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1730,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1735,
+      "span": [
+        1735,
+        1739
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__sdk-vectors__pi-tui__colorToOkhsl.json",
+      "anchor": 1815,
+      "span": [
+        1815,
+        1819
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 1,
+      "span": [
+        1,
+        18
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 7,
+      "span": [
+        7,
+        17
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 8,
+      "span": [
+        8,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pigpen_piglets__oh-my-pig__provenance.json",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 1,
+      "span": [
+        1,
+        65
+      ]
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 10,
+      "span": [
+        10,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 15,
+      "span": [
+        15,
+        17
+      ]
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 18,
+      "span": [
+        18,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 25,
+      "span": [
+        25,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 38,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 39,
+      "span": [
+        39,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 48,
+      "span": [
+        48,
+        52
+      ]
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 52,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 53,
+      "span": [
+        53,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 55,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 56,
+      "span": [
+        56,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 61,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/omp_packages__collab-web__package.json",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 1,
+      "span": [
+        1,
+        18
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 2,
+      "span": [
+        2,
+        17
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 3,
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 6,
+      "span": [
+        6,
+        8
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 8,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 9,
+      "span": [
+        9,
+        11
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 12,
+      "span": [
+        12,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 15,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-coding-agent-12-keybindings-manager.json",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 1,
+      "span": [
+        1,
+        133
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 2,
+      "span": [
+        2,
+        60
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 3,
+      "span": [
+        3,
+        6
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 7,
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 13,
+      "span": [
+        13,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 19,
+      "span": [
+        19,
+        59
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 21,
+      "span": [
+        21,
+        23
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 28,
+      "span": [
+        28,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 33,
+      "span": [
+        33,
+        45
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 37,
+      "span": [
+        37,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 46,
+      "span": [
+        46,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 50,
+      "span": [
+        50,
+        53
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 54,
+      "span": [
+        54,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 62,
+      "span": [
+        62,
+        65
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 69,
+      "span": [
+        69,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 72,
+      "span": [
+        72,
+        75
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 75,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 79,
+      "span": [
+        79,
+        91
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 83,
+      "span": [
+        83,
+        86
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 87,
+      "span": [
+        87,
+        89
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 92,
+      "span": [
+        92,
+        104
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 93,
+      "span": [
+        93,
+        95
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 99,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 100,
+      "span": [
+        100,
+        102
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 106,
+      "span": [
+        106,
+        108
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 109,
+      "span": [
+        109,
+        112
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 112,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 118,
+      "span": [
+        118,
+        130
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 122,
+      "span": [
+        122,
+        125
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__interface-closure__specs__ledger-ai-15-auth-refresh-options.json",
+      "anchor": 124,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 1,
+      "span": [
+        1,
+        103
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 2,
+      "span": [
+        2,
+        59
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 3,
+      "span": [
+        3,
+        57
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 4,
+      "span": [
+        4,
+        50
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 5,
+      "span": [
+        5,
+        8
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 9,
+      "span": [
+        9,
+        12
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 13,
+      "span": [
+        13,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 17,
+      "span": [
+        17,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 22,
+      "span": [
+        22,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 30,
+      "span": [
+        30,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 34,
+      "span": [
+        34,
+        37
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 38,
+      "span": [
+        38,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 42,
+      "span": [
+        42,
+        45
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 46,
+      "span": [
+        46,
+        49
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 49,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 51,
+      "span": [
+        51,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 60,
+      "span": [
+        60,
+        82
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 61,
+      "span": [
+        61,
+        80
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 63,
+      "span": [
+        63,
+        66
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 67,
+      "span": [
+        67,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 71,
+      "span": [
+        71,
+        74
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 76,
+      "span": [
+        76,
+        78
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 78,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 84,
+      "span": [
+        84,
+        100
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 85,
+      "span": [
+        85,
+        94
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 86,
+      "span": [
+        86,
+        89
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 90,
+      "span": [
+        90,
+        93
+      ]
+    },
+    {
+      "file": "files/sample3/json/pigpen_components__tintinweb-subagents__extensions__tintinweb-subagents__tool_specs.json",
+      "anchor": 96,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 1,
+      "span": [
+        1,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 2,
+      "span": [
+        2,
+        10
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 5,
+      "span": [
+        5,
+        7
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 11,
+      "span": [
+        11,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 14,
+      "span": [
+        14,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 20,
+      "span": [
+        20,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 23,
+      "span": [
+        23,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 25,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 28,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 29,
+      "span": [
+        29,
+        37
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 32,
+      "span": [
+        32,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/json/pig_test__parity__unit-evidence__port-110-tui-render-proof-11.json",
+      "anchor": 37,
+      "refused_kind": "unresolved"
+    }
+  ]
+}

@@ -1,0 +1,1176 @@
+{
+ "read": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "path": {
+     "type": "string",
+     "description": "Local path, internal URI, or URL; selectors inline."
+    }
+   },
+   "required": [
+    "path"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "security_scan": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "action": {
+     "enum": [
+      "preflight",
+      "start",
+      "status",
+      "cancel",
+      "validate",
+      "cloud_scans",
+      "cloud_start",
+      "cloud_status",
+      "cloud_pull"
+     ],
+     "type": "string"
+    },
+    "plan_id": {
+     "type": "string"
+    },
+    "operation_id": {
+     "type": "string"
+    },
+    "target_kind": {
+     "enum": [
+      "repository",
+      "scoped_path",
+      "ref_diff",
+      "working_tree"
+     ],
+     "type": "string"
+    },
+    "include_paths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "exclude_paths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "base_revision": {
+     "type": "string"
+    },
+    "head_revision": {
+     "type": "string"
+    },
+    "knowledge_base_paths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "output_root": {
+     "type": "string"
+    },
+    "archive_existing": {
+     "type": "boolean"
+    },
+    "credential_id": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "scan_id": {
+     "type": "string"
+    },
+    "finding_id": {
+     "type": "string"
+    },
+    "validation_status": {
+     "enum": [
+      "unvalidated",
+      "validated",
+      "rejected",
+      "partial",
+      "error"
+     ],
+     "type": "string"
+    },
+    "validation_summary": {
+     "type": "string"
+    },
+    "validation_evidence": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "label": {
+        "type": "string",
+        "minLength": 1
+       },
+       "explanation": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "label",
+       "explanation"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "cloud_configuration_id": {
+     "type": "string"
+    },
+    "repository_id": {
+     "type": "string"
+    },
+    "repository_url": {
+     "type": "string"
+    },
+    "environment_id": {
+     "type": "string"
+    },
+    "lookback_days": {
+     "anyOf": [
+      {
+       "type": "integer",
+       "minimum": 1
+      },
+      {
+       "const": "all"
+      }
+     ]
+    }
+   },
+   "required": [
+    "action"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "bash": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "command": {
+     "type": "string"
+    },
+    "timeout": {
+     "type": "number",
+     "description": "timeout in seconds; 0 disables the command deadline; nonzero values are clamped to 1-3600"
+    },
+    "cwd": {
+     "type": "string"
+    },
+    "pty": {
+     "type": "boolean"
+    },
+    "async": {
+     "type": "boolean"
+    },
+    "notify": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string",
+     "pattern": "^(?:\\s*|[A-Za-z0-9][A-Za-z0-9._-]{0,47})$",
+     "description": "starts a long-lived supervised service under this name; omit for finite commands, async jobs included. 1-48 of [A-Za-z0-9._-]"
+    },
+    "ready": {
+     "type": "object",
+     "properties": {
+      "log": {
+       "type": "string",
+       "description": "regex an output line matches once the service is ready"
+      },
+      "port": {
+       "type": "number",
+       "description": "TCP port the service accepts connections on once ready"
+      },
+      "host": {
+       "type": "string",
+       "description": "host for the port probe; default localhost (127.0.0.1 and ::1)"
+      },
+      "timeout": {
+       "type": "number",
+       "description": "seconds to wait for readiness; default 30"
+      }
+     },
+     "description": "service readiness; needs log or port",
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "command"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "edit": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "input": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "input"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "ast_grep": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "pat": {
+     "type": "string",
+     "description": "ast pattern"
+    },
+    "path": {
+     "type": "string",
+     "description": "file, directory, glob, or internal URL to search; pass several as a semicolon-delimited list (\"src; tests\"). Omitted -> searches the workspace root (\".\")"
+    },
+    "lang": {
+     "type": "string",
+     "description": "language override, e.g. cpp for ambiguous .h files"
+    },
+    "skip": {
+     "type": "number",
+     "description": "matches to skip"
+    }
+   },
+   "required": [
+    "pat"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "ast_edit": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "ops": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "pat": {
+        "type": "string",
+        "description": "ast pattern"
+       },
+       "out": {
+        "type": "string",
+        "description": "replacement template"
+       }
+      },
+      "required": [
+       "pat",
+       "out"
+      ],
+      "additionalProperties": false
+     },
+     "minItems": 1,
+     "description": "rewrite ops"
+    },
+    "paths": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "description": "file, directory, glob, or internal URL to rewrite"
+     },
+     "minItems": 1,
+     "description": "files, directories, globs, or internal URLs to rewrite"
+    }
+   },
+   "required": [
+    "ops",
+    "paths"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "ask": {
+  "lenient": true,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "html": {
+     "type": "string",
+     "description": "one HTML <form>"
+    }
+   },
+   "required": [
+    "html"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "debug": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "action": {
+     "enum": [
+      "launch",
+      "attach",
+      "set_breakpoint",
+      "remove_breakpoint",
+      "set_instruction_breakpoint",
+      "remove_instruction_breakpoint",
+      "data_breakpoint_info",
+      "set_data_breakpoint",
+      "remove_data_breakpoint",
+      "continue",
+      "step_over",
+      "step_in",
+      "step_out",
+      "pause",
+      "evaluate",
+      "stack_trace",
+      "threads",
+      "scopes",
+      "variables",
+      "disassemble",
+      "read_memory",
+      "write_memory",
+      "modules",
+      "loaded_sources",
+      "custom_request",
+      "output",
+      "terminate",
+      "sessions"
+     ],
+     "type": "string"
+    },
+    "program": {
+     "type": "string",
+     "description": "debug target path; Delve accepts Go package directories"
+    },
+    "args": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "program arguments"
+    },
+    "adapter": {
+     "type": "string",
+     "description": "configured adapter id (gdb, lldb-dap, debugpy, dlv, rdbg, or dap.json entry)"
+    },
+    "cwd": {
+     "type": "string"
+    },
+    "file": {
+     "type": "string",
+     "description": "source file"
+    },
+    "line": {
+     "type": "number",
+     "description": "source line"
+    },
+    "function": {
+     "type": "string",
+     "description": "function name"
+    },
+    "name": {
+     "type": "string",
+     "description": "variable or data name"
+    },
+    "condition": {
+     "type": "string",
+     "description": "breakpoint condition"
+    },
+    "hit_condition": {
+     "type": "string"
+    },
+    "expression": {
+     "type": "string",
+     "description": "expression to evaluate"
+    },
+    "context": {
+     "type": "string",
+     "description": "evaluate context: watch | repl | hover | variables | clipboard"
+    },
+    "frame_id": {
+     "type": "number"
+    },
+    "scope_id": {
+     "type": "number",
+     "description": "scope variables reference"
+    },
+    "variable_ref": {
+     "type": "number",
+     "description": "variable reference"
+    },
+    "pid": {
+     "type": "number",
+     "description": "process id for attach"
+    },
+    "port": {
+     "type": "number",
+     "description": "remote attach port"
+    },
+    "host": {
+     "type": "string",
+     "description": "remote attach host"
+    },
+    "levels": {
+     "type": "number",
+     "description": "max stack frames"
+    },
+    "memory_reference": {
+     "type": "string",
+     "description": "memory reference or address"
+    },
+    "instruction_reference": {
+     "type": "string"
+    },
+    "instruction_count": {
+     "type": "number"
+    },
+    "instruction_offset": {
+     "type": "number"
+    },
+    "count": {
+     "type": "number",
+     "description": "bytes to read"
+    },
+    "data": {
+     "type": "string",
+     "description": "base64 memory payload"
+    },
+    "data_id": {
+     "type": "string",
+     "description": "data breakpoint id"
+    },
+    "access_type": {
+     "enum": [
+      "read",
+      "write",
+      "readWrite"
+     ],
+     "type": "string"
+    },
+    "command": {
+     "type": "string",
+     "description": "custom dap request command"
+    },
+    "arguments": {
+     "type": "object",
+     "properties": {},
+     "additionalProperties": true,
+     "description": "custom request arguments"
+    },
+    "offset": {
+     "type": "number"
+    },
+    "resolve_symbols": {
+     "type": "boolean"
+    },
+    "allow_partial": {
+     "type": "boolean"
+    },
+    "start_module": {
+     "type": "number"
+    },
+    "module_count": {
+     "type": "number"
+    },
+    "timeout": {
+     "type": "number",
+     "description": "per-request timeout seconds"
+    }
+   },
+   "required": [
+    "action"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "eval": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "language": {
+     "enum": [
+      "py",
+      "js"
+     ],
+     "type": "string",
+     "description": "\"py\": Python; \"js\": Bun"
+    },
+    "code": {
+     "type": "string",
+     "description": "Code or standalone % command."
+    },
+    "title": {
+     "type": "string",
+     "description": "Short transcript label."
+    },
+    "timeout": {
+     "type": "number",
+     "description": "Cell deadline in seconds (default 30); nonzero values clamp to 1–3600; 0 disables it."
+    },
+    "reset": {
+     "type": "boolean",
+     "description": "Wipe only this kernel."
+    }
+   },
+   "required": [
+    "language",
+    "code"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "github": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "op": {
+     "enum": [
+      "repo_view",
+      "file_read",
+      "pr_create",
+      "pr_checkout",
+      "pr_push",
+      "search_issues",
+      "search_prs",
+      "search_code",
+      "search_commits",
+      "search_repos",
+      "run_watch"
+     ],
+     "type": "string",
+     "description": "github operation"
+    },
+    "repo": {
+     "type": "string",
+     "description": "owner/repo"
+    },
+    "branch": {
+     "type": "string",
+     "description": "branch"
+    },
+    "path": {
+     "type": "string",
+     "description": "repository-relative file path"
+    },
+    "pr": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     ],
+     "description": "pr number, url, or branch"
+    },
+    "force": {
+     "type": "boolean",
+     "description": "reset existing local branch"
+    },
+    "forceWithLease": {
+     "type": "boolean",
+     "description": "force-with-lease push"
+    },
+    "title": {
+     "type": "string",
+     "description": "pr title"
+    },
+    "body": {
+     "type": "string",
+     "description": "pr body markdown"
+    },
+    "base": {
+     "type": "string",
+     "description": "pr base branch"
+    },
+    "head": {
+     "type": "string",
+     "description": "pr head branch"
+    },
+    "draft": {
+     "type": "boolean",
+     "description": "open pr as draft"
+    },
+    "fill": {
+     "type": "boolean",
+     "description": "auto-fill pr title/body from commits"
+    },
+    "reviewer": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "reviewers"
+    },
+    "assignee": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "assignees"
+    },
+    "label": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "labels"
+    },
+    "query": {
+     "type": "string",
+     "description": "search query"
+    },
+    "since": {
+     "type": "string",
+     "description": "lower-bound date filter"
+    },
+    "until": {
+     "type": "string",
+     "description": "upper-bound date filter"
+    },
+    "dateField": {
+     "enum": [
+      "created",
+      "updated"
+     ],
+     "type": "string",
+     "description": "date field"
+    },
+    "limit": {
+     "type": "number",
+     "description": "max results"
+    },
+    "run": {
+     "type": "string",
+     "description": "actions run id or url"
+    },
+    "tail": {
+     "type": "number",
+     "description": "log lines per failed job"
+    }
+   },
+   "required": [
+    "op"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "glob": {
+  "lenient": true,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "path": {
+     "type": "string"
+    },
+    "hidden": {
+     "type": "boolean"
+    },
+    "gitignore": {
+     "type": "boolean"
+    },
+    "limit": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 200
+    }
+   },
+   "additionalProperties": false
+  }
+ },
+ "grep": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "pattern": {
+     "type": "string"
+    },
+    "path": {
+     "type": "string"
+    },
+    "case": {
+     "type": "boolean"
+    },
+    "gitignore": {
+     "type": "boolean"
+    },
+    "skip": {
+     "type": [
+      "number",
+      "null"
+     ]
+    }
+   },
+   "required": [
+    "pattern"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "find": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "query": {
+     "type": "string"
+    },
+    "grep_keywords": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "path": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "query",
+    "grep_keywords"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "lsp": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "action": {
+     "enum": [
+      "diagnostics",
+      "definition",
+      "references",
+      "hover",
+      "symbols",
+      "rename",
+      "rename_file",
+      "code_actions",
+      "type_definition",
+      "implementation",
+      "status",
+      "reload",
+      "capabilities",
+      "request"
+     ],
+     "type": "string"
+    },
+    "file": {
+     "type": "string"
+    },
+    "line": {
+     "type": "number"
+    },
+    "symbol": {
+     "type": "string"
+    },
+    "query": {
+     "type": "string"
+    },
+    "new_name": {
+     "type": "string"
+    },
+    "apply": {
+     "type": "boolean"
+    },
+    "timeout": {
+     "type": "number",
+     "minimum": 5,
+     "maximum": 300,
+     "description": "Timeout in seconds; raises or lowers the default (range 5–300)."
+    },
+    "payload": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "action"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "checkpoint": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "goal": {
+     "type": "string",
+     "description": "investigation goal"
+    }
+   },
+   "required": [
+    "goal"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "rewind": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "report": {
+     "type": "string",
+     "description": "investigation findings"
+    }
+   },
+   "required": [
+    "report"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "task": {
+  "lenient": true,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "context": {
+     "type": "string"
+    },
+    "tasks": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "task": {
+        "type": "string"
+       },
+       "solutionSpace": {
+        "type": "string"
+       },
+       "name": {
+        "type": "string"
+       },
+       "agent": {
+        "type": "string"
+       },
+       "tools": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      },
+      "required": [
+       "task",
+       "solutionSpace"
+      ],
+      "additionalProperties": false
+     }
+    }
+   },
+   "required": [
+    "context",
+    "tasks"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "wait": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": false
+  }
+ },
+ "todo": {
+  "lenient": true,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "op": {
+     "enum": [
+      "init",
+      "start",
+      "done",
+      "rm",
+      "drop",
+      "append",
+      "view"
+     ],
+     "type": "string"
+    },
+    "list": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "phase": {
+        "type": "string"
+       },
+       "items": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        },
+        "minItems": 1
+       }
+      },
+      "required": [
+       "phase",
+       "items"
+      ],
+      "additionalProperties": false
+     },
+     "description": "phases for init"
+    },
+    "task": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     ],
+     "description": "verbatim task content; array targets several (not start)"
+    },
+    "phase": {
+     "type": "string"
+    },
+    "items": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "tasks for flat init or append"
+    }
+   },
+   "required": [
+    "op"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "web_search": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "query": {
+     "type": "string"
+    },
+    "recency": {
+     "enum": [
+      "day",
+      "week",
+      "month",
+      "year"
+     ],
+     "type": "string"
+    },
+    "limit": {
+     "type": "number"
+    },
+    "max_tokens": {
+     "type": "number"
+    },
+    "temperature": {
+     "type": "number"
+    },
+    "num_search_results": {
+     "type": "number"
+    }
+   },
+   "required": [
+    "query"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "write": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "path": {
+     "type": "string"
+    },
+    "content": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "path",
+    "content"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "think": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "thoughts": {
+     "type": "string",
+     "description": "private scratchpad; not shown to user"
+    }
+   },
+   "required": [
+    "thoughts"
+   ],
+   "additionalProperties": false,
+   "description": "private scratchpad; not shown to user"
+  }
+ },
+ "yield": {
+  "lenient": true,
+  "wire": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "submit data or error",
+   "properties": {
+    "type": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "string"
+       }
+      }
+     ],
+     "description": "Optional result type. A non-empty string array labels an incremental section; a string is terminal and, without data, finalizes the submitted sections."
+    },
+    "data": {
+     "type": "object",
+     "additionalProperties": true,
+     "description": "Structured JSON output (no schema specified)"
+    },
+    "error": {
+     "type": "string",
+     "description": "Failure reason; mutually exclusive with data"
+    }
+   },
+   "required": []
+  }
+ },
+ "goal": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "op": {
+     "enum": [
+      "create",
+      "get",
+      "complete",
+      "pause",
+      "resume",
+      "drop"
+     ],
+     "type": "string",
+     "description": "goal operation"
+    },
+    "objective": {
+     "type": "string",
+     "description": "goal objective"
+    },
+    "token_budget": {
+     "type": "integer",
+     "description": "token budget"
+    }
+   },
+   "required": [
+    "op"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "resolve": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string",
+     "description": "One-sentence reason for applying the pending staged action."
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "reject": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string",
+     "description": "One-sentence reason for discarding the pending staged action."
+    }
+   },
+   "required": [
+    "reason"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "propose": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "title": {
+     "type": "string",
+     "description": "Plan slug matching local://<slug>-plan.md."
+    }
+   },
+   "required": [
+    "title"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "report_issue": {
+  "lenient": false,
+  "wire": {
+   "type": "object",
+   "properties": {
+    "report": {
+     "type": "string",
+     "description": "Report in `<tool>: <concise description>` form."
+    }
+   },
+   "required": [
+    "report"
+   ],
+   "additionalProperties": false
+  }
+ }
+}

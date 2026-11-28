@@ -1,0 +1,107 @@
+[
+  {
+    "name": "grep-and-glob",
+    "description": "Exercise grep (basic, case-insensitive, path filter, no match) and glob.",
+    "setup": "mkdir -p src docs && printf 'func Alpha() {}\\nfunc beta() {}\\n' > src/a.go && printf 'ALPHA in docs\\n' > docs/readme.txt && printf 'ignored\\n' > .hidden.txt && find . -exec touch -t 202001010000 {} +",
+    "calls": [
+      { "tool": "grep", "arguments": { "pattern": "Alpha" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "case": false } },
+      { "tool": "grep", "arguments": { "pattern": "Alpha", "path": "src" } },
+      { "tool": "grep", "arguments": { "pattern": "NO_SUCH_TOKEN_XYZ" } },
+      { "tool": "glob", "arguments": { "path": "**/*.go" } },
+      { "tool": "glob", "arguments": { "path": "*" } }
+    ]
+  },
+  {
+    "name": "grep-options",
+    "description": "Exercise grep gitignore, negation glob, line-range selector, multiline regex, invalid regex, missing path, and skip pagination.",
+    "setup": "mkdir -p src/deep node_modules/x many && printf 'foo one\\nbar\\nfoo two\\n' > src/a.txt && printf 'foo deep\\n' > src/deep/b.txt && printf 'foo ignored\\n' > node_modules/x/c.txt && printf 'node_modules/\\n' > .gitignore && printf 'foo hidden\\n' > .h.txt && for i in $(seq 1 150); do printf 'needle %s\\n' $i > many/f$i.txt; done && find . -exec touch -t 202001010000 {} + && git init -q .",
+    "calls": [
+      { "tool": "grep", "arguments": { "pattern": "foo" } },
+      { "tool": "grep", "arguments": { "pattern": "foo", "gitignore": false } },
+      { "tool": "grep", "arguments": { "pattern": "foo", "path": "src;!**/deep/**" } },
+      { "tool": "grep", "arguments": { "pattern": "foo", "path": "src/a.txt:1-1" } },
+      { "tool": "grep", "arguments": { "pattern": "one\\nbar" } },
+      { "tool": "grep", "arguments": { "pattern": "(" } },
+      { "tool": "grep", "arguments": { "pattern": "foo", "path": "missing-dir" } },
+      { "tool": "grep", "arguments": { "pattern": "needle", "path": "many" } },
+      { "tool": "grep", "arguments": { "pattern": "needle", "path": "many", "skip": 100 } }
+    ]
+  },
+  {
+    "name": "glob-options",
+    "description": "Exercise glob limit, hidden, gitignore, bare dir, semicolon multi-pattern, no match, empty args, and limit=0.",
+    "setup": "mkdir -p src/deep node_modules/x many && printf a > src/a.txt && printf b > src/deep/b.txt && printf c > node_modules/x/c.txt && printf 'node_modules/\\n' > .gitignore && printf h > .h.txt && for i in $(seq 1 30); do printf n > many/f$i.txt; done && find . -exec touch -t 202001010000 {} + && git init -q .",
+    "calls": [
+      { "tool": "glob", "arguments": { "path": "many/*.txt", "limit": 5 } },
+      { "tool": "glob", "arguments": { "path": "**/*.txt", "hidden": false } },
+      { "tool": "glob", "arguments": { "path": "**/*.txt", "gitignore": false } },
+      { "tool": "glob", "arguments": { "path": "src" } },
+      { "tool": "glob", "arguments": { "path": "src/*;many/f1.txt" } },
+      { "tool": "glob", "arguments": { "path": "nomatch/**" } },
+      { "tool": "glob", "arguments": {} },
+      { "tool": "glob", "arguments": { "path": "*", "limit": 0 } }
+    ]
+  },
+  {
+    "name": "find-semantic",
+    "description": "Exercise semantic find with find.enabled: on and deterministic loopback chat-judge responses (yes).",
+    "config_yml": "find:\n  enabled: \"on\"\n",
+    "judge_reply": "yes",
+    "setup": "printf 'func computeAnswer() int { return 42 }\\n' > math.go",
+    "calls": [
+      { "tool": "find", "arguments": { "query": "function that computes the answer", "grep_keywords": ["computeAnswer", "42"] } }
+    ]
+  }
+,
+  {
+    "name": "grep-archive",
+    "description": "Exercise grep on archive members: zip, tar.gz, jar, mixed with plain file, missing member/archive, corrupt/truncated archives, directory members, two members from one archive, binary, non-UTF-8, all unreadable, and line ranges.",
+    "setup": "python3 -c 'import zipfile, tarfile, io\nwith zipfile.ZipFile(\"bundle.zip\", \"w\") as z:\n    z.writestr(\"src/\", \"\")\n    z.writestr(\"src/foo.ts\", \"line one\\nconst alpha = 1;\\nline three\\nconst alpha = 2;\\nline five\\n\")\n    z.writestr(\"src/bar.ts\", \"const alpha = 99;\\n\")\n    z.writestr(\"bin.dat\", b\"alpha\\x00binary\\n\")\n    z.writestr(\"badutf8.txt\", b\"alpha \\xff\\xfe invalid\\n\")\nwith zipfile.ZipFile(\"lib.jar\", \"w\") as z:\n    z.writestr(\"META-INF/MANIFEST.MF\", \"Manifest-Version: 1.0\\nMain-Class: com.example.Alpha\\n\")\nwith tarfile.open(\"release.tar.gz\", \"w:gz\") as t:\n    data = b\"Release notes\\nalpha feature\\nomega feature\\nalpha second\\n\"\n    info = tarfile.TarInfo(\"notes.md\")\n    info.size = len(data)\n    t.addfile(info, io.BytesIO(data))\nraw_zip = open(\"bundle.zip\", \"rb\").read()\nopen(\"trunc.zip\", \"wb\").write(raw_zip[:20])\n' && printf 'plain alpha line\n' > plain.txt && printf 'not a zip file\n' > corrupt.zip && printf 'not a gzip file\n' > corrupt.tar.gz && printf 'not a tar file\n' > corrupt.tar && find . -exec touch -t 202001010000 {} +",
+    "calls": [
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src/foo.ts" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "release.tar.gz:notes.md" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src/foo.ts;plain.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:missing.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:missing.txt;plain.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "nope.zip:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "nope.zip:a.txt;plain.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "nope.tar:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "nope.tar.gz:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "corrupt.zip:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "trunc.zip:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "corrupt.tar.gz:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "corrupt.tar:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src/" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src/foo.ts;bundle.zip:src/bar.ts" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:bin.dat" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:bin.dat;plain.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:badutf8.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:badutf8.txt;plain.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:bin.dat;bundle.zip:badutf8.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src/foo.ts:1-3" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "release.tar.gz:notes.md:1-2" } },
+      { "tool": "grep", "arguments": { "pattern": "Alpha", "path": "lib.jar:META-INF/MANIFEST.MF" } }
+    ]
+  },
+  {
+    "name": "glob-unopened-brace",
+    "description": "A closing brace with no opening one in a glob pattern (glob tool and grep path), and a brace inside a character class.",
+    "setup": "mkdir -p src && printf 'alpha\\n' > 'src/a}.txt' && printf 'alpha\\n' > 'src/b{2}.txt' && printf 'alpha\\n' > src/c.txt && find . -exec touch -t 202001010000 {} +",
+    "calls": [
+      { "tool": "glob", "arguments": { "path": "src/a}.txt" } },
+      { "tool": "glob", "arguments": { "path": "**/*}.txt" } },
+      { "tool": "glob", "arguments": { "path": "src/b[{]2}.txt" } },
+      { "tool": "glob", "arguments": { "path": "src/{b,c}*.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "src/*}.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "src/a}.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "*}.txt" } },
+      { "tool": "glob", "arguments": { "path": "*}.txt" } },
+      { "tool": "glob", "arguments": { "path": "src/[z-a].txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "src/[z-a].txt" } },
+      { "tool": "glob", "arguments": { "path": "src/{b,c*.txt" } },
+      { "tool": "glob", "arguments": { "path": "src/[c.txt" } }
+    ]
+  }
+]

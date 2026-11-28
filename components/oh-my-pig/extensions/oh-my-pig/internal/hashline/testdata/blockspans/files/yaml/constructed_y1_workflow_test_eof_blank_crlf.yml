@@ -1,0 +1,10 @@
+name: test
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: test
+        run: go test ./...
+

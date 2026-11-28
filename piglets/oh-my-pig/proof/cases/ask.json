@@ -1,0 +1,15 @@
+[
+  {
+    "name": "ask-headless",
+    "description": "Invoke ask in headless print mode: omp omits ask when !canPromptUser && !hasUI (tools/ask.ts:443-445) so both sides must omit it and refuse direct calls with Tool ask not found. Interactive form answering requires a UI and cannot be exercised in -p mode.",
+    "setup": "",
+    "calls": [
+      {
+        "tool": "ask",
+        "arguments": {
+          "html": "<form><p>Pick a color:</p><label><input type=\"radio\" name=\"color\" value=\"blue\" checked> Blue</label><label><input type=\"radio\" name=\"color\" value=\"green\"> Green</label></form>"
+        }
+      }
+    ]
+  }
+]

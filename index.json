@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-21",
+  "updatedAt": "2026-11-24",
   "entries": [
     {
       "id": "a2a",
@@ -292,6 +292,34 @@
         "The judge is the model PiG is configured with (default) or the TypeSafe API, through the shared Go client Package components/typesafe. Content goes to that provider; /jev names it.",
         "Fails open: when the judge is unavailable, tool calls run unjudged. A judgment is probabilistic advice, not a sandbox.",
         "The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
+      ]
+    },
+    {
+      "id": "oh-my-pig",
+      "kind": "piglet",
+      "name": "oh-my-pig",
+      "description": "An homage to omp (oh-my-pi) on PiG: omp's tools, prompt and commands as a Go extension, drawn natively in Tern with omp's look. Unofficial; parity with omp is a goal, not a promise.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/oh-my-pig"
+      },
+      "manifestSha256": "9240ac1e7cc3d09eaf684c38daa355e834a82035de07709b288f100f58ceb51d",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "An homage to omp (oh-my-pi) by Can Bölük and Stencil Labs. Unofficial and not affiliated with them. omp changes daily; this follows it at a pinned commit, and parity is a goal, not a promise. PARITY.md lists what is ported and what is not.",
+        "Derives from pig-tern: in a Tern pane it draws natively with omp's roles, so Tern's styles for omp apply; anywhere else PiG draws as usual. It keeps PiG's own names towards Tern and does not present itself as omp.",
+        "Keeps none of PiG's built-in tools: the model sees omp's read, write, edit, bash, grep, glob, find, todo, ask and web_search from the oh-my-pig extension, a Go port, with omp's system prompt. Absent today: subagents, eval, lsp, ast_edit, the internal URL schemes, and omp's modes, commands, settings and extensions.",
+        "Source only. Built and run on darwin/arm64; no Binary is signed or published, so no platform is a support claim. A build needs PiG's source (PIG_SOURCE_ROOT) and a Go toolchain, as for pig-tern."
       ]
     },
     {

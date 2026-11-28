@@ -1,0 +1,105 @@
+[
+  {
+    "name": "edit-hashline-ops",
+    "description": "Exercise PUT N.=M, PUT <N, PUT >N, CUT N.=M, PUT @reg paste, and MV.",
+    "setup": "printf 'alpha\\nbeta\\ngamma\\ndelta\\nepsilon\\n' > target.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "target.txt" } },
+      {
+        "tool": "edit",
+        "arguments": {
+          "input": "[target.txt#{{TAG:target.txt}}]\nPUT 2.=2:\n+BETA"
+        }
+      },
+      {
+        "tool": "edit",
+        "arguments": {
+          "input": "[target.txt#{{TAG:target.txt}}]\nPUT <1:\n+header"
+        }
+      },
+      { "tool": "read", "arguments": { "path": "target.txt" } },
+      {
+        "tool": "edit",
+        "arguments": {
+          "input": "[target.txt#{{TAG:target.txt}}]\nPUT >6:\n+footer"
+        }
+      },
+      { "tool": "read", "arguments": { "path": "target.txt" } },
+      {
+        "tool": "edit",
+        "arguments": {
+          "input": "[target.txt#{{TAG:target.txt}}]\nCUT 3.=4 @moved\nPUT >7 @moved"
+        }
+      },
+      { "tool": "read", "arguments": { "path": "target.txt" } },
+      {
+        "tool": "edit",
+        "arguments": {
+          "input": "[target.txt#{{TAG:target.txt}}]\nMV target-renamed.txt"
+        }
+      },
+      { "tool": "read", "arguments": { "path": "target-renamed.txt" } }
+    ]
+  },
+  {
+    "name": "edit-block-and-rem",
+    "description": "Exercise PUT N* block replacement and REM file deletion.",
+    "setup": "printf 'def greet(name):\\n    return name\\n\\ndef bye():\\n    return \"bye\"\\n' > mod.py && printf 'temp\\n' > junk.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "mod.py" } },
+      {
+        "tool": "edit",
+        "arguments": {
+          "input": "[mod.py#{{TAG:mod.py}}]\nPUT 1*:\n+def greet(name):\n+    return f\"hello {name}\""
+        }
+      },
+      { "tool": "read", "arguments": { "path": "junk.txt" } },
+      {
+        "tool": "edit",
+        "arguments": {
+          "input": "[junk.txt#{{TAG:junk.txt}}]\nREM"
+        }
+      }
+    ]
+  },
+  {
+    "name": "edit-errors-stale-tag-and-unseen",
+    "description": "Trigger stale-tag error and unseen-lines error.",
+    "setup": "printf 'l1\\nl2\\nl3\\nl4\\nl5\\nl6\\nl7\\nl8\\nl9\\nl10\\n' > big.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "big.txt:1-2" } },
+      {
+        "tool": "edit",
+        "arguments": {
+          "input": "[big.txt#0000]\nPUT 1.=1:\n+bad-tag"
+        }
+      },
+      {
+        "tool": "edit",
+        "arguments": {
+          "input": "[big.txt#{{TAG:big.txt}}]\nPUT 9.=9:\n+unseen-line"
+        }
+      }
+    ]
+  },
+  {
+    "name": "edit-failures",
+    "description": "Exercise hashline parser/validator failure paths, multi-file edit, MV collision, and empty input.",
+    "setup": "printf 'one\\ntwo\\nthree\\n' > e.txt && printf 'keep\\n' > f.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "e.txt" } },
+      { "tool": "read", "arguments": { "path": "f.txt" } },
+      { "tool": "edit", "arguments": { "input": "PUT 1.=1:\n+x" } },
+      { "tool": "edit", "arguments": { "input": "[nope.txt#0000]\nPUT 1.=1:\n+x" } },
+      { "tool": "edit", "arguments": { "input": "[e.txt#{{TAG:e.txt}}]\nPUT 9.=9:\n+x" } },
+      { "tool": "edit", "arguments": { "input": "[e.txt#{{TAG:e.txt}}]\nPUT 1.=1:" } },
+      { "tool": "edit", "arguments": { "input": "[e.txt#{{TAG:e.txt}}]\nPUT 1.=1:\n-one\n+ONE" } },
+      { "tool": "edit", "arguments": { "input": "[e.txt#{{TAG:e.txt}}]\nFOO 1" } },
+      { "tool": "edit", "arguments": { "input": "[e.txt#{{TAG:e.txt}}]\nPUT 1.=2:\n+a\nPUT 2.=3:\n+b" } },
+      { "tool": "edit", "arguments": { "input": "[e.txt#{{TAG:e.txt}}]\nPUT >1 @nope" } },
+      { "tool": "edit", "arguments": { "input": "[e.txt#{{TAG:e.txt}}]\nPUT >$:\n+tail\n[f.txt#{{TAG:f.txt}}]\nPUT <1:\n+head" } },
+      { "tool": "edit", "arguments": { "input": "[e.txt#{{TAG:e.txt}}]\nMV f.txt" } },
+      { "tool": "edit", "arguments": { "input": "" } }
+    ]
+  }
+]

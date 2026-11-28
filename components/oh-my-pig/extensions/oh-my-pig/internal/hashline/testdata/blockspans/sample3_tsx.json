@@ -1,0 +1,2659 @@
+{
+  "lang": "tsx",
+  "sample": "sample3",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample3",
+  "total": 449,
+  "omp_resolved": 133,
+  "omp_refused": 316,
+  "cases": [
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 1,
+      "refused": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`."
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 4,
+      "span": [
+        4,
+        8
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 8,
+      "refused": "line 1: `CUT 8*` could not resolve a syntactic block beginning on line 8 (blank/closer line, or parse error). Use `CUT 8.=M` with explicit lines. The nearest enclosing multi-line block begins at line 4 and ends at line 8; use `CUT 4*` to target it."
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 10,
+      "span": [
+        10,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 16,
+      "span": [
+        16,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 23,
+      "span": [
+        23,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 27,
+      "span": [
+        27,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 28,
+      "span": [
+        28,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 36,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 39,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__ThemeToggle.tsx",
+      "anchor": 40,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 66,
+      "span": [
+        66,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 80,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 92,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 110,
+      "span": [
+        110,
+        119
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 120,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 124,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 129,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 152,
+      "span": [
+        152,
+        175
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 156,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 169,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 181,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 186,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 196,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 208,
+      "span": [
+        208,
+        224
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 210,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 219,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 237,
+      "span": [
+        237,
+        241
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 239,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 262,
+      "span": [
+        262,
+        278
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 268,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 273,
+      "span": [
+        273,
+        275
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 284,
+      "span": [
+        284,
+        290
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 296,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 297,
+      "span": [
+        297,
+        303
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__github.tsx",
+      "anchor": 316,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 14,
+      "span": [
+        14,
+        27
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 29,
+      "span": [
+        29,
+        127
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 50,
+      "span": [
+        50,
+        52
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 61,
+      "span": [
+        61,
+        65
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 71,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 72,
+      "span": [
+        72,
+        76
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 82,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 83,
+      "span": [
+        83,
+        95
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 89,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 91,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 94,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 96,
+      "span": [
+        96,
+        114
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 99,
+      "span": [
+        99,
+        106
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 101,
+      "span": [
+        101,
+        104
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 103,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 107,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 110,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 117,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 118,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 119,
+      "span": [
+        119,
+        121
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ast-grep.tsx",
+      "anchor": 124,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 4,
+      "span": [
+        4,
+        10
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 12,
+      "span": [
+        12,
+        49
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 14,
+      "span": [
+        14,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 15,
+      "span": [
+        15,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 16,
+      "span": [
+        16,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 22,
+      "span": [
+        22,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 23,
+      "span": [
+        23,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 24,
+      "span": [
+        24,
+        27
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 29,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 30,
+      "span": [
+        30,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 31,
+      "span": [
+        31,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 33,
+      "span": [
+        33,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 37,
+      "span": [
+        37,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 38,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 40,
+      "span": [
+        40,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 46,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__components__shell__Banners.tsx",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 30,
+      "span": [
+        30,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 37,
+      "span": [
+        37,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 62,
+      "span": [
+        62,
+        78
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 85,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 89,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 98,
+      "span": [
+        98,
+        185
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 101,
+      "span": [
+        101,
+        103
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 109,
+      "span": [
+        109,
+        114
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 112,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 119,
+      "span": [
+        119,
+        124
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 122,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 132,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 135,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 137,
+      "span": [
+        137,
+        141
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 149,
+      "span": [
+        149,
+        155
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 152,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 153,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 163,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 166,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 170,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__ui__RequestDrawer.tsx",
+      "anchor": 176,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 3,
+      "span": [
+        3,
+        8
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 8,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 10,
+      "span": [
+        10,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 27,
+      "span": [
+        27,
+        62
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 28,
+      "span": [
+        28,
+        31
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 31,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 34,
+      "span": [
+        34,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 39,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 42,
+      "span": [
+        42,
+        60
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 43,
+      "span": [
+        43,
+        59
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 44,
+      "span": [
+        44,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 46,
+      "span": [
+        46,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 54,
+      "span": [
+        54,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 58,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__LifecycleStepper.tsx",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 1,
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 77,
+      "span": [
+        77,
+        86
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 92,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 152,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 184,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 188,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 222,
+      "span": [
+        222,
+        225
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 273,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 289,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 334,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 365,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 373,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 410,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 448,
+      "span": [
+        448,
+        457
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 454,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 488,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 541,
+      "span": [
+        541,
+        549
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 550,
+      "span": [
+        550,
+        558
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 592,
+      "span": [
+        592,
+        598
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 622,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 628,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 656,
+      "span": [
+        656,
+        667
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 713,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 716,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 753,
+      "span": [
+        753,
+        790
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 793,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 804,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 827,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 853,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 889,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 891,
+      "span": [
+        891,
+        905
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__browser-relay__extension__panel__composer.tsx",
+      "anchor": 922,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 8,
+      "span": [
+        8,
+        13
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 15,
+      "span": [
+        15,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 19,
+      "span": [
+        19,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 34,
+      "span": [
+        34,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 42,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 44,
+      "span": [
+        44,
+        80
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 52,
+      "span": [
+        52,
+        60
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 54,
+      "span": [
+        54,
+        59
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 55,
+      "span": [
+        55,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 61,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 62,
+      "span": [
+        62,
+        68
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 67,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 68,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__write.tsx",
+      "anchor": 77,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 1,
+      "span": [
+        1,
+        8
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 23,
+      "span": [
+        23,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 43,
+      "span": [
+        43,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 63,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 99,
+      "span": [
+        99,
+        135
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 118,
+      "span": [
+        118,
+        121
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 141,
+      "span": [
+        141,
+        144
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 143,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 159,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 180,
+      "span": [
+        180,
+        184
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 190,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 208,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 230,
+      "span": [
+        230,
+        233
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 237,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 245,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 264,
+      "span": [
+        264,
+        276
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 284,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 286,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 315,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 330,
+      "span": [
+        330,
+        333
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 337,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 344,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 364,
+      "span": [
+        364,
+        369
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 384,
+      "span": [
+        384,
+        388
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 387,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 407,
+      "span": [
+        407,
+        415
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 427,
+      "span": [
+        427,
+        437
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 434,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 462,
+      "span": [
+        462,
+        466
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 483,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 491,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__eval.tsx",
+      "anchor": 514,
+      "span": [
+        514,
+        515
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 1,
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 29,
+      "span": [
+        29,
+        51
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 55,
+      "span": [
+        55,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 60,
+      "span": [
+        60,
+        65
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 69,
+      "span": [
+        69,
+        85
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 78,
+      "span": [
+        78,
+        80
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 82,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 102,
+      "span": [
+        102,
+        122
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 107,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 114,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 126,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 134,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 140,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 155,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 161,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 163,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 169,
+      "span": [
+        169,
+        179
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 180,
+      "span": [
+        180,
+        181
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 188,
+      "span": [
+        188,
+        290
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 192,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 196,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 212,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 215,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 231,
+      "span": [
+        231,
+        236
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 239,
+      "span": [
+        239,
+        258
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 240,
+      "span": [
+        240,
+        245
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 254,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 264,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 268,
+      "span": [
+        268,
+        273
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__traces__SpanDrawer.tsx",
+      "anchor": 276,
+      "span": [
+        276,
+        285
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 3,
+      "span": [
+        3,
+        11
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 15,
+      "span": [
+        15,
+        31
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 16,
+      "span": [
+        16,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 20,
+      "span": [
+        20,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 21,
+      "span": [
+        21,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 22,
+      "span": [
+        22,
+        27
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 23,
+      "span": [
+        23,
+        26
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 27,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 30,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_python__robomp__web__src__components__GlassCard.tsx",
+      "anchor": 31,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 14,
+      "span": [
+        14,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 27,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 40,
+      "span": [
+        40,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 58,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 61,
+      "span": [
+        61,
+        72
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 64,
+      "span": [
+        64,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 76,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 79,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 85,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 87,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 96,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 100,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 101,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 110,
+      "span": [
+        110,
+        139
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 114,
+      "span": [
+        114,
+        134
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 116,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 118,
+      "span": [
+        118,
+        120
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 126,
+      "span": [
+        126,
+        132
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 128,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 136,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 140,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 142,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__collab-web__src__tool-render__tools__ask.tsx",
+      "anchor": 146,
+      "span": [
+        146,
+        148
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 6,
+      "span": [
+        6,
+        11
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 9,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 12,
+      "span": [
+        12,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 15,
+      "span": [
+        15,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 17,
+      "span": [
+        17,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 27,
+      "span": [
+        27,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 28,
+      "span": [
+        28,
+        32
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 36,
+      "span": [
+        36,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 38,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 40,
+      "span": [
+        40,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 42,
+      "span": [
+        42,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 46,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 48,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 51,
+      "span": [
+        51,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/tsx/omp_packages__stats__src__client__app__CloseButton.tsx",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`.",
+    "unresolved": "line 1: `CUT 8*` could not resolve a syntactic block beginning on line 8 (blank/closer line, or parse error). Use `CUT 8.=M` with explicit lines. The nearest enclosing multi-line block begins at line 4 and ends at line 8; use `CUT 4*` to target it."
+  }
+}

@@ -7,3 +7,6 @@ dist/
 # go test -c output
 *.test
 pig-tmp/
+# Python bytecode from the generator and proof scripts
+__pycache__/
+*.pyc

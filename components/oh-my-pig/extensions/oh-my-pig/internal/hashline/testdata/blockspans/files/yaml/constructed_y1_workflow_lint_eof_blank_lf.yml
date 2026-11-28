@@ -1,0 +1,10 @@
+name: lint
+
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: run-linter
+        uses: example/lint-action@v1
+

@@ -1,0 +1,187 @@
+# Upstream: `internal/modes`
+
+Follows omp release tag **`v19.1.1`** (`31ffee513f`).
+
+## Upstream files followed
+
+- `packages/coding-agent/src/slash-commands/builtin-registry.ts`
+- `packages/coding-agent/src/slash-commands/available-commands.ts`
+- `packages/coding-agent/src/slash-commands/builtin-modes.ts`
+- `packages/coding-agent/src/slash-commands/builtin-lifecycle.ts`
+- `packages/coding-agent/src/slash-commands/builtin-session.ts`
+- `packages/coding-agent/src/slash-commands/builtin-collaboration.ts`
+- `packages/coding-agent/src/slash-commands/builtin-control.ts`
+- `packages/coding-agent/src/slash-commands/builtin-commit.ts`
+- `packages/coding-agent/src/slash-commands/builtin-marketplace.ts`
+- `packages/coding-agent/src/slash-commands/builtin-skills.ts`
+- `packages/coding-agent/src/slash-commands/helpers/{context-report,usage-report,effort,parse}.ts`
+- `packages/coding-agent/src/plan-mode/{state,plan-files,approved-plan,plan-autosave,plan-protection,settings}.ts`
+- `packages/coding-agent/src/tools/{plan-mode-guard,resolve,shell-tokenize}.ts`
+- `crates/edit/src/path_policy.rs` (`enforce_write`)
+- `packages/coding-agent/src/task/structured-subagent.ts` (`PLAN_MODE_TOOLS`, `createPlanModeAgent`, `assertPlanControlsAllowed`)
+- `packages/coding-agent/src/goals/{state,runtime,settings,tools/goal-tool}.ts`
+- `packages/coding-agent/src/modes/{magic-keywords,loop-limit,loop-condition,turn-budget,interactive-mode,settings}.ts`
+- `packages/coding-agent/src/modes/controllers/{omfg-controller,omfg-rule,btw-controller}.ts`
+- `packages/coding-agent/src/session/{btw-turn,btw-history,prewalk,settings,session-handoff,agent-session,model-controls}.ts`
+- `packages/tui/src/prompt/{magic-keywords,markdown-prose}.ts`
+- `packages/tui/src/overlays/{copy-targets,btw-history,btw-inject}.ts`
+- `packages/tui/src/tools/goal.ts`
+- `packages/utils/src/prompt.ts` (`format` post-render pass)
+- Embedded prompt templates (`internal/modes/prompts/*.md`): 22 templates copied verbatim from `packages/coding-agent/src/prompts/` (`plan-mode-*.md`, `goal-mode-active.md`, `goal-continuation.md`, `goal-budget-limit.md`, `goal-todo-context.md`, `guided-goal-interview.md`, `goal.md`, `btw-user.md`, `ultrathink-notice.md`, `chillax-notice.md`, `orchestrate-notice.md`, `workflow-notice.md`, `jevify-notice.md`, `commit-request.md`, `prewalk-plan.md`, `prewalk-continue.md`, `prewalk-checklist.md`, `omfg-user.md`) and 1 from `packages/agent/src/compaction/prompts/handoff-document.md`.
+
+Template branch defaults:
+- `plan-mode-active.md`: `proposeIsCommand` reflects live `toolcmd.CommandNames(ctx)` (true when `propose` is mounted via bash transport, false when top-level), `isHashlineEditMode=true`, `iterative=false` (parallel workflow), `askAvailable`/`taskAvailable`/`scoutAvailable` read from active tools.
+- `workflow-notice.md`: `taskBatch=true`, `scoutAvailable=true`, `evalTools=true`, `py=true`, `js=true`, `freshAgents=false`, `perCallModel=false`.
+- `btw-user.md`: `inject` reads live `btw.inject` setting (default `false`).
+## Tests ported
+
+21 test functions in `modes_test.go`, including golden byte-exact comparisons against omp `v19.1.1` `prompt.render` (`testdata/plan-mode-active.golden.txt`, `testdata/plan-mode-approved.golden.txt`), upstream cases from `test/plan-mode/approved-plan.test.ts`, `test/goals/goal-runtime.test.ts`, `test/goals/goal-tool.test.ts`, `test/agent-session-goal-midrun-compaction.test.ts`, `test/loop-limit.test.ts`, `test/loop-condition.test.ts`, `test/interactive-mode-loop-provider-error.test.ts`, and `test/agent-session-magic-keywords.test.ts`, plus fake-host tests enforcing PiG's command-only call guards, `withSession` replacement, non-blocking `agent_end` compaction approval (delayed host compaction + exact cancellation matching), `ToolExposureCodemode` vs `ToolExposureDirect` host callability for mounted `propose`, `internal/gate` policy, symlink escapes and host session-ID error fail-closed, Escape abort during loop grace wait and condition execution, goal+loop simultaneous abort, Windows shell refusal without `cmd.exe`, `/force` in plan mode, `/force`/`/tools`/`/context` mounted-tool filtering (`AdvertisedTools` + `~` rows), plan mode tool save/restore preserving mounted tools and order without empty `SetActiveTools`, `/btw` sidecar storage with full tool context, and two-session `Register`-twice + `lifecycle.End` isolation.
+
+## Settings omp reads for this feature
+
+| Setting key | Default | Honoured | Notes |
+|---|---|---|---|
+| `plan.enabled` | `true` | yes | Enforced in `/plan` via `modes.Setting` |
+| `plan.defaultOnStartup` | `false` | yes | Auto-enters plan mode on fresh empty interactive TUI sessions when `plan.defaultOnStartup && plan.enabled` (zero effect when `false`) |
+| `plan.autosave` | `false` | yes | Auto-saves approved plans via `AutosaveApprovedPlan` (`plan-mode/plan-autosave.ts`) on all approval paths |
+| `plan.autosaveDir` | `""` | yes | Resolved with `~`, absolute, or cwd-relative path; empty defaults to `<cwd>/.omp/plans` |
+| `goal.enabled` | `true` | yes | Enforced in `/goal`, `/guided-goal`, and `goal` tool `create`/`resume` via `modes.Setting` |
+| `goal.statusInFooter` | `true` | yes | Status bar shows `GOAL used/budget` |
+| `goal.continuationModes` | `["interactive"]` | default | Auto-continue active via `agent_before_settle` |
+| `loop.mode` | `"prompt"` | default | Only `prompt` mode implemented (`compact`/`reset` omitted — `NewSession` is command-only in PiG) |
+| `loop.conditionTimeoutMs` | `30000` | yes | Read via `modes.Setting` (default 30s; `0` waits indefinitely) |
+| `btw.inject` | `false` | yes | `btw-user.md` rendered with `btw.inject`; `<inject>` block extracted and steered via `/btw inject` |
+| `prewalk.enabled` | `false` | yes | Auto-arms one-shot prewalk handoff at session start when `true` (default `false`, zero hook work when off) |
+| `prewalk.from` | `"@default"` | yes | Planning model/role restored by `/prewalk restart` |
+| `prewalk.into` | `"@smol"` | yes | Target model/role handed off to by `/prewalk` and `prewalk.enabled` |
+| `magicKeywords.enabled` | `true` | yes | Read via `modes.Setting` in `onInput` (`resolveMagicKeywordSettings`) |
+| `magicKeywords.<id>` | `true` | yes | Per-keyword toggles (`ultrathink`, `chillax`, `orchestrate`, `workflow`, `jevify`) read via `modes.Setting` |
+
+## Feature-level omissions and deviations inside ported modes/commands (not ported / differs)
+
+Plan mode is enforced only where a tool resolves a write target (as omp's `enforce_write`, via `internal/gate.Check`) and through `gate.PlanActive` for subagents (`internal/agents`); there is no `tool_call` hook and `checkpoint`/`rewind` are not gated (they write no files and run no processes).
+
+| Feature | Upstream source | Why not ported / how it differs |
+|---|---|---|
+| Plan-mode gate on `github` `pr_create`/`pr_checkout`/`pr_push` | `internal/modes/plan.go` (`planGatePolicy`) | Deliberate tightening not present in omp: `planGatePolicy` denies mutating `github` `OpExec` ops while planning with the working-tree read-only error |
+| Plan-role tier slider in plan review | `plan-mode/model-transition.ts`, `interactive-mode.ts:6000-6060,8100-8270` | Entering plan mode switches to configured `modelRoles.plan` (via `modes.ResolveRole`) and restores the previous model & thinking level on exit / fresh-session approval (default sessions without `modelRoles.plan` never switch); interactive tier slider in plan review overlay not ported |
+| Plan-mode convergence forced wire `tool_choice: "required"` | `agent-session.ts:13791` | PiG SDK has no API to set wire `tool_choice` for a boundary continuation (3-reminder cap `PLAN_MODE_REMINDER_MAX = 3` is ported) |
+| "Approve and execute" directly from `propose` (`agent_end`) | `interactive-mode.ts:7128-7135` | PiG restricts `ctx.NewSession` to command contexts (`command_only_calls.go:8-21`); `agent_end` dialog offers compact/keep + points to `/plan-review`, where "Approve and execute" works via `withSession` + `copyLocalArtifacts` |
+| Plan external `$EDITOR` editing and inline section annotations | `interactive-mode.ts:7011-7069` | Subprocess extensions cannot suspend PiG's terminal for `$EDITOR`; PiG's `Select`/`Input`/`Editor` dialogs are used |
+| Goal `todo_context` injection | `agent-session.ts:8954-9019`, `goal-todo-context.md` | Ported via exported `modes.TodoContextSnapshot` hook (wired by integrator to `internal/todo.CurrentPhases`); renders XML-escaped `<todo_context>` into `goal-mode-context` when todo tracking is active with non-empty phases |
+| `loop.mode` `compact` and `reset` actions | `interactive-mode.ts:3710-3714` | `ctx.NewSession` is refused outside command contexts (`agent_end` cannot reset session) |
+| `/loop` condition Windows shell requirement | `modes/loop-condition.ts:100-106` | Uses Git Bash (`%ProgramFiles%\Git\bin\bash.exe` / `bash.exe` / `sh.exe`) on Windows and refuses with an error if no POSIX bash is installed (never falls back to `cmd.exe /C`) |
+| `/btw` follow-ups, copy (`c`), branch (`b`), docked overlay | `modes/controllers/btw-controller.ts` | Requires omp's custom docked BTW panel & keybindings; sidecar storage, full branch context, `btw.inject` `<inject>` extraction, and `/btw inject` steering are ported |
+| `/btw` sidecar location under `local://btw/` | `session/btw-history.ts:104-110` | Stored under `<local-root>/btw/` (visible under `local://` and copied by `copyLocalArtifacts` on fresh-session plan execution), whereas omp keeps sidecar history under `<artifactsDir>/btw-history/` outside `local://` |
+| `/clear` in-place context reset keeping session ID | `builtin-lifecycle.ts:283` | Command description keeps omp's verbatim text for oracle parity, but PiG SDK has no in-place context reset: `/clear` calls `ctx.NewSession` (same as `/new`) |
+| `/force` wire `tool_choice` override | `builtin-control.ts:60` | Arms `modes.SetForcedToolChoice(sessionID, toolName)` (wired to `providerwire.SetForcedToolChoice` for real provider-level `tool_choice`) and keeps the hidden `forced-tool-notice` fallback in `before_agent_start`; cleared via `modes.ClearForcedToolChoice` on session end |
+| `/effort` `auto` thinking level | `builtin-modes.ts:860`, `model-controls.ts:662` | PiG has no auto-thinking classifier; `ultrathink` injects notice only (never mutates pinned level) |
+| `chillax` automatic thinking-level reduction | `session/model-controls.ts:65-74,730-745` | Ported `modelTakesPerMessageEffort` checks `compat.supportsPerMessageEffort` / `compat.supportsConfigurationUpdate`, which PiG's model objects do not carry; effectively notice-only in PiG |
+| `/switch` temporary-only vs persisted model, fuzzy ids, `alt+p` hint | `builtin-modes.ts:460-505` | Command description keeps omp's verbatim `alt+p` text for oracle parity (PiG cycles models with `Ctrl+P`); supports `@role`, `pi/<role>`, `*`, and `:level` suffixes via `modes.ResolveRole` (wired to `providerwire.ResolveRoleWithThinking`); PiG SDK exposes `SetModelNamed(spec)` only (no temporary-only flag) |
+| `/rename` automatic title generation when title omitted | `builtin-lifecycle.ts:615`, `utils/title-generator.ts` | Generates a concise session title via `@smol` role (falling back to active model) + `ctx.Complete` using omp's title prompt & cleaning rules when title is omitted; falls back to `"Could not generate a session title. Use /rename <title> to set one."` on empty branch or error |
+| `/dump all`, `/dump anon`, and LLM request JSON sidecar | `builtin-collaboration.ts:234-283` | PiG SDK does not expose raw provider request JSON or subagent archive writer |
+| `+Nk`/`+Nk!` eval `budget` helper & `agent()` hard ceiling | `eval/agent-bridge.ts:179-183` | `modes.TurnBudgetFor(ctx)` is exported for `internal/eval` to consume; no notice text is injected (matching omp) |
+
+## Complete Built-in Slash Command Inventory (omp `v19.1.1` vs PiG)
+
+Total built-in slash commands in omp `v19.1.1`: **89** (plus dynamic `/skill:<name>`, already supplied by PiG's built-in `ExpandSkillCommand` when `enableSkillCommands` is true, default true).
+
+Summary counts across the 89 built-in commands:
+- **PiG's own (built-in, not registered here to avoid collision)**: **17** (`settings`, `model`, `tree`, `export`, `share`, `copy`, `session`, `changelog`, `hotkeys`, `fork`, `login`, `logout`, `new`, `compact`, `resume`, `debug`, `quit`) — `/copy <arg>` is additionally intercepted in `EventInput` for omp's `code|cmd|link|local` subcommands, and `/export --copy|copy|clipboard` + `/export --themes [path]` are intercepted in `EventInput` while bare `/export` and `/export <path>` stay on PiG's built-in handler.
+- **Ported here (`internal/modes`)**: **28** primary commands (+ 2 aliases: `/rewind`, `/q`) — `plan`, `plan-review`, `goal`, `guided-goal`, `loop`, `btw`, `context`, `usage`, `handoff`, `branch` (+ alias `rewind`), `clear`, `tools`, `effort`, `switch`, `rename`, `dump`, `jobs`, `queue`, `force`, `exit` (+ alias `q`), `commit`, `open`, `skillful`, `modelpreset`, `tan`, `cleanse`, `prewalk`, `omfg` (plus `import-omp` own addition).
+- **Owned by another area**: **6** (`todo` in `internal/todo`, `ratchet` in `internal/ratchet`, `vibe` in `internal/vibe`, `advisor` in `internal/advisor`, `browser` in `internal/browser`, `ssh` in `internal/ssh`, `forget-approvals` in `internal/approval`; plus `/autoresearch` in `internal/autoresearch` as a built-in extension command).
+- **Not ported**: **38** (including `/add-dir`, `/remove-dir`, `/dirs` — removed because PiG SDK has no multi-root workspace prompt/tool integration).
+
+| Command (aliases) | omp behaviour (`v19.1.1`) | State here | Notes / PiG differences / why not ported |
+|---|---|---|---|
+| `/plan [prompt]` | Toggle plan mode (read-only exploration, `local://<slug>-plan.md`, `propose` + review) | **ported here** | Active/paused/off, `internal/gate` policy on resolved targets, `propose` special command via `toolcmd`, `Select`/`Input`/`Editor` review, aborts active turn on pause |
+| `/plan-review` | Re-open plan review for latest `local://*-plan.md` | **ported here** | Runs in command context; supports all options including "Approve and execute" via `NewSession` + `withSession` + `copyLocalArtifacts` |
+| `/goal [set\|show\|pause\|resume\|drop\|budget\|<objective>]` | Persistent autonomous objective with token budget, hidden `goal` tool, auto-continue | **ported here** | Full subcommands, `goal` tool, lazy usage/wall-clock tracking, `agent_before_settle` auto-continue with stall detection, Esc abort pause |
+| `/guided-goal [rough objective]` | Interview user in chat then create goal | **ported here** | Activates `goal` tool and sends `guided-goal-interview.md` |
+| `/loop [count\|duration] [--while\|--until '<cmd>'] [prompt]` | Repeat prompt after each turn with iteration/duration limit and shell exit-code predicate | **ported here** | Full parser, POSIX `--while`/`--until` (no `cmd.exe` fallback), Escape abort via `ctx.Signal()` during 800 ms grace wait and condition command, pauses on abort and provider error |
+| `/btw [question]` | Ephemeral side question using context without disturbing turn, or browse history | **ported here** | Uses `ctx.Complete` (`toolChoice: "none"`) with full branch context; stores history in sidecar under `local/btw/` (never touches main session journal) |
+| `/context` | Show context window breakdown with ASCII bars | **ported here** | Text breakdown via `GetContextUsage` + `GetSystemPrompt`/`GetAllTools`/`GetBranch`; omp interactive viewer overlay not ported |
+| `/usage [show\|reset]` | Show token usage & provider quota limits | **ported here** | Session token & cost report; provider rate-limit quota bars and reset credits not exposed by PiG SDK |
+| `/handoff [focus]` | Background compaction with handoff document prompt | **ported here** | Calls `ctx.Compact` with omp's `handoff-document.md` prompt |
+| `/branch` (`rewind`) | Rewind to previous user message, keeping old path as a branch | **ported here** | Both `/branch` and `/rewind` registered; uses `ctx.Select` + `ctx.NavigateTree` + `SetEditorText` |
+| `/clear` | Clear conversation context in place, keeping the session | **ported here (partial)** | Calls `ctx.NewSession` (PiG SDK has no in-place reset keeping the same session ID) |
+| `/tools` | List active (`*`), inactive (`-`), and mounted (`~`) tools | **ported here** | Uses `toolcmd.AdvertisedTools` for `*`/`-` and appends `~ <name>` from `toolcmd.MountedNames` |
+| `/effort [level]` | Set reasoning effort (`off`..`max`) or pick via selector | **ported here** | Uses `GetModelInfo`/`SetThinkingLevel`/`Select`; PiG also has `/thinking`; `auto` not in PiG |
+| `/switch [model[:level]]` | Session-only model switch with fuzzy ids, `@role`, `:level` | **ported here (partial)** | Resolves `@role` / `pi/<role>` / `*` (+ `:level`) via `modes.ResolveRole` and calls `SetModelNamed` + `SetThinkingLevel`; PiG has no temporary-only switch |
+| `/rename [title]` | Rename current session (omit title to generate) | **ported here** | Calls `ctx.SetSessionName`; when title omitted, generates concise title from session branch via `@smol` + `ctx.Complete`; PiG also has `/name` |
+| `/dump [all\|anon]` | Copy session transcript to clipboard (and write LLM request JSON to tmp) | **ported here (partial)** | Plain transcript copy via `ctx.CopyToClipboard`; `all`/`anon` zip archives and LLM request JSON sidecar not ported |
+| `/jobs [full\|kill <id>\|kill all]` | List or cancel async background jobs | **ported here** | Reads and cancels jobs in `internal/jobs`; omp live sheet overlay not ported |
+| `/queue <message>` | Queue follow-up message behind active turn | **ported here** | Calls `ctx.SendUserMessage(msg, "followUp")` |
+| `/force <tool> [prompt]` (`/force:`) | Force next turn to use a specific tool | **ported here** | Arms wire-level `tool_choice` via `modes.SetForcedToolChoice` (`providerwire`) and injects hidden `forced-tool-notice` in `before_agent_start` |
+| `/exit` (`/q`) | Exit application | **ported here** | Calls `ctx.Shutdown()`; PiG only has `/quit` without `/exit` or `/q` aliases |
+| `/import-omp [latest\|<file>] [--full]` | (not in omp) | **own addition** | Switches to an omp session translated to a PiG session; `internal/ompsession/UPSTREAM.md` |
+| `/todo [...]` | View/modify agent todo list | **owned by `internal/todo`** | Registered by `internal/todo` |
+| `/settings` | Open omp settings menu | **PiG's own (differs)** | PiG builtin opens PiG's settings menu (not omp's settings schema) |
+| `/model` (`models`) | Open model role/thinking selector | **PiG's own (differs)** | PiG builtin `/model [provider/model]` picks/switches model without omp's role-model hub; `models` alias absent in PiG |
+| `/tree` | Navigate session tree | **PiG's own (same)** | PiG builtin `/tree` navigates branches |
+| `/export [--themes] [path]` | Export session to HTML file | **PiG's own + extended here** | Bare `/export` and `/export <path>` stay on PiG builtin; `/export --copy\|copy\|clipboard` prints `"Use /dump to copy the session to clipboard."` and `/export --themes [path]` writes a self-contained HTML export (`0600`, `~/` expanded) with static dark/light CSS variables (does not read user theme JSON files) via `EventInput` |
+| `/share` | Share session via encrypted server/gist | **PiG's own (differs)** | PiG builtin `/share` uploads to PiG's expiring gateway (not omp's encrypted share server/gist) |
+| `/copy [code\|cmd\|link\|local]` | Pick text/code/cmd/link/local to copy | **PiG's own + extended here** | Bare `/copy` copies last assistant message via PiG builtin (no interactive picker); `/copy code\|cmd\|link\|local` intercepted in `EventInput` here |
+| `/session [info\|delete\|pin]` | Session info, delete, and OAuth account pinning | **PiG's own (differs)** | PiG builtin `/session` takes no arguments and prints stats only; `delete` and `pin` subcommands not available (colliding builtin) |
+| `/changelog [full\|last [N]]` | Show changelog entries | **PiG's own (differs)** | PiG builtin `/changelog` shows PiG's changelog without `full`/`last [N]` subcommands |
+| `/hotkeys` | Show keyboard shortcuts | **PiG's own (differs)** | PiG builtin `/hotkeys` shows PiG's keybindings |
+| `/fork [pane\|window\|tab]` | Fork session (or into multiplexer/Tern pane) | **PiG's own (differs)** | PiG builtin `/fork` forks from a chosen user message in-place (no `pane\|window\|tab` multiplexer or Tern split) |
+| `/login [provider\|url]` | OAuth login + manual redirect URL paste | **PiG's own (differs)** | PiG builtin `/login [provider]` runs PiG OAuth login (no `/login <redirect-url>` manual callback paste) |
+| `/logout [provider]` | Provider OAuth logout | **PiG's own (differs)** | PiG builtin `/logout` takes no provider argument and opens a selector |
+| `/new` | Start a new session | **PiG's own (same)** | PiG builtin `/new` starts a fresh session |
+| `/compact [mode] [focus]` | Compact context (`soft`/`remote`/`snapcompact`/`handoff`) | **ported via `internal/snapcompact` (`EventInput` + `EventSessionBeforeCompact`)** | Default compaction runs local bitmap-frame `snapcompact` on vision models (honoring `compaction.methodOrder` & `snapcompact.shape`, falling back to PiG LLM compaction on text-only models or when focus instructions are given); `/compact snapcompact|soft|handoff|remote` supported. |
+| `/resume [id\|@claude\|@codex]` | Resume session or import foreign session | **PiG's own (differs)** | PiG builtin `/resume` opens PiG's session picker (no direct `<id>` arg or `@claude`/`@codex` foreign import) |
+| `/debug` | Open debug tools selector | **PiG's own (differs)** | PiG builtin `/debug` writes a debug log file (no interactive debug selector) |
+| `/quit` (`q`) | Quit application | **PiG's own (same)** | PiG builtin `/quit`; `/q` alias registered here |
+| `/skill:<name>` | Expand and invoke a discovered skill | **PiG's own (same)** | PiG natively expands `/skill:<name>` via `ExpandSkillCommand` |
+| `/add-dir <path>` | Add workspace directory to session & rebuild prompt | **not ported** | PiG SDK has no multi-root workspace API; tools and prompt builder only consume single `ctx.Cwd()` |
+| `/remove-dir <path>` | Remove workspace directory from session | **not ported** | Same as `/add-dir`: no multi-root workspace support in PiG SDK |
+| `/dirs` | List session workspace directories | **not ported** | Same as `/add-dir`: no multi-root workspace support in PiG SDK |
+| `/vibe [prompt]` | Persistent fast/good worker director mode | **ported (`internal/vibe`)** | Registered by `internal/vibe/register.go` with dynamic `vibe_*` worker tools and reverse mode lockouts |
+| `/advisor [on\|off\|status\|dump\|configure]` | Second-model turn advisor | **ported (`internal/advisor`)** | Registered by `internal/advisor/runtime.go`; `advisor.enabled` defaults to `false`, supports `WATCHDOG.yml` roster, background read-only child review with child-only `advise` tool, `<advisory>` injection, and JSONL spend persistence |
+| `/prewalk [into\|restart\|off\|status]` | One-shot model handoff at next edit/write | **ported here** | Supports `[into]`, `restart [from] [into]`, `off`, `status`, `prewalk.enabled`/`from`/`into` settings, hidden `prewalk-plan.md` injection, todo-gated handoff on first workspace-mutating tool (`edit`/`write` excluding `touchesNoFiles` or mutating bash tool command), model switch via `ResolveRole` + `SetModelNamed`/`SetThinkingLevel`, and `prewalk-checklist.md` steering; `prewalk.auto` classifier not ported |
+| `/fast [on\|ultra\|off\|status]` | Toggle provider priority/ultrafast service tier | **not ported** | PiG SDK has no API to set provider `service_tier` / `speed` |
+| `/slow [on\|off\|status]` | Toggle provider flex/low-priority service tier | **not ported** | PiG SDK has no API to set provider `service_tier` / low-priority fallback |
+| `/extended-context [on\|off\|status]` | Toggle extended context window tier | **not ported** | PiG SDK has no API to toggle provider extended-context beta flags |
+| `/skillful [on\|off\|status]` | Toggle listing skills in system prompt | **ported here** | Session-only `skillful` toggle wired to `internal/settings` and honored by `internal/prompt` (`prompt.Skillful`) |
+| `/computer [on\|off\|status]` | Toggle computer-use eval prelude | **not ported** | Computer-use desktop control prelude not ported |
+| `/ratchet [flow and goal]` | Eval hillclimbing kickoff | **ported (`internal/ratchet`)** | Registered by `internal/ratchet/register.go` alongside the `ratchet` eval prelude |
+| `/modelpreset [list\|save\|switch\|delete]` | Save/switch role-model presets | **ported here** | Stores named model + thinking level + optional role presets in `<agentDir>/model-presets.json` with interactive selector |
+| `/setup` (`providers`) | Interactive provider setup wizard | **not ported** | Custom TUI wizard; PiG uses `/login` and `pig auth` |
+| `/security <subcommand>` | Native security scan planner/runner | **not ported** | Requires omp's `security_scan` backend and SARIF/lineage store |
+| `/trace` | Open session trace in stats dashboard | **not ported** | Requires omp's `@oh-my-pi/omp-stats` HTTP server + SQLite store |
+| `/stats [--port\|--host]` | Launch local stats dashboard | **not ported** | Requires omp's `@oh-my-pi/omp-stats` server |
+| `/collab [start\|view\|list\|stop\|status]` | Live session sharing via relay | **not ported** | Requires omp's collab relay protocol and host/guest runtime |
+| `/join <link>` | Join shared collab session | **not ported** | Requires omp's collab guest runtime |
+| `/leave` | Leave collab session | **not ported** | Requires omp's collab runtime |
+| `/browser [headless\|visible]` | Toggle browser eval-prelude mode | **ported (`internal/browser`)** | Registered by `internal/browser/command.go`; toggles `browser.headless` and drops owned headless tabs |
+| `/open [link]` | Open last conversation link in OS browser | **ported here** | Reuses `ExtractLastLink`; validates `http://`/`https://` and launches argv-only OS opener (`open`/`xdg-open`/`rundll32`) |
+| `/commit [instructions]` | Selective commit of agent-made changes | **ported here** | Verifies `eval` active + `commit` prelude enabled, calls `commit.DraftFor` + `commit.LogSubjects(5)`, renders `commit-request.md` verbatim, and sends/steers prompt |
+| `/live` | Realtime Codex voice mode | **not ported** | Requires WebRTC audio + Codex realtime backend |
+| `/record` | Screen recording (`omp play`) | **not ported** | Requires omp's TUI frame recorder |
+| `/pause` | Freeze all agents until resumed | **not ported** | Requires omp's global `agentPauseGate` + fullscreen pause overlay |
+| `/forget-approvals` | Clear remembered file/folder approvals | **ported (`internal/approval`)** | Registered by `internal/approval/approval.go`; calls `ClearSession` and notifies |
+| `/ssh <subcommand>` | Manage SSH hosts | **ported (`internal/ssh`)** | Registered by `internal/ssh/command.go`; supports `list`, `add`, `remove`, `help` with atomic `ssh.json` writer |
+| `/fresh` | Reset provider stream state without clearing transcript | **not ported** | PiG SDK has no API to prune provider stream state |
+| `/delete` | Delete current session file and start a new one | **not ported** | PiG SDK has no `dropSession` API to unlink the active session file safely |
+| `/shake [elide\|images\|thinking]` | Drop heavy content from context in place | **not ported** | PiG SDK has no API to rewrite past context entries outside compaction |
+| `/pin [session id]` | Pin session at top of resume list | **not ported** | PiG's `/resume` picker does not read omp's session-pins store |
+| `/unpin [session id]` | Unpin session from resume list | **not ported** | PiG's `/resume` picker does not read omp's session-pins store |
+| `/tan <work>` | Run background tangential agent | **ported here** | Forks session context into a detached background subagent via `modes.SpawnDetachedTask` (`agentDisplayName: "tan"`, sharing parent `local://`) while keeping the primary conversation unblocked |
+| `/omfg <complaint>` | Forge TTSR rule from complaint | **ported here** | Ephemeral `ctx.Complete` rule generation via `omfg-user.md` (up to 3 attempts with retry feedback), balanced JSON extraction, strict kebab-case name validation, Go RE2 regex validation against session assistant history, and atomic save to `<cwd>/.omp/rules/<name>.md` (`0644`) or `<agentDir>/rules/<name>.md` (`0600`) with overwrite confirmation; live TTSR stream-interruption engine not ported |
+| `/cleanse [request] [--all]` | Fix diagnostics with parallel subagents | **ported here (partial)** | Parses `[request] [--all\|-a] [--tests\|-t] [-n\|--agents <N>] [-m\|--model <model>]`, discovers Go/JS/Rust/Python checkers, and dispatches a structured parallel cleanse workflow prompt (or custom `SpawnCleanse` hook) with atomic single-active-run guard and cancel support rather than upstream's fullscreen `CleansePanelComponent` overlay |
+| `/retry` | Retry last failed agent turn | **not ported** | PiG SDK has no `session.retry()` API |
+| `/memory <subcommand>` | Inspect/maintain memory backends | **not ported** | Requires omp's memory/hindsight backends |
+| `/move [<path>]` | Move session to another directory | **not ported** | PiG SDK cannot change host process cwd or relocate session files |
+| `/wt` (`worktree`) `[<branch>]` | Move session into new git worktree | **not ported** | Requires `/move` host cwd relocation |
+| `/restart` | Restart binary with same launch flags | **not ported** | Extension cannot exec-replace the PiG host binary |
+| `/marketplace <subcommand>` | Manage omp marketplace plugins | **not ported** | PiG uses `pig install` / `pig config` packages instead of omp marketplace |
+| `/plugins` (`plugin`) `[list\|enable\|disable]` | Manage omp npm/marketplace plugins | **not ported** | PiG uses `pig list` / `pig config` |
+| `/reload-plugins` | Reload omp plugins | **not ported** | PiG uses built-in `/reload` |
+| `/skills <subcommand>` | Search/install from `skills.omp.sh` | **not ported** | Requires omp's `skillshare` registry client |
+| `/extensions` (`status`) | Open Extension Control Center overlay | **not ported** | Custom omp dashboard overlay; PiG has `pig status` / `pig config` |
+| `/agents` | Open Agents Hub overlay | **not ported** | Custom omp overlay; depends on subagent model-role/advisor/prewalk config |
+| `/git [revision]` | Open split-diff Git TUI overlay | **not ported** | Custom fullscreen Git TUI overlay |
+| `/local [name]` | Open `local://` file in `$EDITOR` | **not ported** | Subprocess extensions cannot suspend PiG's terminal to run an interactive `$EDITOR` |
+| `/hub` (`subagents`) | Open live Agent Hub overlay | **not ported** | Custom omp overlay; depends on omp's live subagent observer registry |
+| `/mcp <subcommand>` | Manage MCP servers | **not ported** | PiG manages MCP via `pig mcp` and built-in `mcp` extension |

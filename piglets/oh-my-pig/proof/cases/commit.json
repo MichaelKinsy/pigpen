@@ -1,0 +1,309 @@
+[
+  {
+    "name": "commit-draft-show-select-diff-commit",
+    "description": "Edit two files, draft, show, take/drop by path/units/grep, only with globs, diff, and commit with subject+body+fixes (checking git log).",
+    "persist_session": true,
+    "env": {
+      "GIT_AUTHOR_DATE": "2025-01-02T03:04:05+0000",
+      "GIT_COMMITTER_DATE": "2025-01-02T03:04:05+0000"
+    },
+    "setup": "export GIT_AUTHOR_DATE='2025-01-02T03:04:05+0000' GIT_COMMITTER_DATE='2025-01-02T03:04:05+0000' && git init -q -b main && git config user.email test@example.com && git config user.name Test && git config commit.gpgSign false && git config core.autocrlf false && printf 'line1\\nline2\\nline3\\nline4\\nline5\\nline6\\nline7\\nline8\\nline9\\nline10\\n' > alpha.txt && printf 'beta1\\nbeta2\\n' > beta.txt && printf 'doc1\\n' > notes.md && git add . && git commit -qm seed",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "alpha.txt", "content": "line1\nline2_agent\nline3\nline4\nline5\nline6\nline7\nline8\nline9_agent\nline10\n" } },
+      { "tool": "write", "arguments": { "path": "beta.txt", "content": "beta1\nbeta2_agent\n" } },
+      { "tool": "write", "arguments": { "path": "notes.md", "content": "doc1\ndoc2_agent\n" } },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "draft and show",
+          "code": "d = await commit.draft()\nprint('---SHOW_ALL---')\nawait d.show()\nprint('---SHOW_ALPHA---')\nawait d.show('alpha.txt')"
+        }
+      },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "drop and take by unit, path, grep, and only",
+          "code": "await d.drop('alpha.txt', '2')\nawait d.take('alpha.txt', grep='line9_agent')\nawait d.drop('beta.txt')\nawait d.take('beta.txt')\nawait d.only('alpha.txt', '*.md')\nprint('---DIFF---')\npatch = await d.diff()\nprint('PATCH_LEN_OK:', len(patch) > 0)"
+        }
+      },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "commit with subject body and fixes",
+          "code": "res = await d.commit('feat: selective update', ['- Updated alpha and notes.'], fixes=42, silent=True)\nsha = res['sha']\nassert len(sha) == 40 and all(c in '0123456789abcdef' for c in sha)\nprint(repr(d).replace(sha[:10], '<SHA10>'))\nprint('COMMIT_PATHS:', res['paths'])\nprint('COMMIT_SUBJECT:', res['subject'])"
+        }
+      },
+      {
+        "tool": "bash",
+        "arguments": {
+          "command": "git log -1 --format='SUBJECT=%s%nBODY=%B' && git show --name-only --format= HEAD && git status --porcelain"
+        }
+      }
+    ]
+  },
+  {
+    "name": "commit-external-bash-edit-preselection",
+    "description": "External write via bash (spawned python3, unrecorded in both omp and oh-my-pig) alongside an agent write in the same file: only agent lines are preselected.",
+    "persist_session": true,
+    "env": {
+      "GIT_AUTHOR_DATE": "2025-01-02T03:04:05+0000",
+      "GIT_COMMITTER_DATE": "2025-01-02T03:04:05+0000"
+    },
+    "setup": "export GIT_AUTHOR_DATE='2025-01-02T03:04:05+0000' GIT_COMMITTER_DATE='2025-01-02T03:04:05+0000' && git init -q -b main && git config user.email test@example.com && git config user.name Test && git config commit.gpgSign false && git config core.autocrlf false && printf 'top\\nmid1\\nmid2\\nmid3\\nmid4\\nmid5\\nmid6\\nbottom\\n' > shared.txt && git add . && git commit -qm seed",
+    "calls": [
+      {
+        "tool": "bash",
+        "arguments": {
+          "command": "python3 -c \"p='shared.txt'; s=open(p).read().replace('top','top_external'); open(p,'w').write(s)\""
+        }
+      },
+      {
+        "tool": "write",
+        "arguments": {
+          "path": "shared.txt",
+          "content": "top_external\nmid1\nmid2\nmid3\nmid4\nmid5\nmid6\nbottom_agent\n"
+        }
+      },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "js",
+          "title": "js draft show diff commit",
+          "code": "const d = await commit.draft();\nawait d.show();\nawait d.diff();\nconst out = await d.commit('fix: only agent bottom line', { silent: true });\nconst sha10 = out.sha.slice(0, 10);\nprint(String(d).replaceAll(sha10, '<SHA10>'));\nprint('COMMITTED_PATHS:', out.paths.join(','));"
+        }
+      },
+      {
+        "tool": "bash",
+        "arguments": {
+          "command": "git show HEAD:shared.txt && echo '---WORK---' && cat shared.txt"
+        }
+      }
+    ]
+  },
+  {
+    "name": "commit-subagent-attribution-and-scope",
+    "description": "Subagent writes child.txt, main writes main.txt; verify default scope preselects both, scope='self' and scope='SubWriter' isolate them, and unknown agent name fails with omp wording.",
+    "persist_session": true,
+    "env": {
+      "GIT_AUTHOR_DATE": "2025-01-02T03:04:05+0000",
+      "GIT_COMMITTER_DATE": "2025-01-02T03:04:05+0000"
+    },
+    "setup": "export GIT_AUTHOR_DATE='2025-01-02T03:04:05+0000' GIT_COMMITTER_DATE='2025-01-02T03:04:05+0000' && git init -q -b main && git config user.email test@example.com && git config user.name Test && git config commit.gpgSign false && git config core.autocrlf false && printf 'seed\\n' > seed.txt && git add . && git commit -qm seed",
+    "child_tool_calls": [
+      { "tool": "write", "arguments": { "path": "child.txt", "content": "from child\n" } }
+    ],
+    "child_reply": "CHILD_WROTE_FILE",
+    "calls": [
+      {
+        "tool": "task",
+        "arguments": {
+          "context": "Subagent commit attribution test.",
+          "tasks": [
+            {
+              "name": "SubWriter",
+              "agent": "task",
+              "task": "Write child.txt with 'from child'.",
+              "solutionSpace": "one fixed file"
+            }
+          ]
+        }
+      },
+      { "tool": "wait", "arguments": {} },
+      { "tool": "write", "arguments": { "path": "main.txt", "content": "from main\n" } },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "draft scopes with subagent",
+          "code": "print('=== DEFAULT ===')\nd_all = await commit.draft()\nprint('=== SELF ===')\nd_self = await commit.draft('self')\nprint('=== SUBWRITER ===')\nd_sub = await commit.draft('SubWriter')\nprint('=== UNKNOWN ===')\ntry:\n    await commit.draft('NoSuchAgent')\nexcept Exception as e:\n    print('UNKNOWN_ERR:', e)\nres = await d_sub.commit('feat: subagent only', silent=True)\nprint('SUB_PATHS:', res['paths'])"
+        }
+      },
+      {
+        "tool": "bash",
+        "arguments": {
+          "command": "git show --name-only --format= HEAD && git status --porcelain"
+        }
+      }
+    ]
+  },
+  {
+    "name": "commit-user-staged-same-and-other-file",
+    "description": "User has STAGED changes in another file (other.txt) and in the same file (mix.txt) before agent commits; index keeps user's staged changes and commit excludes them.",
+    "persist_session": true,
+    "env": {
+      "GIT_AUTHOR_DATE": "2025-01-02T03:04:05+0000",
+      "GIT_COMMITTER_DATE": "2025-01-02T03:04:05+0000"
+    },
+    "setup": "export GIT_AUTHOR_DATE='2025-01-02T03:04:05+0000' GIT_COMMITTER_DATE='2025-01-02T03:04:05+0000' && git init -q -b main && git config user.email test@example.com && git config user.name Test && git config commit.gpgSign false && git config core.autocrlf false && printf 'o1\\n' > other.txt && printf 'l1\\nl2\\nl3\\nl4\\nl5\\nl6\\nl7\\nl8\\n' > mix.txt && git add . && git commit -qm seed && printf 'o1_staged\\n' > other.txt && printf 'l1_staged\\nl2\\nl3\\nl4\\nl5\\nl6\\nl7\\nl8\\n' > mix.txt && git add other.txt mix.txt",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "mix.txt", "content": "l1_staged\nl2\nl3\nl4\nl5\nl6\nl7\nl8_agent\n" } },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "draft and commit preserving staged index",
+          "code": "d = await commit.draft()\nres = await d.commit('fix: agent line in mix', silent=True)\nsha10 = res['sha'][:10]\nprint(repr(d).replace(sha10, '<SHA10>'))\nprint('INDEX_NOTES:', res['indexNotes'])"
+        }
+      },
+      {
+        "tool": "bash",
+        "arguments": {
+          "command": "echo '=== HEAD:other.txt ===' && git show HEAD:other.txt && echo '=== :other.txt ===' && git show :other.txt && echo '=== HEAD:mix.txt ===' && git show HEAD:mix.txt && echo '=== :mix.txt ===' && git show :mix.txt"
+        }
+      }
+    ]
+  },
+  {
+    "name": "commit-untracked-edit-delete-move-binary-crlf-noeol",
+    "description": "Untracked new file via write, file deleted and moved via edit, binary file, CRLF file, and file without trailing newline.",
+    "persist_session": true,
+    "env": {
+      "GIT_AUTHOR_DATE": "2025-01-02T03:04:05+0000",
+      "GIT_COMMITTER_DATE": "2025-01-02T03:04:05+0000"
+    },
+    "setup": "export GIT_AUTHOR_DATE='2025-01-02T03:04:05+0000' GIT_COMMITTER_DATE='2025-01-02T03:04:05+0000' && git init -q -b main && git config user.email test@example.com && git config user.name Test && git config commit.gpgSign false && git config core.autocrlf false && printf 'delme\\n' > gone.txt && printf 'move1\\nmove2\\n' > oldname.txt && printf 'c1\\r\\nc2\\r\\n' > crlf.txt && printf 'noeol1\\nnoeol2' > noeol.txt && python3 -c \"open('blob.bin','wb').write(b'\\x00\\x01\\x02')\" && git add . && git commit -qm seed",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "brand_new.txt", "content": "fresh file\n" } },
+      { "tool": "read", "arguments": { "path": "gone.txt" } },
+      { "tool": "edit", "arguments": { "input": "[gone.txt#{{TAG:gone.txt}}]\nREM" } },
+      { "tool": "read", "arguments": { "path": "oldname.txt" } },
+      { "tool": "edit", "arguments": { "input": "[oldname.txt#{{TAG:oldname.txt}}]\nPUT 2.=2:\n+move2_edited\nMV newname.txt" } },
+      { "tool": "write", "arguments": { "path": "crlf.txt", "content": "c1\nc2_edited\n" } },
+      { "tool": "write", "arguments": { "path": "noeol.txt", "content": "noeol1\nnoeol2_edited" } },
+      { "tool": "bash", "arguments": { "command": "python3 -c \"open('blob.bin','wb').write(b'\\x00\\x09\\x08\\x07')\"" } },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "draft take binary and commit all",
+          "code": "d = await commit.draft()\nawait d.take('blob.bin')\nres = await d.commit('feat: mixed file kinds', silent=True)\nprint('PATHS:', sorted(res['paths']))"
+        }
+      },
+      {
+        "tool": "bash",
+        "arguments": {
+          "command": "git ls-tree -r --name-only HEAD && python3 -c \"import subprocess; print('CRLF:', repr(subprocess.check_output(['git','show','HEAD:crlf.txt']))); print('NOEOL:', repr(subprocess.check_output(['git','show','HEAD:noeol.txt']))); print('BIN:', list(subprocess.check_output(['git','show','HEAD:blob.bin']))); print('MOVED:', repr(subprocess.check_output(['git','show','HEAD:newname.txt'])))\" && git status --porcelain"
+        }
+      }
+    ]
+  },
+  {
+    "name": "commit-hooks-noverify-and-amend",
+    "description": "Failing pre-commit hook aborts commit leaving HEAD and index intact; noVerify bypasses hook; amend replaces the session's own commit.",
+    "persist_session": true,
+    "env": {
+      "GIT_AUTHOR_DATE": "2025-01-02T03:04:05+0000",
+      "GIT_COMMITTER_DATE": "2025-01-02T03:04:05+0000"
+    },
+    "setup": "export GIT_AUTHOR_DATE='2025-01-02T03:04:05+0000' GIT_COMMITTER_DATE='2025-01-02T03:04:05+0000' && git init -q -b main && git config user.email test@example.com && git config user.name Test && git config commit.gpgSign false && git config core.autocrlf false && printf 'v0\\n' > app.txt && printf 'u0\\n' > user.txt && git add . && git commit -qm seed && printf 'u_staged\\n' > user.txt && git add user.txt && printf '#!/bin/sh\\necho \"hook rejected this commit\" >&2\\nexit 1\\n' > .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "app.txt", "content": "v1\n" } },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "failing hook then no_verify",
+          "code": "d = await commit.draft()\ntry:\n    await d.commit('feat: v1')\nexcept Exception as e:\n    print('HOOK_FAILED:', 'hook rejected this commit' in str(e))\nprint('AFTER_FAIL_COUNT:', sh('git rev-list --count HEAD').strip())\nprint('AFTER_FAIL_STAGED:', sh('git diff --cached --name-only').strip())\nres1 = await d.commit('feat: v1', no_verify=True, silent=True)\nprint('COMMIT1_PATHS:', res1['paths'])"
+        }
+      },
+      { "tool": "write", "arguments": { "path": "app.txt", "content": "v2\n" } },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "amend own commit with no_verify",
+          "code": "d2 = await commit.draft(silent=True)\nprint(repr(d2).replace(d2.details['head'][:10], '<SHA10>'))\nres2 = await d2.commit('feat: v2 amended', amend=True, no_verify=True, silent=True)\nprint('AMENDED_IS_SET:', bool(res2.get('amended')))\nprint('AMENDED_PATHS:', res2['paths'])\nprint('FINAL_COUNT:', sh('git rev-list --count HEAD').strip())\nprint('FINAL_SUBJECT:', sh('git log -1 --format=%s').strip())\nprint('FINAL_APP:', sh('git show HEAD:app.txt').strip())\nprint('FINAL_STAGED:', sh('git diff --cached --name-only').strip())"
+        }
+      }
+    ]
+  },
+  {
+    "name": "commit-merge-detached-empty-maxdrafts-stale",
+    "description": "In-progress merge refused, detached HEAD commits cleanly, empty repo makes root commit, >MAX_DRAFTS expires oldest, and second draft after first commits handles stale/moved HEAD.",
+    "persist_session": true,
+    "env": {
+      "GIT_AUTHOR_DATE": "2025-01-02T03:04:05+0000",
+      "GIT_COMMITTER_DATE": "2025-01-02T03:04:05+0000"
+    },
+    "setup": "export GIT_AUTHOR_DATE='2025-01-02T03:04:05+0000' GIT_COMMITTER_DATE='2025-01-02T03:04:05+0000' && mkdir -p merge_repo detached_repo empty_repo multi_repo conflict_repo && git -C merge_repo init -q -b main && git -C merge_repo config user.email t@e.com && git -C merge_repo config user.name T && git -C merge_repo config commit.gpgSign false && printf 'base\\n' > merge_repo/c.txt && git -C merge_repo add . && git -C merge_repo commit -qm base && git -C merge_repo checkout -qb side && printf 'side\\n' > merge_repo/c.txt && git -C merge_repo add . && git -C merge_repo commit -qm side && git -C merge_repo checkout -q main && printf 'main\\n' > merge_repo/c.txt && git -C merge_repo add . && git -C merge_repo commit -qm main && (git -C merge_repo merge side || true) && git -C detached_repo init -q -b main && git -C detached_repo config user.email t@e.com && git -C detached_repo config user.name T && git -C detached_repo config commit.gpgSign false && printf 'd0\\n' > detached_repo/d.txt && git -C detached_repo add . && git -C detached_repo commit -qm seed && git -C detached_repo checkout -q --detach HEAD && git -C empty_repo init -q -b main && git -C empty_repo config user.email t@e.com && git -C empty_repo config user.name T && git -C empty_repo config commit.gpgSign false && git -C multi_repo init -q -b main && git -C multi_repo config user.email t@e.com && git -C multi_repo config user.name T && git -C multi_repo config commit.gpgSign false && printf 'a0\\n' > multi_repo/a.txt && printf 'b0\\n' > multi_repo/b.txt && git -C multi_repo add . && git -C multi_repo commit -qm seed && git -C conflict_repo init -q -b main && git -C conflict_repo config user.email t@e.com && git -C conflict_repo config user.name T && git -C conflict_repo config commit.gpgSign false && printf 'x0\\n' > conflict_repo/x.txt && git -C conflict_repo add . && git -C conflict_repo commit -qm seed",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "merge_repo/agent.txt", "content": "a\n" } },
+      { "tool": "write", "arguments": { "path": "detached_repo/d.txt", "content": "d1\n" } },
+      { "tool": "write", "arguments": { "path": "empty_repo/first.txt", "content": "first\n" } },
+      { "tool": "write", "arguments": { "path": "multi_repo/a.txt", "content": "a1\n" } },
+      { "tool": "write", "arguments": { "path": "multi_repo/b.txt", "content": "b1\n" } },
+      { "tool": "write", "arguments": { "path": "conflict_repo/x.txt", "content": "x_agent\n" } },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "merge refused, detached HEAD, empty repo, stale draft",
+          "code": "dm = await commit.draft(repo='merge_repo', silent=True)\ntry:\n    await dm.commit('fix: during merge', silent=True)\nexcept Exception as e:\n    print('MERGE_ERR:', e)\n\ndd = await commit.draft(repo='detached_repo', silent=True)\nprint('DETACHED_SUMMARY_LINE0:', repr(dd).splitlines()[0])\nrd = await dd.commit('fix: detached', silent=True)\nprint('DETACHED_HEADER:', repr(dd).splitlines()[0].replace(rd['sha'][:10], '<SHA10>'))\n\nde = await commit.draft(repo='empty_repo', silent=True)\nprint('EMPTY_SUMMARY_LINE0:', repr(de).splitlines()[0])\nre_out = await de.commit('feat: root', silent=True)\nprint('EMPTY_PARENT:', re_out['parent'])\nprint('EMPTY_PATHS:', re_out['paths'])\n\nd1 = await commit.draft(repo='multi_repo', silent=True)\nd2 = await commit.draft(repo='multi_repo', silent=True)\nawait d1.only('a.txt', silent=True)\nr1 = await d1.commit('feat: a only', silent=True)\nprint('D1_PATHS:', r1['paths'])\nawait d2.drop('a.txt', silent=True)\nr2 = await d2.commit('feat: b on moved HEAD', silent=True)\nprint('D2_CLEAN_NOTE:', 'HEAD had moved to ' + r1['sha'][:10] + '; the selection applied cleanly on top.' in repr(d2))\nprint('D2_PATHS:', r2['paths'])\n\ndc = await commit.draft(repo='conflict_repo', silent=True)\nsh(\"printf 'x_other\\\\n' > conflict_repo/x.txt && git -C conflict_repo add x.txt && git -C conflict_repo commit -qm other\")\ntry:\n    await dc.commit('fix: stale conflict', silent=True)\nexcept Exception as e:\n    print('STALE_CONFLICT_ERR:', e)"
+        }
+      }
+    ]
+  },
+  {
+    "name": "commit-disabled-setting",
+    "description": "With commit.enabled: false, commit is absent from eval description and invoking commit fails with omp's disabled-prelude wording.",
+    "config_yml": "commit:\n  enabled: false\n",
+    "setup": "git init -q -b main && git config user.email test@example.com && git config user.name Test",
+    "calls": [
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "commit disabled in py",
+          "code": "print('HAS_COMMIT_GLOBAL:', 'commit' in globals())\ntry:\n    await _omp_prelude('commit', {'action': 'draft'})\nexcept Exception as e:\n    print('DISABLED_ERR:', e)"
+        }
+      },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "js",
+          "title": "commit disabled in js",
+          "code": "print('HAS_COMMIT_GLOBAL:', typeof globalThis.commit !== 'undefined');\ntry {\n  await globalThis.__omp_prelude__('commit', { action: 'draft' });\n} catch (e) {\n  print('DISABLED_ERR:', e.message);\n}"
+        }
+      }
+    ]
+  },
+  {
+    "name": "commit-errors-and-outside-git",
+    "description": "Error cases for every action (unknown draft, empty selection, bad params) and behavior outside a git repository.",
+    "persist_session": true,
+    "env": {
+      "GIT_AUTHOR_DATE": "2025-01-02T03:04:05+0000",
+      "GIT_COMMITTER_DATE": "2025-01-02T03:04:05+0000"
+    },
+    "setup": "export GIT_AUTHOR_DATE='2025-01-02T03:04:05+0000' GIT_COMMITTER_DATE='2025-01-02T03:04:05+0000' && mkdir -p repo outside && git -C repo init -q -b main && git -C repo config user.email test@example.com && git -C repo config user.name Test && git -C repo config commit.gpgSign false && printf 'one\\n' > repo/a.txt && git -C repo add . && git -C repo commit -qm seed && printf 'one\\ntwo\\n' > repo/a.txt",
+    "calls": [
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "outside git repo error",
+          "code": "try:\n    await commit.draft(repo='outside')\nexcept Exception as e:\n    print('OUTSIDE_ERR:', e)"
+        }
+      },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "unknown draft and empty selection errors",
+          "code": "d = await commit.draft(repo='repo')\nfor label, fn in [\n    ('empty_commit', lambda: d.commit('fix: nothing')),\n    ('bad_path_show', lambda: d.show('nope.txt')),\n    ('bad_path_take', lambda: d.take('nope.txt')),\n    ('bad_path_drop', lambda: d.drop('nope.txt')),\n    ('bad_only', lambda: d.only('nope.txt')),\n    ('bad_unit', lambda: d.take('a.txt', '9z')),\n    ('no_target', lambda: d.take()),\n]:\n    try:\n        await fn()\n    except Exception as e:\n        print(label + ':', e)\nfor action in ['show', 'take', 'drop', 'only', 'diff', 'commit']:\n    params = {'action': action, 'draft': 'd_unknown'}\n    if action == 'only': params['globs'] = ['a.txt']\n    if action == 'commit': params['subject'] = 'x'\n    try:\n        await _omp_prelude('commit', params)\n    except Exception as e:\n        print('unknown_draft_' + action + ':', e)"
+        }
+      },
+      {
+        "tool": "eval",
+        "arguments": {
+          "language": "js",
+          "title": "js bad options and unknown action",
+          "code": "for (const [label, fn] of [\n  ['bad_draft_opt', () => commit.draft({ cwd: 'repo' })],\n  ['bad_params_action', () => globalThis.__omp_prelude__('commit', { action: 'bogus' })],\n  ['bad_commit_empty_subj', () => globalThis.__omp_prelude__('commit', { action: 'commit', draft: 'd1', subject: '' })],\n]) {\n  try {\n    await fn();\n  } catch (e) {\n    print(label + ':', e.message);\n  }\n}"
+        }
+      }
+    ]
+  }
+]

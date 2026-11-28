@@ -1,0 +1,9 @@
+package p
+
+func f(h func() any) {
+	switch v :=
+		h().(type) {
+	case int:
+		_ = v
+	}
+}

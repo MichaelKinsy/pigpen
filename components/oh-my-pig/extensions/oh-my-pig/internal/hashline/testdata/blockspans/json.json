@@ -1,0 +1,1144 @@
+{
+  "lang": "json",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py",
+  "total": 162,
+  "omp_resolved": 103,
+  "omp_refused": 59,
+  "cases": [
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 1,
+      "span": [
+        1,
+        587
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 14,
+      "span": [
+        14,
+        16
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 19,
+      "span": [
+        19,
+        21
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 27,
+      "span": [
+        27,
+        29
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 52,
+      "span": [
+        52,
+        55
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 60,
+      "span": [
+        60,
+        63
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 68,
+      "span": [
+        68,
+        71
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 76,
+      "span": [
+        76,
+        79
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 88,
+      "span": [
+        88,
+        91
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 96,
+      "span": [
+        96,
+        99
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 104,
+      "span": [
+        104,
+        107
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 112,
+      "span": [
+        112,
+        115
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 124,
+      "span": [
+        124,
+        127
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 132,
+      "span": [
+        132,
+        135
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 140,
+      "span": [
+        140,
+        143
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 152,
+      "span": [
+        152,
+        155
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 160,
+      "span": [
+        160,
+        163
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 168,
+      "span": [
+        168,
+        171
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 176,
+      "span": [
+        176,
+        179
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 188,
+      "span": [
+        188,
+        191
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 196,
+      "span": [
+        196,
+        199
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 204,
+      "span": [
+        204,
+        207
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 212,
+      "span": [
+        212,
+        215
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 224,
+      "span": [
+        224,
+        227
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 232,
+      "span": [
+        232,
+        235
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 240,
+      "span": [
+        240,
+        243
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 248,
+      "span": [
+        248,
+        251
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 260,
+      "span": [
+        260,
+        263
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 268,
+      "span": [
+        268,
+        271
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 276,
+      "span": [
+        276,
+        279
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 288,
+      "span": [
+        288,
+        291
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 296,
+      "span": [
+        296,
+        299
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 304,
+      "span": [
+        304,
+        307
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 312,
+      "span": [
+        312,
+        315
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 324,
+      "span": [
+        324,
+        327
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 332,
+      "span": [
+        332,
+        335
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 340,
+      "span": [
+        340,
+        343
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 348,
+      "span": [
+        348,
+        351
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 360,
+      "span": [
+        360,
+        363
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 368,
+      "span": [
+        368,
+        371
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 376,
+      "span": [
+        376,
+        379
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 384,
+      "span": [
+        384,
+        387
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 396,
+      "span": [
+        396,
+        399
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 404,
+      "span": [
+        404,
+        407
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 412,
+      "span": [
+        412,
+        415
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 424,
+      "span": [
+        424,
+        427
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 432,
+      "span": [
+        432,
+        435
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 440,
+      "span": [
+        440,
+        443
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 448,
+      "span": [
+        448,
+        451
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 460,
+      "span": [
+        460,
+        463
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 468,
+      "span": [
+        468,
+        471
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 476,
+      "span": [
+        476,
+        479
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 484,
+      "span": [
+        484,
+        487
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 496,
+      "span": [
+        496,
+        499
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 504,
+      "span": [
+        504,
+        507
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 512,
+      "span": [
+        512,
+        515
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 520,
+      "span": [
+        520,
+        523
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 532,
+      "span": [
+        532,
+        535
+      ]
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 541,
+      "refused": "line 1: `CUT 541*` resolved a single-line block — line 541 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 541`. The nearest enclosing multi-line block begins at line 539 and ends at line 553; use `CUT 539*` to target it."
+    },
+    {
+      "file": "files/json/coding-agent-pkg.json",
+      "anchor": 554,
+      "span": [
+        554,
+        580
+      ]
+    },
+    {
+      "file": "files/json/tsconfig.json",
+      "anchor": 1,
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/json/tsconfig.json",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/tsconfig.json",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 1,
+      "span": [
+        1,
+        105
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 2,
+      "span": [
+        2,
+        43
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 6,
+      "span": [
+        6,
+        42
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 8,
+      "span": [
+        8,
+        13
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 10,
+      "span": [
+        10,
+        12
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 14,
+      "span": [
+        14,
+        19
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 16,
+      "span": [
+        16,
+        18
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 21,
+      "span": [
+        21,
+        26
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 23,
+      "span": [
+        23,
+        25
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 28,
+      "span": [
+        28,
+        33
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 30,
+      "span": [
+        30,
+        32
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 35,
+      "span": [
+        35,
+        40
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 37,
+      "span": [
+        37,
+        39
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 44,
+      "span": [
+        44,
+        64
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 48,
+      "span": [
+        48,
+        63
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 50,
+      "span": [
+        50,
+        55
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 52,
+      "span": [
+        52,
+        54
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 57,
+      "span": [
+        57,
+        62
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 59,
+      "span": [
+        59,
+        61
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 65,
+      "span": [
+        65,
+        84
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 69,
+      "span": [
+        69,
+        83
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 70,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 71,
+      "span": [
+        71,
+        76
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 73,
+      "span": [
+        73,
+        75
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 77,
+      "span": [
+        77,
+        82
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 79,
+      "span": [
+        79,
+        81
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 80,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 85,
+      "span": [
+        85,
+        104
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 89,
+      "span": [
+        89,
+        103
+      ]
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 90,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 91,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 92,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 93,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 94,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 95,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 96,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 98,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 99,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 100,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 101,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/edit-cases.json",
+      "anchor": 102,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 1,
+      "span": [
+        1,
+        62
+      ]
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 2,
+      "span": [
+        2,
+        13
+      ]
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 6,
+      "span": [
+        6,
+        12
+      ]
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 14,
+      "span": [
+        14,
+        32
+      ]
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 18,
+      "span": [
+        18,
+        31
+      ]
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 33,
+      "span": [
+        33,
+        42
+      ]
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 37,
+      "span": [
+        37,
+        41
+      ]
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 43,
+      "span": [
+        43,
+        61
+      ]
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 47,
+      "span": [
+        47,
+        60
+      ]
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 50,
+      "span": [
+        50,
+        57
+      ]
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 52,
+      "span": [
+        52,
+        56
+      ]
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/bash-cases.json",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/json/constructed_nested_objects.json",
+      "anchor": 1,
+      "constructed": true,
+      "name": "nested_objects",
+      "span": [
+        1,
+        11
+      ]
+    },
+    {
+      "file": "files/json/constructed_nested_objects.json",
+      "anchor": 2,
+      "constructed": true,
+      "name": "nested_objects",
+      "span": [
+        2,
+        5
+      ]
+    },
+    {
+      "file": "files/json/constructed_nested_objects.json",
+      "anchor": 6,
+      "constructed": true,
+      "name": "nested_objects",
+      "span": [
+        6,
+        10
+      ]
+    },
+    {
+      "file": "files/json/constructed_nested_objects.json",
+      "anchor": 7,
+      "constructed": true,
+      "name": "nested_objects",
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/json/constructed_two_members_same_line.json",
+      "anchor": 1,
+      "constructed": true,
+      "name": "two_members_same_line",
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/json/constructed_two_members_same_line.json",
+      "anchor": 2,
+      "constructed": true,
+      "name": "two_members_same_line",
+      "refused_kind": "single_line"
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 541*` resolved a single-line block — line 541 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 541`. The nearest enclosing multi-line block begins at line 539 and ends at line 553; use `CUT 539*` to target it."
+  }
+}

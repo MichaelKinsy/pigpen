@@ -70,6 +70,7 @@ func (s *session) Resume() {
 		s.startKeepalive()
 	}
 	var err error
+	var opened bool
 	switch {
 	case s.closed || s.fellBack:
 	case s.tsp == nil:
@@ -79,11 +80,12 @@ func (s *session) Resume() {
 	case !s.lent:
 		if s.sf == nil {
 			err = s.openLocked()
+			opened = err == nil
 		}
 	default:
 		s.lent = false
 		var sf *tern.Surface
-		sf, err = s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: "pig", Role: "pig.session", Chat: true, Adopt: true})
+		sf, err = s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: s.surfaceTitle(), Role: "pig.session", Chat: true, Adopt: true})
 		if err != nil {
 			err = errRefused
 			break
@@ -96,6 +98,9 @@ func (s *session) Resume() {
 		}
 	}
 	s.mu.Unlock()
+	if opened {
+		s.notifySurface(true)
+	}
 	if err != nil {
 		s.fallback(err.Error())
 	}
@@ -151,16 +156,31 @@ func (s *session) redrawAll() {
 			continue
 		}
 		e.settled = false
-		s.pending = append(s.pending, tern.OpAdd("main", "", s.mainNode(e.id, e.node)))
+		e.readGroupHostID = ""
+		e.readGroupMembers = nil
+		e.readGroupLastWire = nil
+		wire := s.mainNodeFor(e, e.node)
+		if e.hasWelcomeSpacers {
+			sp0 := tern.WireNode{ID: e.id + ".sp0", K: tern.KindSpacer, P: map[string]any{"size": "sm"}}
+			sp1 := tern.WireNode{ID: e.id + ".sp1", K: tern.KindSpacer, P: map[string]any{"size": "sm"}}
+			s.pending = append(s.pending, tern.OpAdd("main", "", sp0), tern.OpAdd("main", "", wire), tern.OpAdd("main", "", sp1))
+			s.pending = append(s.pending, tern.OpSettle(sp0.ID), tern.OpSettle(sp1.ID))
+		} else {
+			s.pending = append(s.pending, tern.OpAdd("main", "", wire))
+		}
 	}
 	for i, id := range s.order {
 		s.settle(s.sent[strings.TrimPrefix(id, "n.")], i)
+	}
+	if s.ompRoles {
+		s.syncOmpReadGroups()
 	}
 	if s.sessionNode {
 		s.sessionNode = false
 		s.publishSessionFile(s.sessionFile)
 	}
 	s.markDirty, s.markInstalled, s.overlaySheetSent = true, false, false
+	s.ompBrandDirty, s.ompBrandSheetSent, s.ompBrandSheetText = true, false, ""
 	s.viewSheetSent = false
 	s.redrawDock()
 }

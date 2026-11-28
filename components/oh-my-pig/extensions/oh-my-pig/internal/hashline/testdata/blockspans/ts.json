@@ -1,0 +1,1811 @@
+{
+  "lang": "ts",
+  "sample": "sample1",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample1",
+  "total": 269,
+  "omp_resolved": 127,
+  "omp_refused": 142,
+  "cases": [
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 1,
+      "span": [
+        1,
+        7
+      ]
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 5,
+      "refused": "line 1: `CUT 5*` could not resolve a syntactic block beginning on line 5 (blank/closer line, or parse error). Use `CUT 5.=M` with explicit lines. The nearest enclosing multi-line block begins at line 1 and ends at line 7; use `CUT 1*` to target it."
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 8,
+      "refused": "line 1: `CUT 8*` resolved a single-line block — line 8 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 8`."
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 13,
+      "span": [
+        13,
+        17
+      ]
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 21,
+      "span": [
+        21,
+        26
+      ]
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 30,
+      "span": [
+        30,
+        50
+      ]
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 36,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 37,
+      "span": [
+        37,
+        40
+      ]
+    },
+    {
+      "file": "files/ts/store.ts",
+      "anchor": 44,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 3,
+      "span": [
+        3,
+        8
+      ]
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 13,
+      "span": [
+        13,
+        16
+      ]
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 18,
+      "span": [
+        18,
+        22
+      ]
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 26,
+      "span": [
+        26,
+        29
+      ]
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 33,
+      "span": [
+        33,
+        35
+      ]
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 39,
+      "span": [
+        39,
+        41
+      ]
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 45,
+      "span": [
+        45,
+        49
+      ]
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 54,
+      "span": [
+        54,
+        56
+      ]
+    },
+    {
+      "file": "files/ts/schemas.ts",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/remote-mirror.ts",
+      "anchor": 1,
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/ts/remote-mirror.ts",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/remote-mirror.ts",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/remote-mirror.ts",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/remote-mirror.ts",
+      "anchor": 16,
+      "span": [
+        16,
+        18
+      ]
+    },
+    {
+      "file": "files/ts/remote-mirror.ts",
+      "anchor": 20,
+      "span": [
+        20,
+        24
+      ]
+    },
+    {
+      "file": "files/ts/remote-mirror.ts",
+      "anchor": 25,
+      "span": [
+        25,
+        32
+      ]
+    },
+    {
+      "file": "files/ts/remote-mirror.ts",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/remote-mirror.ts",
+      "anchor": 35,
+      "span": [
+        35,
+        37
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 1,
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 12,
+      "span": [
+        12,
+        16
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 19,
+      "span": [
+        19,
+        25
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 27,
+      "span": [
+        27,
+        31
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 35,
+      "span": [
+        35,
+        37
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 44,
+      "span": [
+        44,
+        58
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 51,
+      "span": [
+        51,
+        57
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 61,
+      "span": [
+        61,
+        72
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 65,
+      "span": [
+        65,
+        71
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 75,
+      "span": [
+        75,
+        79
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 81,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 82,
+      "span": [
+        82,
+        84
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 86,
+      "span": [
+        86,
+        97
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 90,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 91,
+      "span": [
+        91,
+        96
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 99,
+      "span": [
+        99,
+        122
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 103,
+      "span": [
+        103,
+        109
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 105,
+      "span": [
+        105,
+        108
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 110,
+      "span": [
+        110,
+        121
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 116,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 117,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 118,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 119,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 124,
+      "span": [
+        124,
+        134
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 128,
+      "span": [
+        128,
+        133
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 136,
+      "span": [
+        136,
+        146
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 140,
+      "span": [
+        140,
+        145
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 148,
+      "span": [
+        148,
+        158
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 152,
+      "span": [
+        152,
+        157
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 160,
+      "span": [
+        160,
+        170
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 164,
+      "span": [
+        164,
+        169
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 172,
+      "span": [
+        172,
+        182
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 176,
+      "span": [
+        176,
+        181
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 184,
+      "span": [
+        184,
+        195
+      ]
+    },
+    {
+      "file": "files/ts/settings.ts",
+      "anchor": 188,
+      "span": [
+        188,
+        194
+      ]
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 4,
+      "span": [
+        4,
+        9
+      ]
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 12,
+      "span": [
+        12,
+        14
+      ]
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 17,
+      "span": [
+        17,
+        19
+      ]
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 22,
+      "span": [
+        22,
+        24
+      ]
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 29,
+      "span": [
+        29,
+        46
+      ]
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 34,
+      "span": [
+        34,
+        42
+      ]
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 40,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 48,
+      "span": [
+        48,
+        52
+      ]
+    },
+    {
+      "file": "files/ts/normalize.ts",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 16,
+      "span": [
+        16,
+        20
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 22,
+      "span": [
+        22,
+        68
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 25,
+      "span": [
+        25,
+        44
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 26,
+      "span": [
+        26,
+        31
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 32,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 34,
+      "span": [
+        34,
+        42
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 35,
+      "span": [
+        35,
+        39
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 47,
+      "span": [
+        47,
+        54
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 50,
+      "span": [
+        50,
+        52
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 55,
+      "span": [
+        55,
+        57
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 60,
+      "span": [
+        60,
+        65
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 61,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 62,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 67,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 70,
+      "span": [
+        70,
+        91
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 71,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 73,
+      "span": [
+        73,
+        90
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 78,
+      "span": [
+        78,
+        87
+      ]
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 86,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/pipeline.ts",
+      "anchor": 88,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 5,
+      "span": [
+        5,
+        11
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 16,
+      "span": [
+        16,
+        30
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 18,
+      "span": [
+        18,
+        22
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 24,
+      "span": [
+        24,
+        28
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 32,
+      "span": [
+        32,
+        35
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 37,
+      "span": [
+        37,
+        60
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 41,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 45,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 48,
+      "span": [
+        48,
+        50
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 52,
+      "span": [
+        52,
+        54
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 55,
+      "span": [
+        55,
+        59
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 62,
+      "span": [
+        62,
+        95
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 67,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 70,
+      "span": [
+        70,
+        79
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 72,
+      "span": [
+        72,
+        78
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 73,
+      "span": [
+        73,
+        77
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 82,
+      "span": [
+        82,
+        92
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 84,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 86,
+      "span": [
+        86,
+        91
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 87,
+      "span": [
+        87,
+        90
+      ]
+    },
+    {
+      "file": "files/ts/model-selection.ts",
+      "anchor": 94,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 13,
+      "span": [
+        13,
+        16
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 18,
+      "span": [
+        18,
+        46
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 22,
+      "span": [
+        22,
+        24
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 29,
+      "span": [
+        29,
+        31
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 34,
+      "span": [
+        34,
+        38
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 35,
+      "span": [
+        35,
+        37
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 39,
+      "span": [
+        39,
+        43
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 40,
+      "span": [
+        40,
+        42
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 48,
+      "span": [
+        48,
+        64
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 49,
+      "span": [
+        49,
+        51
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 53,
+      "span": [
+        53,
+        57
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 66,
+      "span": [
+        66,
+        77
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 70,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 71,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 79,
+      "span": [
+        79,
+        128
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 82,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 83,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 98,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 100,
+      "span": [
+        100,
+        125
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 101,
+      "span": [
+        101,
+        103
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 102,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 104,
+      "span": [
+        104,
+        106
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 105,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 107,
+      "span": [
+        107,
+        109
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 108,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 110,
+      "span": [
+        110,
+        112
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 111,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 113,
+      "span": [
+        113,
+        117
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 115,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 118,
+      "span": [
+        118,
+        122
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 119,
+      "span": [
+        119,
+        121
+      ]
+    },
+    {
+      "file": "files/ts/validation.ts",
+      "anchor": 127,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/constructed_valid_fn.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "valid_fn",
+      "span": [
+        1,
+        3
+      ]
+    },
+    {
+      "file": "files/ts/constructed_valid_fn.ts",
+      "anchor": 2,
+      "constructed": true,
+      "name": "valid_fn",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/constructed_valid_fn.ts",
+      "anchor": 3,
+      "constructed": true,
+      "name": "valid_fn",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/constructed_valid_fn.ts",
+      "anchor": 4,
+      "constructed": true,
+      "name": "valid_fn",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/constructed_chained_then_catch.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "chained_then_catch",
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/ts/constructed_chained_then_catch.ts",
+      "anchor": 4,
+      "constructed": true,
+      "name": "chained_then_catch",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/constructed_multiline_sig.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "multiline_sig",
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/ts/constructed_multiline_sig.ts",
+      "anchor": 4,
+      "constructed": true,
+      "name": "multiline_sig",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/constructed_continuation_dot.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "continuation_dot",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/ts/constructed_continuation_dot.ts",
+      "anchor": 2,
+      "constructed": true,
+      "name": "continuation_dot",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/constructed_template_literal_braces.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "template_literal_braces",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/ts/constructed_template_literal_braces.ts",
+      "anchor": 2,
+      "constructed": true,
+      "name": "template_literal_braces",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/constructed_regex_with_brace.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "regex_with_brace",
+      "span": [
+        1,
+        3
+      ]
+    },
+    {
+      "file": "files/ts/constructed_allman_brace.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "allman_brace",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/ts/constructed_allman_brace.ts",
+      "anchor": 2,
+      "constructed": true,
+      "name": "allman_brace",
+      "span": [
+        2,
+        4
+      ]
+    },
+    {
+      "file": "files/ts/constructed_decorator_above_class.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "decorator_above_class",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/ts/constructed_decorator_above_class.ts",
+      "anchor": 2,
+      "constructed": true,
+      "name": "decorator_above_class",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/ts/constructed_allman_else_next_line.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "allman_else_next_line",
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/ts/constructed_allman_else_next_line.ts",
+      "anchor": 4,
+      "constructed": true,
+      "name": "allman_else_next_line",
+      "span": [
+        4,
+        6
+      ]
+    },
+    {
+      "file": "files/ts/constructed_trailing_member_after_brace.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "trailing_member_after_brace",
+      "span": [
+        1,
+        3
+      ]
+    },
+    {
+      "file": "files/ts/constructed_two_stmts_on_one_line.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "two_stmts_on_one_line",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/constructed_regex_then_obj_same_line.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "regex_then_obj_same_line",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/constructed_switch_case_brace_then_break.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "switch_case_brace_then_break",
+      "span": [
+        1,
+        10
+      ]
+    },
+    {
+      "file": "files/ts/constructed_switch_case_brace_then_break.ts",
+      "anchor": 2,
+      "constructed": true,
+      "name": "switch_case_brace_then_break",
+      "span": [
+        2,
+        5
+      ]
+    },
+    {
+      "file": "files/ts/constructed_switch_case_brace_then_break.ts",
+      "anchor": 6,
+      "constructed": true,
+      "name": "switch_case_brace_then_break",
+      "span": [
+        6,
+        9
+      ]
+    },
+    {
+      "file": "files/ts/constructed_multiline_arrow_extends_return.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "multiline_arrow_extends_return",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/ts/constructed_multiline_arrow_extends_return.ts",
+      "anchor": 6,
+      "constructed": true,
+      "name": "multiline_arrow_extends_return",
+      "span": [
+        6,
+        10
+      ]
+    },
+    {
+      "file": "files/ts/constructed_multiline_arrow_extends_return.ts",
+      "anchor": 9,
+      "constructed": true,
+      "name": "multiline_arrow_extends_return",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/constructed_multiline_arrow_extends_return.ts",
+      "anchor": 12,
+      "constructed": true,
+      "name": "multiline_arrow_extends_return",
+      "span": [
+        12,
+        15
+      ]
+    },
+    {
+      "file": "files/ts/constructed_prev_line_operator_cont.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "prev_line_operator_cont",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/ts/constructed_prev_line_operator_cont.ts",
+      "anchor": 2,
+      "constructed": true,
+      "name": "prev_line_operator_cont",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/ts/constructed_w1_asi_next_line_cont.ts",
+      "anchor": 1,
+      "constructed": true,
+      "name": "w1_asi_next_line_cont",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/ts/constructed_w1_asi_next_line_cont.ts",
+      "anchor": 6,
+      "constructed": true,
+      "name": "w1_asi_next_line_cont",
+      "span": [
+        6,
+        9
+      ]
+    },
+    {
+      "file": "files/ts/constructed_w1_asi_next_line_cont.ts",
+      "anchor": 11,
+      "constructed": true,
+      "name": "w1_asi_next_line_cont",
+      "span": [
+        11,
+        14
+      ]
+    },
+    {
+      "file": "files/ts/constructed_w1_asi_next_line_cont.ts",
+      "anchor": 16,
+      "constructed": true,
+      "name": "w1_asi_next_line_cont",
+      "span": [
+        16,
+        19
+      ]
+    }
+  ],
+  "refusal_samples": {
+    "unresolved": "line 1: `CUT 5*` could not resolve a syntactic block beginning on line 5 (blank/closer line, or parse error). Use `CUT 5.=M` with explicit lines. The nearest enclosing multi-line block begins at line 1 and ends at line 7; use `CUT 1*` to target it.",
+    "single_line": "line 1: `CUT 8*` resolved a single-line block — line 8 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 8`."
+  }
+}

@@ -1,0 +1,180 @@
+[
+  {
+    "case": "bash-notify-streams-cancel",
+    "call_index": 5,
+    "tool": "read",
+    "regex": "(?:^proc://bg_2/streams/1 open 9B — \\(echo pipe_one; sleep 1\\.5; echo pipe_two\\) → cat$|^bg_2 has piped nothing between `\\|` stages and redirected nothing into a file yet\\. Read proc://bg_2 for its output\\.$)",
+    "details_paths": [
+      "displayContent.text"
+    ],
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Live pipe/redirection stream tapping",
+      "proc://<id>/streams"
+    ],
+    "ref_subject": [
+      "proc://<id>/streams"
+    ],
+    "why": "Live pipe/redirection stream tapping (proc://<id>/streams) is not portable without omp's embedded shell VM; port always returns the empty-streams message (which also changes displayContent.text)."
+  },
+  {
+    "case": "bash-notify-streams-cancel",
+    "call_index": 6,
+    "tool": "read",
+    "regex": "(?:^pipe_one$|^Stream not found: proc://bg_2/streams/1\\. List them with proc://bg_2/streams\\.$)",
+    "is_error_mismatch": [
+      false,
+      true
+    ],
+    "details_paths": [
+      "contentType",
+      "displayContent",
+      "meta",
+      "rowPrefixes",
+      "totalLines"
+    ],
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Live pipe/redirection stream tapping",
+      "proc://<id>/streams"
+    ],
+    "ref_subject": [
+      "proc://<id>/streams/<n>",
+      "Stream not found"
+    ],
+    "why": "Live pipe/redirection stream tapping (proc://<id>/streams/<n>) is not portable without omp's embedded shell VM; port returns Stream not found (isError=true, empty details)."
+  },
+  {
+    "case": "internal-urls-read-write",
+    "call_index": 5,
+    "tool": "read",
+    "side": "omp",
+    "regex": "^- proc://<id>/streams lists a bash job's pipes and the files it redirects output into, proc://<id>/streams/<n> reads what stream n carried so far\\. Write sends stdin to services only \\(empty = Enter\\); proc://<id>/mode: persist\\|session\\|detached \\(services only\\); start long-lived work as a named service when it needs stdin or lifetime controls\\. Completed jobs evicted \\(process-local\\)\\.$",
+    "details_paths": [
+      "displayContent.text"
+    ],
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Live pipe/redirection stream tapping",
+      "proc://<id>/streams"
+    ],
+    "ref_subject": [
+      "proc://<id>/streams"
+    ],
+    "why": "omp's help://read/urls proc:// line advertises stream tapping and persist|session|detached modes (replaced by the port's system-shell/session-only line below)."
+  },
+  {
+    "case": "internal-urls-read-write",
+    "call_index": 5,
+    "tool": "read",
+    "side": "pig",
+    "regex": "^- proc://<id>/streams is not available in the system-shell port \\(live intermediate `\\|` pipe and redirected-file tapping requires omp's embedded shell VM\\)\\. Write sends stdin to services only \\(empty = Enter\\); proc://<id>/mode: session only \\(persist/detached require an out-of-process daemon\\); start long-lived work as a named service when it needs stdin\\. Completed jobs evicted \\(process-local\\)\\.$",
+    "details_paths": [
+      "displayContent.text"
+    ],
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Out-of-process `omp` project daemon broker",
+      "`persist`/`detached`"
+    ],
+    "ref_subject": [
+      "persist",
+      "detached"
+    ],
+    "why": "Port's help://read/urls proc:// line documents both unavailable stream tapping and session-only service mode (no out-of-process daemon broker)."
+  },
+  {
+    "case": "read-image-vision",
+    "call_index": 0,
+    "tool": "read",
+    "regex": "(?:^Read image file \\[image/png\\](?: \\(displayed as image/webp\\))?$|^\\[Image: original 1x1, displayed at 200x200\\. Multiply coordinates by 0\\.01 to map to original image\\.\\]$)",
+    "class": "LISTED",
+    "ref_file": "internal/files/UPSTREAM.md",
+    "ref_term": [
+      "image auto-resize",
+      "SVG `:img` rasterization"
+    ],
+    "ref_subject": [
+      "image auto-resize"
+    ],
+    "why": "Image auto-resize / WebP transcoding note is not ported (Go stdlib sends original PNG)."
+  },
+  {
+    "case": "bash-async-and-service",
+    "call_index": 3,
+    "tool": "read",
+    "regex": "(?:^oracle-svc \\[service\\] — ready — up <DURATION (?:ms|s)> — pid <PID> — persistent$|^oracle-svc \\[service\\] — ready — up <DURATION (?:ms|s)> — pid <PID>$)",
+    "details_paths": [
+      "displayContent.text"
+    ],
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Out-of-process `omp` project daemon broker",
+      "`persist`/`detached`"
+    ],
+    "ref_subject": [
+      "persist"
+    ],
+    "why": "Replaces implicit `service_persistent` normalizer: omp print-mode daemon broker runs services as ` — persistent`, whereas in-process ServiceManager is session-only (no ` — persistent` suffix; also reflected in displayContent.text)."
+  },
+  {
+    "case": "bash-async-and-service",
+    "call_index": 4,
+    "tool": "write",
+    "regex": "(?:^Stopped oracle-svc \\[service\\] — exited — up <DURATION (?:ms|s)> — persistent$|^Stopped oracle-svc \\[service\\] — exited — up <DURATION (?:ms|s)>$)",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Out-of-process `omp` project daemon broker",
+      "`persist`/`detached`"
+    ],
+    "ref_subject": [
+      "persist"
+    ],
+    "why": "Replaces implicit `service_persistent` normalizer: omp print-mode daemon broker prints ` — persistent` on service stop, whereas in-process ServiceManager is session-only."
+  },
+  {
+    "case": "task-errors-and-agent-urls",
+    "call_index": 0,
+    "tool": "task",
+    "regex": "(?:^Task Bad failed preflight: Unknown agent \"no-such-agent\"\\. Available: scout, reviewer, security-reviewer, task, sonic\\. Searched: ~/.omp/agent/agents$|^Task Bad failed preflight: Unknown agent \"no-such-agent\"\\. Available: scout, reviewer, security-reviewer, task, sonic\\. Searched: ~/.pig/agent/agents, ~/.omp/agent/agents$)",
+    "class": "LISTED",
+    "ref_file": "internal/agents/UPSTREAM.md",
+    "ref_term": [
+      "Agent discovery error `Searched:` list",
+      "~/.pig/agent/agents, ~/.omp/agent/agents"
+    ],
+    "ref_subject": [
+      "Searched:",
+      "~/.pig/agent/agents"
+    ],
+    "why": "Port searches both ~/.pig/agent/agents and ~/.omp/agent/agents, so unknown-agent preflight errors list both directories in Searched: where omp lists only ~/.omp/agent/agents."
+  },
+  {
+    "case": "write-archive-errors-and-edge-cases",
+    "call_index": 5,
+    "tool": "write",
+    "regex": "(?:^Successfully wrote 9 bytes to zstd\\.tar\\.zst:a\\.txt$|^Writing entries inside tar\\.zst archives is not supported in this Go standard-library port \\(only zip, tar, and tar\\.gz/tgz are writable\\)\\.$)",
+    "is_error_mismatch": [
+      false,
+      true
+    ],
+    "details_paths": [
+      "resolvedPath"
+    ],
+    "class": "LISTED",
+    "ref_file": "internal/files/UPSTREAM.md",
+    "ref_term": [
+      "`write` non-stdlib archive formats (`.tar.zst`/`.tzst`, `.asar`)"
+    ],
+    "ref_subject": [
+      "tar.zst"
+    ],
+    "why": "tar.zst writing requires a zstd encoder outside the Go standard library; omp writes zstd.tar.zst:a.txt while the port refuses with an explicit stdlib-only error (isError=true, no resolvedPath)."
+  }
+]

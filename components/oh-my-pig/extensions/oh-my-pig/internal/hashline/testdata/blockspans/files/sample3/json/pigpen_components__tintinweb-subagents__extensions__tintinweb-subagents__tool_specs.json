@@ -1,0 +1,103 @@
+{
+ "Agent": {
+  "parameters": {
+   "properties": {
+    "description": {
+     "description": "A short (3-5 word) description of the task (shown in UI).",
+     "type": "string"
+    },
+    "inherit_context": {
+     "description": "If true, fork parent conversation into the agent. Default: false (fresh context).",
+     "type": "boolean"
+    },
+    "isolated": {
+     "description": "If true, agent gets no extension/MCP tools — only built-in tools.",
+     "type": "boolean"
+    },
+    "max_turns": {
+     "description": "Maximum number of agentic turns before stopping. Omit for unlimited (default).",
+     "minimum": 1,
+     "type": "number"
+    },
+    "model": {
+     "description": "Optional model override. Accepts \"provider/modelId\" or fuzzy name (e.g. \"haiku\", \"sonnet\"). Omit to use the agent type's default.",
+     "type": "string"
+    },
+    "name": {
+     "description": "Optional memorable name for this agent, e.g. \"auth-audit\", so it can be addressed as `@name` at the prompt and by steer_subagent / get_subagent_result. Letters, digits, `_` and `-`. Worth setting when several agents of the same type run at once; omit for one-off work. The agent stays reachable by its type either way.",
+     "type": "string"
+    },
+    "prompt": {
+     "description": "The task for the agent to perform.",
+     "type": "string"
+    },
+    "resume": {
+     "description": "Optional agent ID to resume from. Continues from previous context. Resumes detached like any other spawn; pass run_in_background: false to block and get the result inline. An agent can only be resumed once its current run has finished — use steer_subagent to reach one mid-run.",
+     "type": "string"
+    },
+    "run_in_background": {
+     "description": "Defaults to true — the agent runs detached, returning its ID immediately, and you are notified on completion. Set false only when your very next action depends on the result; the call then blocks and returns the agent's full output inline.",
+     "type": "boolean"
+    },
+    "subagent_type": {
+     "description": "The type of specialized agent to use. Available types: {{TYPES}}. Custom agents from .pi/agents/*.md (project) or {{AGENTDIR}}/agents/*.md (global) are also available.",
+     "type": "string"
+    },
+    "thinking": {
+     "description": "Thinking level: off, minimal, low, medium, high, xhigh, max. Overrides agent default.",
+     "type": "string"
+    }
+   },
+   "required": [
+    "prompt",
+    "description",
+    "subagent_type"
+   ],
+   "type": "object"
+  },
+  "description": null
+ },
+ "get_subagent_result": {
+  "parameters": {
+   "properties": {
+    "agent_id": {
+     "description": "The agent ID to check. The agent's handle also works — its `name` if you gave it one, otherwise its type (`explore`, `explore-2`).",
+     "type": "string"
+    },
+    "verbose": {
+     "description": "If true, include the agent's full conversation (messages + tool calls). Default: false.",
+     "type": "boolean"
+    },
+    "wait": {
+     "description": "If true, wait for the agent to complete before returning. Default: false.",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "agent_id"
+   ],
+   "type": "object"
+  },
+  "description": "Check status and retrieve a background agent's full result — its completion notification carries only a preview. Use the agent ID returned by Agent."
+ },
+ "steer_subagent": {
+  "parameters": {
+   "properties": {
+    "agent_id": {
+     "description": "The agent ID to steer (must be currently running). The agent's handle also works — its `name` if you gave it one, otherwise its type (`explore`, `explore-2`).",
+     "type": "string"
+    },
+    "message": {
+     "description": "The steering message to send. This will appear as a user message in the agent's conversation.",
+     "type": "string"
+    }
+   },
+   "required": [
+    "agent_id",
+    "message"
+   ],
+   "type": "object"
+  },
+  "description": "Send a steering message to a running agent. The message will interrupt the agent after its current tool execution and be injected into its conversation, allowing you to redirect its work mid-run. Only works on running agents."
+ }
+}

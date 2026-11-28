@@ -26,11 +26,20 @@ func (s *session) publishSessionFile(file string) {
 		return
 	}
 	s.sessionNode = true
+	kind := tern.KindText
 	props := map[string]any{"hidden": true, "role": sessionRole, "text": ""}
+	if s.ompRoles {
+		// Tern's `.sf-fresh` check allows `spacer` children in `main` (and
+		// treats non-notice/non-welcome `text` nodes as transcript content,
+		// even when hidden). Using `spacer` preserves the exact id (`pig.session`),
+		// `role`, `hidden: true`, and `href` contract while keeping `.sf-fresh` active.
+		kind = tern.KindSpacer
+		props = map[string]any{"hidden": true, "role": sessionRole}
+	}
 	if file != "" {
 		props["href"] = file
 	}
 	// Before the first transcript node Tern still has: one it evicted is
 	// unknown to it, and an add before it would be rejected.
-	s.queue(tern.OpAdd("main", s.liveFrom(0), tern.WireNode{ID: sessionNodeID, K: "text", P: props}))
+	s.queue(tern.OpAdd("main", s.liveFrom(0), tern.WireNode{ID: sessionNodeID, K: kind, P: props}))
 }

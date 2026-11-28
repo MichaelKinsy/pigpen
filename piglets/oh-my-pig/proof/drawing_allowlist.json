@@ -1,0 +1,977 @@
+[
+  {
+    "part": "surface root",
+    "node_path": "$",
+    "prop": "role",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": "omp.session",
+    "pig": "pig.session",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `surface root` |",
+      "pig.session"
+    ],
+    "ref_subject": [
+      "pig.session",
+      "omp.session"
+    ],
+    "why": "Root surface intentionally carries `pig.session` instead of `omp.session` (`PARITY.md:215`)."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > image[omp.welcome.logo]",
+    "prop": "alt",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": "omp",
+    "pig": "oh-my-pig",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "oh-my-pig"
+    ],
+    "ref_subject": [
+      "logo",
+      "Branding intentionally names `oh-my-pig`"
+    ],
+    "why": "Welcome logo alt text is branded `oh-my-pig` rather than `omp`."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > image[omp.welcome.logo]",
+    "prop": "builtin",
+    "side": "omp-only",
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "builtin:\"omp\""
+    ],
+    "ref_subject": [
+      "builtin:\"omp\"",
+      "mashup"
+    ],
+    "why": "Welcome logo uses oh-my-pig's π-plus-pig mashup SVG blob rather than Tern's built-in `omp` logo."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > image[omp.welcome.logo]",
+    "prop": "blob",
+    "side": "port-only",
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "SVG `blob`"
+    ],
+    "ref_subject": [
+      "blob",
+      "mashup"
+    ],
+    "why": "Welcome logo ships oh-my-pig's 24×22 π-plus-pig mashup as an inline SVG blob."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > image[omp.welcome.logo]",
+    "prop": "w",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": 128,
+    "pig": 48,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "`w:48`, `h:44`"
+    ],
+    "ref_subject": [
+      "w:48",
+      "mashup"
+    ],
+    "why": "Welcome logo natural width is 48 CSS px (exact 2× of the 24×22 art grid) instead of omp's 128."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > image[omp.welcome.logo]",
+    "prop": "h",
+    "side": "port-only",
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "`w:48`, `h:44`"
+    ],
+    "ref_subject": [
+      "h:44",
+      "mashup"
+    ],
+    "why": "Welcome logo sets explicit natural height 44 CSS px (exact 2× of the 24×22 art grid)."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > col[omp.welcome.mark] > text[omp.welcome.wordmark]",
+    "prop": "spans",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": [
+      {
+        "t": "omp",
+        "s": "strong"
+      }
+    ],
+    "pig": [
+      {
+        "t": "oh-my-pig",
+        "s": "strong"
+      }
+    ],
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "oh-my-pig"
+    ],
+    "ref_subject": [
+      "wordmark `oh-my-pig`"
+    ],
+    "why": "Welcome wordmark is branded `oh-my-pig` rather than `omp`."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > col[omp.welcome.mark] > text[omp.welcome.version]",
+    "prop": "spans",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": [
+      {
+        "t_regex": "^v\\d+\\.\\d+\\.\\d+$",
+        "s": "dim mono"
+      }
+    ],
+    "pig": [
+      {
+        "t_regex": "^v\\d+\\.\\d+\\.\\d+$",
+        "s": "dim mono"
+      }
+    ],
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "oh-my-pig"
+    ],
+    "ref_subject": [
+      "Piglet version from `Env.Version`"
+    ],
+    "why": "Welcome version displays the Piglet version (`Env.Version`) rather than omp's `v19.1.1`."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.tip] > text[omp.welcome.tip-text]",
+    "prop": "text",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "match_kind": "welcome_tip",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "oh-my-pig"
+    ],
+    "ref_subject": [
+      "randomly chosen per launch"
+    ],
+    "why": "Welcome tip is randomly selected per launch and filtered to registered commands; each side's tip is checked against its source tips list."
+  },
+  {
+    "part": "user message",
+    "node_path": "$",
+    "prop": "actions",
+    "side": "value",
+    "class": "HOST",
+    "omp": {
+      "hold": [
+        {"id": "copy-message", "label": "Copy message", "icon": "copy"},
+        {"id": "edit-turn", "label": "Edit & resend", "icon": "edit", "detail": "To composer"},
+        {"id": "retry-turn", "label": "Retry turn", "icon": "refresh"},
+        {"id": "rewind-turn", "label": "Rewind to here…", "icon": "rewind"},
+        {"id": "fork-turn", "label": "Fork from here", "icon": "branch", "detail": "New session"}
+      ]
+    },
+    "pig": {
+      "hold": [
+        {"id": "copy-message", "label": "Copy message", "icon": "copy"},
+        {"id": "edit-turn", "label": "Edit & resend", "icon": "edit", "detail": "To composer"},
+        {"id": "rewind-turn", "label": "Rewind to here…", "icon": "rewind"},
+        {"id": "fork-turn", "label": "Fork from here", "icon": "branch", "detail": "New session"}
+      ]
+    },
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `user message` |",
+      "retry-turn"
+    ],
+    "ref_subject": [
+      "actions.hold",
+      "retry-turn"
+    ],
+    "why": "`card[omp.user]` ports `copy-message`, `edit-turn`, `rewind-turn`, and `fork-turn` hold actions; only `retry-turn` is omitted because PiG `frontend.Env` has no retry callback or `/retry` command."
+  },
+  {
+    "part": "user message",
+    "node_path": "row[omp.user.tools] > text@2",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `user message` |",
+      "omp.user.time"
+    ],
+    "ref_subject": [
+      "omp.user.tools",
+      "omp.user.time"
+    ],
+    "why": "`row[omp.user.tools]` ports `copy` and `rewind` icons; omits the `·` separator before timestamp because PiG `frontend.MarkdownText` carries no message timestamp."
+  },
+  {
+    "part": "user message",
+    "node_path": "row[omp.user.tools] > text[omp.user.time]",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `user message` |",
+      "omp.user.time"
+    ],
+    "ref_subject": [
+      "omp.user.time"
+    ],
+    "why": "PiG `frontend.MarkdownText` carries no message timestamp, so `text[omp.user.time]` is omitted inside `row[omp.user.tools]`."
+  },
+  {
+    "part": "assistant text (markdown)",
+    "node_path": "$",
+    "prop": "actions",
+    "side": "value",
+    "class": "HOST",
+    "omp": {
+      "hold": [
+        {"id": "copy-answer", "label": "Copy reply", "icon": "copy"},
+        {"id": "retry-turn", "label": "Retry turn", "icon": "refresh"},
+        {"id": "rewind-turn", "label": "Rewind to here…", "icon": "rewind"},
+        {"id": "fork-turn", "label": "Fork from here", "icon": "branch", "detail": "New session"}
+      ]
+    },
+    "pig": {
+      "hold": [
+        {"id": "copy-answer", "label": "Copy reply", "icon": "copy"},
+        {"id": "rewind-turn", "label": "Rewind to here…", "icon": "rewind"},
+        {"id": "fork-turn", "label": "Fork from here", "icon": "branch", "detail": "New session"}
+      ]
+    },
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `assistant text (markdown)` |",
+      "retry-turn"
+    ],
+    "ref_subject": [
+      "actions.hold",
+      "retry-turn"
+    ],
+    "why": "`col[omp.assistant]` ports `copy-answer`, `rewind-turn`, and `fork-turn` hold actions; only `retry-turn` is omitted because PiG `frontend.Env` has no retry callback or `/retry` command."
+  },
+  {
+    "part": "assistant text (markdown)",
+    "node_path": "row[omp.turn.usage]",
+    "prop": "title",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "match_kind": "turn_usage_timing",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `assistant text (markdown)` |",
+      "omp.turn.usage"
+    ],
+    "ref_subject": [
+      "omp.turn.usage",
+      "<DUR>"
+    ],
+    "why": "`row[omp.turn.usage]` title differs only by run-specific wall-clock elapsed duration (`<DUR>`); exact token counts and wording are checked equal."
+  },
+  {
+    "part": "assistant text (markdown)",
+    "node_path": "row[omp.turn.usage] > text@2",
+    "prop": "text",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "match_kind": "turn_usage_timing",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `assistant text (markdown)` |",
+      "omp.turn.usage"
+    ],
+    "ref_subject": [
+      "omp.turn.usage",
+      "<DUR>"
+    ],
+    "why": "`row[omp.turn.usage]` summary text differs only by run-specific wall-clock elapsed duration (`<DUR>`); exact token count and wording are checked equal."
+  },
+  {
+    "part": "working row",
+    "node_path": "$",
+    "prop": "$count",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": 2,
+    "pig": 1,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `working row` |",
+      "omp.working.pig"
+    ],
+    "ref_subject": [
+      "spinner",
+      "omp.working.pig"
+    ],
+    "why": "Working row omits the `spinner` kind in favour of `el[omp.working.pig]`, so `find_working_nodes` (which matches both `row[omp.working]` and `spinner` nodes) counts 1 on pig vs 2 on omp."
+  },
+  {
+    "part": "working row",
+    "node_path": "spinner@0",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `working row` |",
+      "omp.working.pig"
+    ],
+    "ref_subject": [
+      "spinner",
+      "omp.working.pig"
+    ],
+    "why": "Working row deliberately replaces omp's starburst `spinner` with oh-my-pig's animated pig head spinner (`el[omp.working.pig]`)."
+  },
+  {
+    "part": "working row",
+    "node_path": "el[omp.working.pig]",
+    "prop": "$node",
+    "side": "port-only",
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `working row` |",
+      "omp.working.pig"
+    ],
+    "ref_subject": [
+      "omp.working.pig",
+      "pig head spinner"
+    ],
+    "why": "Working row draws oh-my-pig's animated pixel-art pig head spinner (`el[omp.working.pig]`) via the `omp-brand` stylesheet."
+  },
+  {
+    "part": "working row",
+    "node_path": "row[omp.working.stop]",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `working row` |",
+      "omp.working.stop"
+    ],
+    "ref_subject": [
+      "omp.working.stop"
+    ],
+    "why": "PiG frontend.Env has no interrupt callback and frontend.Working carries no interrupt key, so `row[omp.working.stop]` is omitted."
+  },
+  {
+    "part": "tool card: bash",
+    "parts": [
+      "tool card: bash",
+      "long bash (folded)",
+      "long bash (expanded)"
+    ],
+    "node_path": "col[omp.run] > shell[omp.tool.bash.command]",
+    "prop": "presentation",
+    "side": "value",
+    "class": "LISTED",
+    "match_kind": "shell_presentation_semantic",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `tool card: bash` |",
+      "omp.tool.bash.command"
+    ],
+    "ref_subject": [
+      "omp.tool.bash.command",
+      "presentation"
+    ],
+    "why": "Native `shell` node matches omp's pseudo-code `presentation` semantically (preferences, rows, segment text/style/language, effects); differs only in omp's embedded-shell VM runtime trace metadata (`executedAtNs`, `executionSeq`, `timeline`, `argv` detail)."
+  },
+  {
+    "part": "tool card: bash",
+    "parts": [
+      "tool card: bash",
+      "long bash (folded)",
+      "long bash (expanded)"
+    ],
+    "node_path": "col[omp.run] > shell[omp.tool.bash.command]",
+    "prop": "steps",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `tool card: bash` |",
+      "steps"
+    ],
+    "ref_subject": [
+      "steps",
+      "omp.tool.bash.command"
+    ],
+    "why": "Interactive per-step stream pinning (`steps: true`) requires omp's embedded-shell VM pipe-tap trace; host bash omits it."
+  },
+  {
+    "part": "tool card: bash",
+    "parts": [
+      "tool card: bash",
+      "long bash (folded)",
+      "long bash (expanded)"
+    ],
+    "node_path": "col[omp.run] > shell[omp.tool.bash.command]",
+    "prop": "focus",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `tool card: bash` |",
+      "focus"
+    ],
+    "ref_subject": [
+      "focus",
+      "omp.tool.bash.command"
+    ],
+    "why": "Interactive per-step stream pinning (`focus: []`) requires omp's embedded-shell VM pipe-tap trace; host bash omits it."
+  },
+  {
+    "part": "ask form (live)",
+    "node_path": "$",
+    "prop": "$kind",
+    "side": "value",
+    "class": "HOST",
+    "omp": "col",
+    "pig": "picker",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `ask form (live)` |",
+      "omp.ask.card"
+    ],
+    "ref_subject": [
+      "omp.ask.card",
+      "picker"
+    ],
+    "why": "PiG frontend.Env has no whole-form dialog primitive or answer callback; omp mounts `col[omp.ask.card]` in dock while PiG mounts `picker` in layer. Prompt title and option labels are still compared below `$kind`."
+  },
+  {
+    "part": "ask form (live)",
+    "node_path": "$",
+    "prop": "role",
+    "side": "value",
+    "class": "HOST",
+    "omp": "omp.ask.card",
+    "pig": null,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `ask form (live)` |",
+      "omp.ask.card"
+    ],
+    "ref_subject": [
+      "omp.ask.card"
+    ],
+    "why": "Host `picker` overlay carries no `omp.ask.card` role."
+  },
+  {
+    "part": "provider error turn",
+    "node_path": "row[omp.error.actions] > row[omp.error.action]@0",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `omp.error.action`",
+      "Retry",
+      "raw-http-request"
+    ],
+    "ref_subject": [
+      "Retry"
+    ],
+    "why": "`Retry` (`F5`) action on `card[omp.error]` is omitted because `frontend.Env` has no retry-turn callback and PiG has no `/retry` command."
+  },
+  {
+    "part": "provider error turn",
+    "node_path": "text[omp.error.message]",
+    "prop": "spans",
+    "side": "value",
+    "class": "HOST",
+    "omp": [
+      {
+        "t": "Proof simulated provider error (type=invalid_request_error)\nraw-http-request=<HTTP_LOG>",
+        "s": "mono"
+      }
+    ],
+    "pig": [
+      {
+        "t": "Proof simulated provider error (type=invalid_request_error)",
+        "s": "mono"
+      }
+    ],
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `omp.error.action`",
+      "Retry",
+      "raw-http-request"
+    ],
+    "ref_subject": [
+      "raw-http-request",
+      "ai/errors.go"
+    ],
+    "why": "Port now formats the JSON body identically to omp (`Proof simulated provider error (type=invalid_request_error)`); only omp's trailing `raw-http-request=<HTTP_LOG>` dump path differs because PiG's `ai/errors.go` does not write raw HTTP 400 dump files."
+  },
+  {
+    "part": "error banner",
+    "node_path": "button[omp.btn]@1",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `omp.error.action`",
+      "Retry",
+      "Details"
+    ],
+    "ref_subject": [
+      "Details",
+      "button[omp.btn]"
+    ],
+    "why": "omp's error banner is 2 lines due to `raw-http-request=<log>` and shows a `Details` button (`button[omp.btn]`); port's banner has only the 1-line formatted error (≤80 runes) and omits the unnecessary `Details` toggle."
+  },
+  {
+    "part": "slash menu",
+    "node_path": "$",
+    "prop": "anchor",
+    "side": "value",
+    "omp": {
+      "caret": "j.line/input"
+    },
+    "pig": {
+      "caret": "dock.editor.editor.line.input"
+    },
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "anchor"
+    ],
+    "why": "Both sides anchor `overlay[omp.autocomplete]` to their editor input's TSP ID (`j.line/input` in omp vs `dock.editor.editor.line.input` in pig-tern)."
+  },
+  {
+    "part": "slash menu",
+    "node_path": "col[omp.select] > list",
+    "prop": "selected",
+    "side": "value",
+    "omp_regex": "^[^\\s]+/plan$",
+    "pig": "layer.complete.select.list.settings",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "selected"
+    ],
+    "why": "PiG's built-in slash command list orders PiG's own `settings` first whereas omp orders `plan` first, and each side uses its own list item node ID format."
+  },
+  {
+    "part": "slash menu",
+    "node_path_regex": "^col\\[omp\\.select\\] > list > item@[0-4]$",
+    "prop": "label",
+    "side": "value",
+    "omp": [
+      {
+        "t_regex": "^(plan|security|settings|setup|plan-review)$"
+      }
+    ],
+    "pig": [
+      {
+        "t_regex": "^(settings|model|tree|thinking|scoped-models)$"
+      }
+    ],
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "item"
+    ],
+    "why": "PiG's slash autocomplete exposes PiG's built-in command order (settings, model, tree, thinking, scoped-models in the 5-row dock.below window) whereas omp orders plan, security, settings, setup, plan-review first."
+  },
+  {
+    "part": "slash menu",
+    "node_path_regex": "^col\\[omp\\.select\\] > list > item@[0-4]$",
+    "prop": "detail",
+    "side": "value",
+    "omp": [
+      {
+        "s": "muted",
+        "t_regex": "^(Toggle plan mode|Plan, run, inspect|Open settings menu|Open provider setup|Re-open the plan review)"
+      }
+    ],
+    "pig": [
+      {
+        "s": "muted",
+        "t_regex": "^(Open settings menu|<provider/model> — Select model|Navigate session tree|<level> — Set thinking level|Enable/disable models)"
+      }
+    ],
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "item"
+    ],
+    "why": "Paired with slash menu item label ordering: descriptions differ because PiG orders its built-in commands ahead of omp extension commands."
+  },
+  {
+    "part": "slash menu",
+    "node_path_regex": "^col\\[omp\\.select\\] > list > item@[0-4]$",
+    "prop": "icon",
+    "side": "value",
+    "omp_regex": "^(plan|shield|settings|gear)$",
+    "pig_regex": "^(settings|model|tree|gauge|action)$",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "icon"
+    ],
+    "why": "Paired with slash menu item ordering: icons match each row's command name, which differs in index order between omp and PiG."
+  },
+  {
+    "part": "slash menu",
+    "node_path_regex": "^col\\[omp\\.select\\] > list > item@\\d+$",
+    "prop": "value",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "value"
+    ],
+    "why": "omp attaches dynamic state values (e.g. `on (PLAN.md)`) to select items; PiG's `dock.below` SelectList lines carry only label and description."
+  },
+  {
+    "part": "slash menu",
+    "node_path_regex": "^col\\[omp\\.select\\] > list > item@\\d+$",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "dock.below"
+    ],
+    "why": "omp sends all ~89 slash commands into the `list` node, while PiG's `dock.below` renders only the 5-row visible window (`autocompleteMax=5`) with an `(i/N)` status footer."
+  },
+  {
+    "part": "slash menu",
+    "node_path": "col[omp.select] > text@1",
+    "prop": "$node",
+    "side": "port-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete menu (`overlay[omp.autocomplete]`)"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]",
+      "status"
+    ],
+    "why": "PiG's 5-row windowed autocomplete includes a `(1/N)` status footer rendered as a muted `text` child inside `col[omp.select]`."
+  },
+  {
+    "part": "composer",
+    "node_path": "meter[omp.composer.context]",
+    "prop": "title",
+    "side": "value",
+    "class": "HOST",
+    "omp": "Context 0% used\n120 of 128K tokens\nAuto-compact at 85%",
+    "pig": "Context 0% used\n155 of 128K tokens\nAuto-compact at 85%",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Context meter token count"
+    ],
+    "ref_subject": [
+      "TotalTokens",
+      "155"
+    ],
+    "why": "`Auto-compact at 85%` and threshold `marks` now match omp; only the token count differs because PiG `agent/context_tokens.go:32-37` computes `TotalTokens` (`155`) whereas omp reports prompt tokens (`120`) at `01-markdown`."
+  },
+  {
+    "part": "composer",
+    "node_path": "meter[omp.composer.context]",
+    "prop": "value",
+    "side": "value",
+    "class": "HOST",
+    "omp": 0.0009375,
+    "pig": 0.0012109375,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Context meter token count"
+    ],
+    "ref_subject": [
+      "TotalTokens",
+      "155"
+    ],
+    "why": "PiG `agent/context_tokens.go:32-37` reports `TotalTokens` (155/128K = 0.0012109375) whereas omp reports prompt tokens (120/128K = 0.0009375) at `01-markdown`."
+  },
+  {
+    "part": "slash closed (composer)",
+    "parts": [
+      "slash closed (composer)",
+      "narrow 80 (composer)"
+    ],
+    "node_path": "meter[omp.composer.context]",
+    "prop": "value",
+    "side": "value",
+    "class": "HOST",
+    "omp": 0.010671875000000003,
+    "pig": 0.010968749999999998,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Context meter token count"
+    ],
+    "ref_subject": [
+      "TotalTokens",
+      "155"
+    ],
+    "why": "PiG `agent/context_tokens.go:32-37` reports `TotalTokens` (1404/128K = 0.01096875) whereas omp reports prompt tokens (1366/128K = 0.010671875) at `17b-slash-closed` / `18-narrow-80`."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "omp-only",
+    "node_kind": "col",
+    "role": "omp.assistant",
+    "empty_container": true,
+    "next_sibling_kind": "tool",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Empty `col[omp.assistant]` before tool-call turns"
+    ],
+    "ref_subject": [
+      "col[omp.assistant]",
+      "tool-call-only"
+    ],
+    "why": "PiG's `AssistantMessageComponent.appendFrontendNodes` (`tui/tui_surface.go:914-944`) emits zero ops for tool-call-only turns; bounded strictly to empty `col[omp.assistant]` whose next non-empty sibling is a `tool` card."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "omp-only",
+    "node_kind": "toast",
+    "role": "omp.toast.status",
+    "text_regex": "^(?:Tool output expansion: enabled|Plan mode enabled\\. Plan file: local://PLAN\\.md)$",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `omp.toast.status`"
+    ],
+    "ref_subject": [
+      "omp.toast.status"
+    ],
+    "why": "PiG frontend.Session has no Toast/Notification node kind for ephemeral status toasts (`Tool output expansion: enabled`, `Plan mode enabled...`)."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "port-only",
+    "node_kind": "ansi",
+    "role": "",
+    "text_regex": "^(?:Tool output: expanded|Plan mode enabled\\. Plan file: local://PLAN\\.md)$",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `omp.toast.status`"
+    ],
+    "ref_subject": [
+      "Tool output: expanded",
+      "Plan mode enabled"
+    ],
+    "why": "PiG host `showStatus` (`interactive_chat.go:583-604`) and `ctx.Notify` (`ext_ui_context.go:457-473`) append plain `tui.ThemedText` lines to `chatContainer`, delivered as unmarked `ansi` nodes in `RegionMain`."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "port-only",
+    "node_kind": "ansi",
+    "role": "",
+    "text_regex": "^(?:\\[Extensions\\] (?:path )?builtin:piglet|Piglet oh-my-pig hid 2 tools from the registry: - built-in tools: powershell, ls|If this looks like a pig bug, /bug sends a report to the developers\\.)$",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Host transcript notices in `main`"
+    ],
+    "ref_subject": [
+      "[Extensions]",
+      "/bug"
+    ],
+    "why": "PiG host emits startup notices (`[Extensions]`, `Piglet oh-my-pig hid 2 tools: powershell, ls`) and `/bug` hint (`interactive_chat.go:524-531`) as plain `frontend.Lines` in `RegionMain`."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "omp-only",
+    "node_kind": "col",
+    "role": "omp.ask.card",
+    "step": "08a-ask-form",
+    "text_regex": "^ask Choose a mode:",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Interactive `omp.ask.pill` / live inline `col[omp.ask.card]`"
+    ],
+    "ref_subject": [
+      "omp.ask.card",
+      "picker"
+    ],
+    "why": "omp mounts live `col[omp.ask.card]` inline in `main` at `08a-ask-form` whereas PiG mounts `picker` in `layer` (`tui_surface.go:578-585, 626-638`)."
+  },
+  {
+    "kind": "frame_child",
+    "region": "dock",
+    "side": "omp-only",
+    "node_kind": "col",
+    "role": "",
+    "step": "08a-ask-form",
+    "child_roles": [
+      "col[omp.editor]"
+    ],
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Interactive `omp.ask.pill` / live inline `col[omp.ask.card]`"
+    ],
+    "ref_subject": [
+      "col[omp.editor]",
+      "composer swap"
+    ],
+    "why": "PiG `TuiSurface.dockEntries` (`tui/tui_surface.go:578-585, 626-638`) replaces the `Editor` slot with `Selector` (`picker` in `layer`) while `ctx.Select` runs at `08a-ask-form`, leaving `dock.editor` empty instead of keeping `col[omp.editor]` mounted."
+  },
+  {
+    "kind": "frame_child",
+    "region": "dock",
+    "side": "port-only",
+    "node_kind": "col",
+    "role": "",
+    "step": "08a-ask-form",
+    "empty_container": true,
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Interactive `omp.ask.pill` / live inline `col[omp.ask.card]`"
+    ],
+    "ref_subject": [
+      "col[omp.editor]",
+      "composer swap"
+    ],
+    "why": "Paired with omp's `col(col[omp.editor])` at `08a-ask-form`: PiG swaps the editor for `picker` in `layer`, leaving the port's `dock.editor` slot as an empty `col`."
+  },
+  {
+    "kind": "frame_child",
+    "region": "layer",
+    "side": "port-only",
+    "node_kind": "picker",
+    "role": "",
+    "step": "08a-ask-form",
+    "text": "Choose a mode:",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Interactive `omp.ask.pill` / live inline `col[omp.ask.card]`"
+    ],
+    "ref_subject": [
+      "picker",
+      "layer"
+    ],
+    "why": "PiG mounts `Selector` as a `picker` in `layer` during `08a-ask-form` (`tui/tui_surface.go:578-585, 626-638`)."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "port-only",
+    "node_kind": "section",
+    "role": "omp.notice.discovery",
+    "text_regex": "^(?:Context|Skills|Prompts|Extensions|Themes|Skill warnings|Prompt conflicts|Extension issues|Theme conflicts) · ",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Host transcript notices in `main`:",
+      "collapsible startup discovery notices (`section[omp.notice.discovery]`)"
+    ],
+    "ref_subject": [
+      "section[omp.notice.discovery]",
+      "startup discovery"
+    ],
+    "why": "PiG host emits startup loaded-resource sections (`[Extensions]`, `[Context]`, `[Skills]`, …) in `RegionMain` (no `quietStartup` manifest toggle); frontend converts them to collapsed `section[omp.notice.discovery]` notices so Tern activates `.sf-fresh` hero landing mode identically to `omp`."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "port-only",
+    "node_kind": "section",
+    "role": "omp.thinking",
+    "text_regex": "Thought.*Let me reason carefully about the sum of 20 and 22",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Thinking block nested inside `col[omp.assistant]`"
+    ],
+    "ref_subject": [
+      "Thinking",
+      "sibling"
+    ],
+    "why": "PiG frontend.Frame emits Thinking as a top-level sibling in main instead of nesting it inside col[omp.assistant]."
+  },
+  {
+    "part": "assistant text (markdown)",
+    "node_path": "section[omp.thinking]",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Thinking block nested inside `col[omp.assistant]`"
+    ],
+    "ref_subject": [
+      "Thinking",
+      "col[omp.assistant]"
+    ],
+    "why": "omp nests `section[omp.thinking]` inside `col[omp.assistant]`, while PiG emits it as a top-level sibling in main."
+  }
+]

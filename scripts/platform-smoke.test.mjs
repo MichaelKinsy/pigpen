@@ -4,7 +4,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, wr
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, describe, it } from 'node:test';
-import { FAUX_PROMPT, hangReport, loadErrors, loadFailure, loadsInPig, smokeBinary, smokeEnv, stagedPiglets } from './platform-smoke.mjs';
+import { FAUX_PROMPT, OWN_SMOKE, hangReport, loadErrors, loadFailure, loadsInPig, smokeBinary, smokeEnv, stagedPiglets } from './platform-smoke.mjs';
 import { requiredPigVersion } from './pig-bin.mjs';
 
 const posix = process.platform !== 'win32';
@@ -33,6 +33,14 @@ const result = (checks) => Object.fromEntries(checks.map((c) => [c.name, c.ok]))
 describe('smokeBinary', { skip: !posix && 'fake Binaries are shell scripts' }, () => {
   it('passes a Binary that reports the pinned version and answers the faux turn', () => {
     assert.deepEqual(result(smokeBinary(fake())), { version: true, 'faux turn': true });
+  });
+
+  it('asks a Piglet listed in OWN_SMOKE its own prompt and requires that prompt\'s answer', () => {
+    const { prompt, answer } = OWN_SMOKE['oh-my-pig'];
+    const bin = fake({ stdout: answer });
+    assert.deepEqual(result(smokeBinary(bin, { name: 'oh-my-pig' })), { version: true, 'faux turn': true });
+    assert.ok(readFileSync(`${bin}.args`, 'utf8').startsWith(`-p ${prompt} `));
+    assert.equal(result(smokeBinary(fake({ stdout: 'ok' }), { name: 'oh-my-pig' }))['faux turn'], false);
   });
 
   it('runs the faux turn in print mode with the test model, no session, and an isolated environment', () => {

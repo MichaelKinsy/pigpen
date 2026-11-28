@@ -1,0 +1,10 @@
+steps:
+- run: a
+- run: b
+next: 1
+desc: first line
+  second line
+items: [
+  # ]
+  1,
+]

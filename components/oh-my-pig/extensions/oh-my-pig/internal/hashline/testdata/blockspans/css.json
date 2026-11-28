@@ -1,0 +1,189 @@
+{
+  "lang": "css",
+  "sample": "sample1",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample1",
+  "total": 21,
+  "omp_resolved": 9,
+  "omp_refused": 12,
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 2*` resolved a single-line block — line 2 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 2`. The nearest enclosing multi-line block begins at line 1 and ends at line 4; use `CUT 1*` to target it.",
+    "unresolved": "line 1: `CUT 2*` could not resolve a syntactic block beginning on line 2 (blank/closer line, or parse error). Use `CUT 2.=M` with explicit lines. The nearest enclosing multi-line block begins at line 1 and ends at line 4; use `CUT 1*` to target it."
+  },
+  "cases": [
+    {
+      "file": "files/css/constructed_n5_selector_list.css",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n5_selector_list",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/css/constructed_n5_selector_list.css",
+      "anchor": 2,
+      "constructed": true,
+      "name": "n5_selector_list",
+      "refused": "line 1: `CUT 2*` resolved a single-line block — line 2 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 2`. The nearest enclosing multi-line block begins at line 1 and ends at line 4; use `CUT 1*` to target it."
+    },
+    {
+      "file": "files/css/constructed_n5_selector_list.css",
+      "anchor": 6,
+      "constructed": true,
+      "name": "n5_selector_list",
+      "span": [
+        6,
+        14
+      ]
+    },
+    {
+      "file": "files/css/constructed_n5_selector_list.css",
+      "anchor": 7,
+      "constructed": true,
+      "name": "n5_selector_list",
+      "span": [
+        7,
+        10
+      ]
+    },
+    {
+      "file": "files/css/constructed_n5_selector_list.css",
+      "anchor": 8,
+      "constructed": true,
+      "name": "n5_selector_list",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/css/constructed_n5_selector_list.css",
+      "anchor": 11,
+      "constructed": true,
+      "name": "n5_selector_list",
+      "span": [
+        11,
+        13
+      ]
+    },
+    {
+      "file": "files/css/constructed_n5_selector_list.css",
+      "anchor": 16,
+      "constructed": true,
+      "name": "n5_selector_list",
+      "span": [
+        16,
+        18
+      ]
+    },
+    {
+      "file": "files/css/constructed_w7_leading_comma_selector.css",
+      "anchor": 1,
+      "constructed": true,
+      "name": "w7_leading_comma_selector",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/css/constructed_w7_leading_comma_selector.css",
+      "anchor": 2,
+      "constructed": true,
+      "name": "w7_leading_comma_selector",
+      "refused": "line 1: `CUT 2*` could not resolve a syntactic block beginning on line 2 (blank/closer line, or parse error). Use `CUT 2.=M` with explicit lines. The nearest enclosing multi-line block begins at line 1 and ends at line 4; use `CUT 1*` to target it."
+    },
+    {
+      "file": "files/css/constructed_w7_leading_comma_selector.css",
+      "anchor": 6,
+      "constructed": true,
+      "name": "w7_leading_comma_selector",
+      "span": [
+        6,
+        8
+      ]
+    },
+    {
+      "file": "files/css/constructed_w7_leading_comma_selector.css",
+      "anchor": 10,
+      "constructed": true,
+      "name": "w7_leading_comma_selector",
+      "span": [
+        10,
+        13
+      ]
+    },
+    {
+      "file": "files/css/constructed_w7_leading_comma_selector.css",
+      "anchor": 11,
+      "constructed": true,
+      "name": "w7_leading_comma_selector",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/css/constructed_w8_custom_prop_block.css",
+      "anchor": 1,
+      "constructed": true,
+      "name": "w8_custom_prop_block",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/css/constructed_w8_custom_prop_block.css",
+      "anchor": 5,
+      "constructed": true,
+      "name": "w8_custom_prop_block",
+      "span": [
+        5,
+        7
+      ]
+    },
+    {
+      "file": "files/css/constructed_c1_css_and_scss_refused.css",
+      "anchor": 1,
+      "constructed": true,
+      "name": "c1_css_and_scss_refused",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/css/constructed_c1_css_and_scss_refused.css",
+      "anchor": 5,
+      "constructed": true,
+      "name": "c1_css_and_scss_refused",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/css/constructed_c1_css_and_scss_refused.css",
+      "anchor": 9,
+      "constructed": true,
+      "name": "c1_css_and_scss_refused",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/css/constructed_c1_css_and_scss_refused.css",
+      "anchor": 13,
+      "constructed": true,
+      "name": "c1_css_and_scss_refused",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/css/constructed_c1_scss_mixin_refused.scss",
+      "anchor": 1,
+      "constructed": true,
+      "name": "c1_scss_mixin_refused",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/css/constructed_c1_scss_mixin_refused.scss",
+      "anchor": 5,
+      "constructed": true,
+      "name": "c1_scss_mixin_refused",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/css/constructed_c1_scss_mixin_refused.scss",
+      "anchor": 7,
+      "constructed": true,
+      "name": "c1_scss_mixin_refused",
+      "refused_kind": "unresolved"
+    }
+  ]
+}

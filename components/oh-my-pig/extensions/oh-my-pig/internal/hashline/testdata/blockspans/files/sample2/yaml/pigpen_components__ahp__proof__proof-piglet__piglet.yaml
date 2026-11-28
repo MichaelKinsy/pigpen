@@ -1,0 +1,18 @@
+# Build proof: a Piglet whose only extension is the ahp Package, so `pig piglet build --format
+# binary` fuses it (and its vendored Microsoft AHP module) into one executable. Not published.
+name: ahp-proof
+description: "Proof Piglet: default PiG with the AHP host extension fused in. It opens no listener unless started."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64]
+packages:
+  ahp: local:../..
+extensions:
+  - name: ahp
+    origins: [package:ahp]
+    tools: []
+skills: []
+discovery:
+  extensions: []
+  skills: []

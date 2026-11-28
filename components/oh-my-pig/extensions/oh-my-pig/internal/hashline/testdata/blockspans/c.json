@@ -1,0 +1,498 @@
+{
+  "lang": "c",
+  "sample": "sample1",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample1",
+  "total": 72,
+  "omp_resolved": 33,
+  "omp_refused": 39,
+  "cases": [
+    {
+      "file": "files/c/run.c",
+      "anchor": 12,
+      "span": [
+        12,
+        21
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 14,
+      "span": [
+        14,
+        19
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 16,
+      "span": [
+        16,
+        18
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 23,
+      "span": [
+        23,
+        29
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 24,
+      "refused": "line 1: `CUT 24*` resolved a single-line block — line 24 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 24`. The nearest enclosing multi-line block begins at line 23 and ends at line 29; use `CUT 23*` to target it."
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 31,
+      "span": [
+        31,
+        36
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 34,
+      "span": [
+        34,
+        35
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 38,
+      "span": [
+        38,
+        41
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 43,
+      "span": [
+        43,
+        62
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 64,
+      "span": [
+        64,
+        130
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 68,
+      "span": [
+        68,
+        81
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 72,
+      "span": [
+        72,
+        78
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 77,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 83,
+      "span": [
+        83,
+        111
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 86,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 87,
+      "span": [
+        87,
+        104
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 93,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 94,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 95,
+      "span": [
+        95,
+        100
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 105,
+      "span": [
+        105,
+        109
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 116,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 121,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 128,
+      "span": [
+        128,
+        129
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 132,
+      "span": [
+        132,
+        143
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 134,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 139,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 145,
+      "span": [
+        145,
+        155
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 154,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 157,
+      "span": [
+        157,
+        166
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 158,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 168,
+      "span": [
+        168,
+        225
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 169,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 173,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 175,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 179,
+      "span": [
+        179,
+        220
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 181,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 182,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 183,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 185,
+      "span": [
+        185,
+        219
+      ]
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 190,
+      "refused": "line 1: `CUT 190*` could not resolve a syntactic block beginning on line 190 (blank/closer line, or parse error). Use `CUT 190.=M` with explicit lines. The nearest enclosing multi-line block begins at line 185 and ends at line 219; use `CUT 185*` to target it."
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 204,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 207,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/c/run.c",
+      "anchor": 209,
+      "span": [
+        209,
+        213
+      ]
+    },
+    {
+      "file": "files/c/constructed_n1_ifdef_split_body.c",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n1_ifdef_split_body",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/c/constructed_n1_ifdef_split_body.c",
+      "anchor": 3,
+      "constructed": true,
+      "name": "n1_ifdef_split_body",
+      "span": [
+        3,
+        9
+      ]
+    },
+    {
+      "file": "files/c/constructed_n1_ifdef_split_body.c",
+      "anchor": 5,
+      "constructed": true,
+      "name": "n1_ifdef_split_body",
+      "span": [
+        5,
+        8
+      ]
+    },
+    {
+      "file": "files/c/constructed_n1_ifdef_split_body.c",
+      "anchor": 11,
+      "constructed": true,
+      "name": "n1_ifdef_split_body",
+      "span": [
+        11,
+        13
+      ]
+    },
+    {
+      "file": "files/c/constructed_n1_extern_c.h",
+      "anchor": 2,
+      "constructed": true,
+      "name": "n1_extern_c",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/c/constructed_n1_case_brace_break.c",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n1_case_brace_break",
+      "span": [
+        1,
+        8
+      ]
+    },
+    {
+      "file": "files/c/constructed_n1_case_brace_break.c",
+      "anchor": 2,
+      "constructed": true,
+      "name": "n1_case_brace_break",
+      "span": [
+        2,
+        7
+      ]
+    },
+    {
+      "file": "files/c/constructed_n1_case_brace_break.c",
+      "anchor": 3,
+      "constructed": true,
+      "name": "n1_case_brace_break",
+      "span": [
+        3,
+        6
+      ]
+    },
+    {
+      "file": "files/c/constructed_finding1_multiline_allman_typedef.c",
+      "anchor": 1,
+      "constructed": true,
+      "name": "finding1_multiline_allman_typedef",
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/c/constructed_finding1_multiline_allman_typedef.c",
+      "anchor": 3,
+      "constructed": true,
+      "name": "finding1_multiline_allman_typedef",
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/c/constructed_finding1_multiline_allman_typedef.c",
+      "anchor": 7,
+      "constructed": true,
+      "name": "finding1_multiline_allman_typedef",
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/c/constructed_finding1_multiline_allman_typedef.c",
+      "anchor": 11,
+      "constructed": true,
+      "name": "finding1_multiline_allman_typedef",
+      "span": [
+        11,
+        14
+      ]
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 24*` resolved a single-line block — line 24 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 24`. The nearest enclosing multi-line block begins at line 23 and ends at line 29; use `CUT 23*` to target it.",
+    "unresolved": "line 1: `CUT 190*` could not resolve a syntactic block beginning on line 190 (blank/closer line, or parse error). Use `CUT 190.=M` with explicit lines. The nearest enclosing multi-line block begins at line 185 and ends at line 219; use `CUT 185*` to target it."
+  }
+}

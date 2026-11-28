@@ -24,6 +24,15 @@ import { hostTarget } from './host-target.mjs';
 import { PIG_VERSION_ARGS, parsePigVersion, pigVersionMatches, requirePig, requiredPigVersion } from './pig-bin.mjs';
 
 export const FAUX_PROMPT = 'reply with exactly: ok';
+/**
+ * Piglets whose faux turn uses another prompt, each with the answer the faux model gives to it.
+ * The faux model answers FAUX_PROMPT only when the user message starts with it. oh-my-pig puts a
+ * date and working-directory reminder before the first user message, as omp does, so it is asked
+ * a prompt the faux model matches anywhere in the message.
+ */
+export const OWN_SMOKE = {
+  'oh-my-pig': { prompt: 'show mermaid flowchart', answer: '```mermaid\ngraph TD\n  A[Start] --> B[End]\n```' },
+};
 const RUN_LIMIT_MS = 120_000; // a hung Binary must fail the job, not hold the runner for six hours
 
 /** Lines of pig output that report an extension that did not load. */
@@ -81,8 +90,9 @@ export function hangReport(stderr, maxLines = 220) {
   return lines.length > maxLines ? `${lines.slice(0, maxLines).join('\n')}\n... ${lines.length - maxLines} more lines` : lines.join('\n');
 }
 
-/** Run the two smoke checks on one Binary. Returns [{ name, ok, detail }]. */
-export function smokeBinary(bin, { required = parsePigVersion(requiredPigVersion()) } = {}) {
+/** Run the two smoke checks on one Binary (of the Piglet `name`, for OWN_SMOKE). Returns [{ name, ok, detail }]. */
+export function smokeBinary(bin, { required = parsePigVersion(requiredPigVersion()), name = '' } = {}) {
+  const { prompt, answer } = OWN_SMOKE[name] ?? { prompt: FAUX_PROMPT, answer: 'ok' };
   const home = mkdtempSync(join(tmpdir(), 'pigpen-smoke-'));
   try {
     for (const dir of ['tmp', 'work']) mkdirSync(join(home, dir), { recursive: true });
@@ -100,10 +110,10 @@ export function smokeBinary(bin, { required = parsePigVersion(requiredPigVersion
       detail: version.error ? version.error.message : `exit ${version.status}, ${JSON.stringify(firstLine(version.stdout))}`,
     });
 
-    const turn = run(['-p', FAUX_PROMPT, '--model', 'test-faux/faux-1', '--no-session']);
+    const turn = run(['-p', prompt, '--model', 'test-faux/faux-1', '--no-session']);
     const output = `${turn.stdout ?? ''}\n${turn.stderr ?? ''}`;
     const failed = loadErrors(output);
-    const answered = (turn.stdout ?? '').trim() === 'ok';
+    const answered = (turn.stdout ?? '').trim() === answer;
     checks.push({
       name: 'faux turn',
       ok: turn.status === 0 && answered && failed.length === 0,
@@ -213,7 +223,7 @@ async function main() {
     } else {
       row.bytes = statSync(built.target).size;
       row.sha256 = sha256(built.target);
-      row.checks = smokeBinary(built.target);
+      row.checks = smokeBinary(built.target, { name });
       const bad = row.checks.filter((check) => !check.ok);
       console.log(`  ${bad.length ? 'FAIL' : 'ok  '} ${name} (${built.seconds}s, ${(row.bytes / 1048576).toFixed(1)} MiB)${bad.map((c) => `\n       ${c.name}: ${c.detail.replaceAll('\n', '\n         ')}`).join('')}`);
     }

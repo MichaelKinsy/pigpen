@@ -1,0 +1,4 @@
+@Injectable()
+class Svc {
+  run() {}
+}

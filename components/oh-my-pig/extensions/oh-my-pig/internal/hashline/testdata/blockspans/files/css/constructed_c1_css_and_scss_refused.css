@@ -1,0 +1,15 @@
+.q::before {
+  content: "{";
+}
+
+.after {
+  color: red;
+}
+
+@container sidebar (min-width: 400px) {
+  .card { padding: 8px; }
+}
+
+@page :first {
+  margin: 1cm;
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "name": "bash-exit-no-output-state",
+    "description": "Exercise zero exit, non-zero exit, silent command, and shell state across calls.",
+    "setup": "",
+    "calls": [
+      { "tool": "bash", "arguments": { "command": "printf 'hello\\nworld\\n'" } },
+      { "tool": "bash", "arguments": { "command": "true" } },
+      { "tool": "bash", "arguments": { "command": "echo 'boom' >&2; exit 7" } },
+      { "tool": "bash", "arguments": { "command": "export ORACLE_VAR=kept_42" } },
+      { "tool": "bash", "arguments": { "command": "printf 'val=%s\\n' \"${ORACLE_VAR:-missing}\"" } }
+    ]
+  },
+  {
+    "name": "bash-cwd-spill",
+    "description": "Exercise cwd option, missing cwd, cd persistence, pty fallback, ANSI stripping, wide line, output spill to local://1.log, exit code, stderr-only, and empty command.",
+    "setup": "mkdir -p sub",
+    "calls": [
+      { "tool": "bash", "arguments": { "command": "basename \"$PWD\"", "cwd": "sub" } },
+      { "tool": "bash", "arguments": { "command": "pwd", "cwd": "missing-dir" } },
+      { "tool": "bash", "arguments": { "command": "cd sub && basename \"$PWD\"" } },
+      { "tool": "bash", "arguments": { "command": "basename \"$PWD\"" } },
+      { "tool": "bash", "arguments": { "command": "test -t 1 && echo tty || echo notty", "pty": true } },
+      { "tool": "bash", "arguments": { "command": "printf 'a\\033[31mred\\033[0mz\\n'" } },
+      { "tool": "bash", "arguments": { "command": "head -c 3000 /dev/zero | tr '\\0' 'x'; echo" } },
+      { "tool": "bash", "arguments": { "command": "seq 1 40000" } },
+      { "tool": "read", "arguments": { "path": "local://1.log:39999-40000" } },
+      { "tool": "bash", "arguments": { "command": "exit 3" } },
+      { "tool": "bash", "arguments": { "command": "echo only-err >&2" } },
+      { "tool": "bash", "arguments": { "command": "" } }
+    ]
+  },
+  {
+    "name": "bash-timeout-foreground",
+    "description": "Exercise foreground timeout (timeout: 3) + wait + proc:// inspection.",
+    "setup": "",
+    "calls": [
+      { "tool": "bash", "arguments": { "command": "echo started; sleep 20; echo never", "timeout": 3 } },
+      { "tool": "wait", "arguments": {} },
+      { "tool": "read", "arguments": { "path": "proc://" } }
+    ]
+  },
+  {
+    "name": "bash-async-and-service",
+    "description": "Exercise async job + wait and a named supervised service with readiness log + proc:// inspection + stop via write proc://<name>/kill.",
+    "setup": "",
+    "calls": [
+      { "tool": "bash", "arguments": { "command": "sleep 0.3; echo async_done", "async": true } },
+      { "tool": "wait", "arguments": {} },
+      {
+        "tool": "bash",
+        "arguments": {
+          "name": "oracle-svc",
+          "command": "echo SERVICE_READY; sleep 60",
+          "ready": { "log": "SERVICE_READY", "timeout": 5 }
+        }
+      },
+      { "tool": "read", "arguments": { "path": "proc://" } },
+      { "tool": "write", "arguments": { "path": "proc://oracle-svc/kill", "content": "" } }
+    ]
+  }
+]

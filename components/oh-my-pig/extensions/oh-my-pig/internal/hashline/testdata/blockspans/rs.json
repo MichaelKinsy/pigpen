@@ -1,0 +1,3345 @@
+{
+  "lang": "rs",
+  "sample": "sample1",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample1",
+  "total": 484,
+  "omp_resolved": 288,
+  "omp_refused": 196,
+  "cases": [
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 10,
+      "refused": "line 1: `CUT 10*` resolved a single-line block — line 10 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 10`."
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 12,
+      "span": [
+        12,
+        27
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 13,
+      "span": [
+        13,
+        27
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 14,
+      "span": [
+        14,
+        16
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 17,
+      "span": [
+        17,
+        18
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 19,
+      "span": [
+        19,
+        20
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 21,
+      "span": [
+        21,
+        22
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 23,
+      "span": [
+        23,
+        24
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 25,
+      "span": [
+        25,
+        26
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 29,
+      "span": [
+        29,
+        118
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 30,
+      "span": [
+        30,
+        40
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 33,
+      "span": [
+        33,
+        40
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 42,
+      "span": [
+        42,
+        47
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 45,
+      "span": [
+        45,
+        47
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 49,
+      "span": [
+        49,
+        71
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 51,
+      "span": [
+        51,
+        71
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 52,
+      "span": [
+        52,
+        70
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 58,
+      "span": [
+        58,
+        69
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 63,
+      "span": [
+        63,
+        68
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 73,
+      "span": [
+        73,
+        117
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 76,
+      "span": [
+        76,
+        117
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 77,
+      "span": [
+        77,
+        116
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 78,
+      "span": [
+        78,
+        102
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 79,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 81,
+      "span": [
+        81,
+        100
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 83,
+      "span": [
+        83,
+        98
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 85,
+      "span": [
+        85,
+        94
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 87,
+      "span": [
+        87,
+        89
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 90,
+      "span": [
+        90,
+        92
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 95,
+      "span": [
+        95,
+        97
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 103,
+      "span": [
+        103,
+        115
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 107,
+      "span": [
+        107,
+        113
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 120,
+      "span": [
+        120,
+        133
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 125,
+      "refused": "line 1: `CUT 125*` could not resolve a syntactic block beginning on line 125 (blank/closer line, or parse error). Use `CUT 125.=M` with explicit lines. The nearest enclosing multi-line block begins at line 121 and ends at line 133; use `CUT 121*` to target it."
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 127,
+      "span": [
+        127,
+        132
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 135,
+      "span": [
+        135,
+        145
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 136,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 137,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 138,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 139,
+      "span": [
+        139,
+        145
+      ]
+    },
+    {
+      "file": "files/rs/pretoken.rs",
+      "anchor": 141,
+      "span": [
+        141,
+        143
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 7,
+      "span": [
+        7,
+        8
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 9,
+      "span": [
+        9,
+        10
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 11,
+      "span": [
+        11,
+        12
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 15,
+      "span": [
+        15,
+        16
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 17,
+      "span": [
+        17,
+        18
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 21,
+      "span": [
+        21,
+        22
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 25,
+      "span": [
+        25,
+        26
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 27,
+      "span": [
+        27,
+        28
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 31,
+      "span": [
+        31,
+        32
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 33,
+      "span": [
+        33,
+        34
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 37,
+      "span": [
+        37,
+        38
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 41,
+      "span": [
+        41,
+        42
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 43,
+      "span": [
+        43,
+        44
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 47,
+      "span": [
+        47,
+        48
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 49,
+      "span": [
+        49,
+        50
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 51,
+      "span": [
+        51,
+        52
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 54,
+      "span": [
+        54,
+        57
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 55,
+      "span": [
+        55,
+        57
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 58,
+      "span": [
+        58,
+        61
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 59,
+      "span": [
+        59,
+        61
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 62,
+      "span": [
+        62,
+        70
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 63,
+      "span": [
+        63,
+        70
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 67,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 68,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 72,
+      "span": [
+        72,
+        74
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 75,
+      "span": [
+        75,
+        78
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 77,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 79,
+      "span": [
+        79,
+        95
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 81,
+      "span": [
+        81,
+        93
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 83,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 94,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 96,
+      "span": [
+        96,
+        99
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 98,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 100,
+      "span": [
+        100,
+        105
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 101,
+      "span": [
+        101,
+        105
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 107,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 108,
+      "span": [
+        108,
+        110
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 111,
+      "span": [
+        111,
+        118
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 112,
+      "span": [
+        112,
+        118
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 119,
+      "span": [
+        119,
+        130
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 120,
+      "span": [
+        120,
+        130
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 123,
+      "span": [
+        123,
+        125
+      ]
+    },
+    {
+      "file": "files/rs/format.rs",
+      "anchor": 131,
+      "span": [
+        131,
+        132
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 3,
+      "span": [
+        3,
+        7
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 9,
+      "span": [
+        9,
+        17
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 11,
+      "span": [
+        11,
+        14
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 23,
+      "span": [
+        23,
+        31
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 24,
+      "span": [
+        24,
+        31
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 35,
+      "span": [
+        35,
+        37
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 39,
+      "span": [
+        39,
+        47
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 40,
+      "span": [
+        40,
+        44
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 42,
+      "span": [
+        42,
+        44
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 49,
+      "span": [
+        49,
+        72
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 50,
+      "span": [
+        50,
+        72
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 53,
+      "span": [
+        53,
+        57
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 55,
+      "span": [
+        55,
+        57
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 58,
+      "span": [
+        58,
+        66
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 67,
+      "span": [
+        67,
+        70
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 68,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 74,
+      "span": [
+        74,
+        97
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 75,
+      "span": [
+        75,
+        97
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 78,
+      "span": [
+        78,
+        82
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 80,
+      "span": [
+        80,
+        82
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 83,
+      "span": [
+        83,
+        91
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 87,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 92,
+      "span": [
+        92,
+        95
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 93,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 99,
+      "span": [
+        99,
+        116
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 100,
+      "span": [
+        100,
+        116
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 101,
+      "span": [
+        101,
+        103
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 105,
+      "span": [
+        105,
+        109
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 107,
+      "span": [
+        107,
+        109
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 111,
+      "span": [
+        111,
+        114
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 112,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 118,
+      "span": [
+        118,
+        147
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 119,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 120,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 121,
+      "span": [
+        121,
+        147
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 122,
+      "span": [
+        122,
+        124
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 125,
+      "span": [
+        125,
+        127
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 128,
+      "span": [
+        128,
+        130
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 133,
+      "span": [
+        133,
+        145
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 134,
+      "span": [
+        134,
+        137
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 138,
+      "span": [
+        138,
+        140
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 149,
+      "span": [
+        149,
+        182
+      ]
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 150,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 151,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 152,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 153,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 154,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 155,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 156,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 157,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 158,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 159,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 160,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 161,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/syntax.rs",
+      "anchor": 162,
+      "span": [
+        162,
+        182
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 5,
+      "span": [
+        5,
+        12
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 7,
+      "span": [
+        7,
+        10
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 13,
+      "span": [
+        13,
+        16
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 18,
+      "span": [
+        18,
+        30
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 19,
+      "span": [
+        19,
+        21
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 22,
+      "span": [
+        22,
+        26
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 29,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 32,
+      "span": [
+        32,
+        43
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 35,
+      "span": [
+        35,
+        42
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 37,
+      "span": [
+        37,
+        40
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 45,
+      "span": [
+        45,
+        54
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 63,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 64,
+      "span": [
+        64,
+        84
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 65,
+      "span": [
+        65,
+        71
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 72,
+      "span": [
+        72,
+        74
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 76,
+      "span": [
+        76,
+        81
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 78,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 82,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 88,
+      "span": [
+        88,
+        90
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 93,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 97,
+      "span": [
+        97,
+        102
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 101,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 107,
+      "span": [
+        107,
+        142
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 111,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 112,
+      "span": [
+        112,
+        114
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 119,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 129,
+      "span": [
+        129,
+        140
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 134,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 145,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 146,
+      "span": [
+        146,
+        231
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 152,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 153,
+      "span": [
+        153,
+        155
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 159,
+      "span": [
+        159,
+        228
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 160,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 161,
+      "span": [
+        161,
+        226
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 170,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 173,
+      "span": [
+        173,
+        225
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 174,
+      "span": [
+        174,
+        186
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 175,
+      "span": [
+        175,
+        185
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 187,
+      "span": [
+        187,
+        224
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 188,
+      "span": [
+        188,
+        202
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 191,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 203,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 204,
+      "span": [
+        204,
+        214
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 205,
+      "span": [
+        205,
+        212
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 215,
+      "span": [
+        215,
+        223
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 217,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 233,
+      "span": [
+        233,
+        267
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 234,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 237,
+      "span": [
+        237,
+        265
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 238,
+      "span": [
+        238,
+        264
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 239,
+      "span": [
+        239,
+        252
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 240,
+      "span": [
+        240,
+        251
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 253,
+      "span": [
+        253,
+        262
+      ]
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 256,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/clipboard.rs",
+      "anchor": 260,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 7,
+      "span": [
+        7,
+        10
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 16,
+      "span": [
+        16,
+        29
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 17,
+      "span": [
+        17,
+        29
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 31,
+      "span": [
+        31,
+        39
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 32,
+      "span": [
+        32,
+        39
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 41,
+      "span": [
+        41,
+        61
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 43,
+      "span": [
+        43,
+        48
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 55,
+      "span": [
+        55,
+        59
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 63,
+      "span": [
+        63,
+        72
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 64,
+      "span": [
+        64,
+        72
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 65,
+      "span": [
+        65,
+        70
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 74,
+      "span": [
+        74,
+        126
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 75,
+      "span": [
+        75,
+        126
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 81,
+      "span": [
+        81,
+        120
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 91,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 92,
+      "span": [
+        92,
+        102
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 97,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 99,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 108,
+      "span": [
+        108,
+        113
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 121,
+      "span": [
+        121,
+        124
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 128,
+      "span": [
+        128,
+        145
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 130,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 131,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 133,
+      "span": [
+        133,
+        144
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 135,
+      "span": [
+        135,
+        137
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 139,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 141,
+      "span": [
+        141,
+        142
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 148,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 149,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 150,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 152,
+      "span": [
+        152,
+        157
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 154,
+      "span": [
+        154,
+        155
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 159,
+      "span": [
+        159,
+        172
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 160,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 162,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 163,
+      "span": [
+        163,
+        172
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 168,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 174,
+      "span": [
+        174,
+        194
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 175,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 177,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 178,
+      "span": [
+        178,
+        194
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 187,
+      "span": [
+        187,
+        190
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 188,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 196,
+      "span": [
+        196,
+        208
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 197,
+      "span": [
+        197,
+        208
+      ]
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 200,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/mismatch.rs",
+      "anchor": 202,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 6,
+      "span": [
+        6,
+        14
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 22,
+      "span": [
+        22,
+        31
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 23,
+      "span": [
+        23,
+        30
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 36,
+      "span": [
+        36,
+        119
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 40,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 59,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 60,
+      "span": [
+        60,
+        63
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 67,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 72,
+      "span": [
+        72,
+        77
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 73,
+      "span": [
+        73,
+        75
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 80,
+      "span": [
+        80,
+        113
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 84,
+      "span": [
+        84,
+        93
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 85,
+      "span": [
+        85,
+        92
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 86,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 87,
+      "span": [
+        87,
+        90
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 95,
+      "span": [
+        95,
+        104
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 103,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 108,
+      "span": [
+        108,
+        112
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 110,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 114,
+      "span": [
+        114,
+        118
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 116,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 121,
+      "span": [
+        121,
+        221
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 127,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 128,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 129,
+      "span": [
+        129,
+        215
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 138,
+      "span": [
+        138,
+        140
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 139,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 145,
+      "span": [
+        145,
+        159
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 150,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 153,
+      "span": [
+        153,
+        155
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 167,
+      "span": [
+        167,
+        171
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 169,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 175,
+      "span": [
+        175,
+        177
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 188,
+      "span": [
+        188,
+        192
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 190,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 194,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 197,
+      "span": [
+        197,
+        206
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 198,
+      "span": [
+        198,
+        201
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 203,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 207,
+      "span": [
+        207,
+        211
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 223,
+      "span": [
+        223,
+        248
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 224,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 225,
+      "span": [
+        225,
+        248
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 230,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 240,
+      "span": [
+        240,
+        246
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 250,
+      "span": [
+        250,
+        261
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 251,
+      "span": [
+        251,
+        261
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 253,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 255,
+      "span": [
+        255,
+        260
+      ]
+    },
+    {
+      "file": "files/rs/preview.rs",
+      "anchor": 256,
+      "span": [
+        256,
+        260
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 3,
+      "span": [
+        3,
+        8
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 19,
+      "span": [
+        19,
+        23
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 26,
+      "span": [
+        26,
+        37
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 33,
+      "span": [
+        33,
+        34
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 39,
+      "span": [
+        39,
+        48
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 42,
+      "span": [
+        42,
+        43
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 46,
+      "span": [
+        46,
+        47
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 51,
+      "span": [
+        51,
+        65
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 56,
+      "span": [
+        56,
+        58
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 60,
+      "span": [
+        60,
+        63
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 75,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 88,
+      "span": [
+        88,
+        92
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 97,
+      "span": [
+        97,
+        101
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 106,
+      "span": [
+        106,
+        109
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 121,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 142,
+      "span": [
+        142,
+        189
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 158,
+      "span": [
+        158,
+        162
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 171,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 181,
+      "span": [
+        181,
+        183
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 199,
+      "span": [
+        199,
+        305
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 208,
+      "span": [
+        208,
+        213
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 215,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 229,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 240,
+      "span": [
+        240,
+        265
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 248,
+      "span": [
+        248,
+        251
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 254,
+      "span": [
+        254,
+        258
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 264,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 275,
+      "span": [
+        275,
+        278
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 288,
+      "span": [
+        288,
+        295
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 308,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 312,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 323,
+      "span": [
+        323,
+        367
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 327,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 330,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 339,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 352,
+      "span": [
+        352,
+        364
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 361,
+      "span": [
+        361,
+        363
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 373,
+      "span": [
+        373,
+        374
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 381,
+      "span": [
+        381,
+        383
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 389,
+      "span": [
+        389,
+        423
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 393,
+      "span": [
+        393,
+        423
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 408,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 425,
+      "span": [
+        425,
+        494
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 428,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 432,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 435,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 441,
+      "span": [
+        441,
+        444
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 455,
+      "span": [
+        455,
+        465
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 480,
+      "span": [
+        480,
+        482
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 489,
+      "span": [
+        489,
+        491
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 499,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 502,
+      "span": [
+        502,
+        562
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 509,
+      "span": [
+        509,
+        516
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 512,
+      "span": [
+        512,
+        514
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 514,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 520,
+      "span": [
+        520,
+        522
+      ]
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 537,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/recovery.rs",
+      "anchor": 548,
+      "span": [
+        548,
+        550
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 5,
+      "span": [
+        5,
+        7
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 9,
+      "span": [
+        9,
+        19
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 10,
+      "span": [
+        10,
+        19
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 11,
+      "span": [
+        11,
+        12
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 16,
+      "span": [
+        16,
+        18
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 21,
+      "span": [
+        21,
+        37
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 22,
+      "span": [
+        22,
+        37
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 23,
+      "span": [
+        23,
+        36
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 25,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 27,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 29,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 32,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 40,
+      "span": [
+        40,
+        60
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 44,
+      "span": [
+        44,
+        60
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 45,
+      "span": [
+        45,
+        57
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 46,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 49,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 50,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 51,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 52,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 62,
+      "span": [
+        62,
+        68
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 63,
+      "span": [
+        63,
+        64
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 64,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 70,
+      "span": [
+        70,
+        73
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 71,
+      "span": [
+        71,
+        72
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 72,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 75,
+      "span": [
+        75,
+        78
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 76,
+      "span": [
+        76,
+        77
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 77,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 80,
+      "span": [
+        80,
+        83
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 81,
+      "span": [
+        81,
+        82
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 82,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 85,
+      "span": [
+        85,
+        91
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 86,
+      "span": [
+        86,
+        87
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 87,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 93,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 94,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 95,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 96,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 98,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 99,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 101,
+      "span": [
+        101,
+        117
+      ]
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 111,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/code.rs",
+      "anchor": 116,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/constructed_n1_cont_if_and_where.rs",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n1_cont_if_and_where",
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/rs/constructed_n1_cont_if_and_where.rs",
+      "anchor": 2,
+      "constructed": true,
+      "name": "n1_cont_if_and_where",
+      "span": [
+        2,
+        5
+      ]
+    },
+    {
+      "file": "files/rs/constructed_n1_cont_if_and_where.rs",
+      "anchor": 3,
+      "constructed": true,
+      "name": "n1_cont_if_and_where",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/constructed_n1_cont_if_and_where.rs",
+      "anchor": 8,
+      "constructed": true,
+      "name": "n1_cont_if_and_where",
+      "span": [
+        8,
+        12
+      ]
+    },
+    {
+      "file": "files/rs/constructed_n1_cont_if_and_where.rs",
+      "anchor": 9,
+      "constructed": true,
+      "name": "n1_cont_if_and_where",
+      "span": [
+        9,
+        10
+      ]
+    },
+    {
+      "file": "files/rs/constructed_n1_cont_if_and_where.rs",
+      "anchor": 10,
+      "constructed": true,
+      "name": "n1_cont_if_and_where",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/constructed_n1_two_stmts_same_line.rs",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n1_two_stmts_same_line",
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/rs/constructed_n1_two_stmts_same_line.rs",
+      "anchor": 2,
+      "constructed": true,
+      "name": "n1_two_stmts_same_line",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/constructed_n1_match_arm_under_attr.rs",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n1_match_arm_under_attr",
+      "span": [
+        1,
+        10
+      ]
+    },
+    {
+      "file": "files/rs/constructed_n1_match_arm_under_attr.rs",
+      "anchor": 2,
+      "constructed": true,
+      "name": "n1_match_arm_under_attr",
+      "span": [
+        2,
+        9
+      ]
+    },
+    {
+      "file": "files/rs/constructed_n1_match_arm_under_attr.rs",
+      "anchor": 4,
+      "constructed": true,
+      "name": "n1_match_arm_under_attr",
+      "span": [
+        4,
+        7
+      ]
+    },
+    {
+      "file": "files/rs/constructed_n1_match_arm_under_attr.rs",
+      "anchor": 5,
+      "constructed": true,
+      "name": "n1_match_arm_under_attr",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/rs/constructed_finding2_attrs_and_where.rs",
+      "anchor": 1,
+      "constructed": true,
+      "name": "finding2_attrs_and_where",
+      "span": [
+        1,
+        7
+      ]
+    },
+    {
+      "file": "files/rs/constructed_finding2_attrs_and_where.rs",
+      "anchor": 2,
+      "constructed": true,
+      "name": "finding2_attrs_and_where",
+      "span": [
+        2,
+        7
+      ]
+    },
+    {
+      "file": "files/rs/constructed_finding2_attrs_and_where.rs",
+      "anchor": 9,
+      "constructed": true,
+      "name": "finding2_attrs_and_where",
+      "span": [
+        9,
+        17
+      ]
+    },
+    {
+      "file": "files/rs/constructed_finding2_attrs_and_where.rs",
+      "anchor": 10,
+      "constructed": true,
+      "name": "finding2_attrs_and_where",
+      "span": [
+        10,
+        17
+      ]
+    },
+    {
+      "file": "files/rs/constructed_finding2_attrs_and_where.rs",
+      "anchor": 19,
+      "constructed": true,
+      "name": "finding2_attrs_and_where",
+      "span": [
+        19,
+        21
+      ]
+    },
+    {
+      "file": "files/rs/constructed_finding2_attrs_and_where.rs",
+      "anchor": 23,
+      "constructed": true,
+      "name": "finding2_attrs_and_where",
+      "span": [
+        23,
+        24
+      ]
+    },
+    {
+      "file": "files/rs/constructed_valid_lifetimes_nested_comments_attrs.rs",
+      "anchor": 1,
+      "constructed": true,
+      "name": "valid_lifetimes_nested_comments_attrs",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/rs/constructed_valid_lifetimes_nested_comments_attrs.rs",
+      "anchor": 2,
+      "constructed": true,
+      "name": "valid_lifetimes_nested_comments_attrs",
+      "span": [
+        2,
+        4
+      ]
+    },
+    {
+      "file": "files/rs/constructed_valid_lifetimes_nested_comments_attrs.rs",
+      "anchor": 6,
+      "constructed": true,
+      "name": "valid_lifetimes_nested_comments_attrs",
+      "span": [
+        6,
+        12
+      ]
+    },
+    {
+      "file": "files/rs/constructed_chained_match.rs",
+      "anchor": 1,
+      "constructed": true,
+      "name": "chained_match",
+      "span": [
+        1,
+        7
+      ]
+    },
+    {
+      "file": "files/rs/constructed_chained_match.rs",
+      "anchor": 2,
+      "constructed": true,
+      "name": "chained_match",
+      "span": [
+        2,
+        6
+      ]
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 10*` resolved a single-line block — line 10 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 10`.",
+    "unresolved": "line 1: `CUT 125*` could not resolve a syntactic block beginning on line 125 (blank/closer line, or parse error). Use `CUT 125.=M` with explicit lines. The nearest enclosing multi-line block begins at line 121 and ends at line 133; use `CUT 121*` to target it."
+  }
+}

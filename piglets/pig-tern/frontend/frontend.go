@@ -102,22 +102,300 @@ const (
 // Frontend is the member's factory, the symbol the Piglet build registers.
 func Frontend() fe.Frontend { return member{} }
 
-type member struct{}
+// ModelMeta carries per-model catalog metadata supplied by a derived Piglet's
+// extension for omp's model picker (`Ctx`, `$/M`, `free` / `ctx>...` badges,
+// and supported thinking effort slider steps).
+type ModelMeta struct {
+	ID              string
+	Provider        string
+	Name            string
+	ContextWindow   int
+	InputCostPer1M  float64
+	OutputCostPer1M float64
+	Reasoning       bool
+	ThinkingLevels  []string
+}
+
+// AgentHubItem is one subagent row published by an extension for omp's native
+// HUD counter, composer subagent spend (+X.XX), and Agent Hub overlay.
+type AgentHubItem struct {
+	ID            string
+	DisplayName   string
+	AgentType     string
+	ParentID      string
+	Status        string // "running" | "idle" | "parked" | "aborted"
+	Task          string
+	Activity      string
+	Model         string
+	ModelRole     string
+	ThinkingLevel string
+	Cost          float64
+	DurationMs    int64
+	StartedAtMs   int64
+	Requests      int
+	Tools         int
+	Tokens        int
+	ContextTokens int
+	ContextWindow int
+	CreatedAtMs   int64
+	LastActiveMs  int64
+	SessionFile   string
+	CanRevive     bool
+}
+
+// AgentHubActivity is one activity timeline event for the Agent Hub Activity tab.
+type AgentHubActivity struct {
+	ID          string
+	AgentID     string
+	Kind        string // "tool" | "response" | "irc" | "status"
+	Title       string
+	Detail      string
+	Status      string // "ok" | "pending" | "error" | "aborted"
+	TimestampMs int64
+}
+
+// AgentHubTranscriptEntry is one rendered message entry for an agent's transcript
+// viewer overlay.
+type AgentHubTranscriptEntry struct {
+	Role        string // "user" | "assistant" | "tool" | "system"
+	Text        string
+	Thinking    string
+	ToolName    string
+	ToolArgs    string
+	ToolOutput  string
+	IsError     bool
+	TimestampMs int64
+}
+
+// AgentHubSnapshot is the immutable subagent state snapshot for the current session.
+type AgentHubSnapshot struct {
+	RunningCount     int
+	InspectableCount int
+	SubagentCost     float64
+	TotalDurationMs  int64
+	TotalRequests    int
+	TotalTokens      int
+	TotalTools       int
+	Agents           []AgentHubItem
+	Activity         []AgentHubActivity
+}
+
+// CompactionMeta holds display metadata for one compaction entry supplied by a
+// derived Piglet's extension so Tern renders omp's native
+// `section[omp.compaction]` divider with exact method label, before → after
+// tokens, frame count, and expandable summary.
+type CompactionMeta struct {
+	Method       string // "snapcompact" | "soft" | "remote" | "handoff" | "shake" | ""
+	TokensBefore int
+	TokensAfter  int
+	FrameCount   int
+	Summary      string
+	Warning      string
+}
+
+// TurnUsageRecord holds per-turn token, cost, and wall-clock metrics published
+// by an extension so Tern renders omp's `row[omp.turn.usage]` footer on
+// settled assistant replies.
+type TurnUsageRecord struct {
+	TurnSeq     int
+	Input       int
+	Output      int
+	CacheRead   int
+	CacheWrite  int
+	Cost        float64
+	ElapsedMs   int64
+	TimestampMs int64
+}
+
+// ComposerMeta carries live composer facts not present on PiG's frontend.Footer:
+// auto-compact threshold/speculation mark percentages, live generation tok/s,
+// GitHub Copilot premium request counts, and advisor spend.
+type ComposerMeta struct {
+	HasBoundaries      bool
+	AutoCompactEnabled bool
+	ThresholdPercent   float64
+	SpeculationPercent float64
+	SpeculationState   string
+	PremiumRequests    float64
+	AdvisorCost        float64
+	AdvisorSub         bool
+	TokensPerSec       float64
+}
+
+// JudgeBatchHudItem describes one active eval judge_batch progress row for
+// Tern's `col[omp.hud.judge]`.
+type JudgeBatchHudItem struct {
+	ID     string
+	Intent string
+	Done   int
+	Total  int
+	Failed int
+	Cost   float64
+}
+
+// DownloadHudItem describes one active download/install activity row for
+// Tern's `col[omp.hud.downloads]`.
+type DownloadHudItem struct {
+	ID     string
+	Label  string
+	Detail string
+	State  string
+	Loaded int64
+	Total  int64
+	Unit   string
+	Error  string
+}
+
+// CompactionHudItem describes an active background compaction row for Tern's
+// `col[omp.hud.compaction]`.
+type CompactionHudItem struct {
+	Active      bool
+	Label       string
+	StartedAtMs int64
+}
+
+// JobHudItem describes one running non-agent background job (bash/service/eval)
+// for Tern's `omp.hud.seg` ("jobs") pill beside the agents pill.
+type JobHudItem struct {
+	ID         string
+	Kind       string
+	Label      string
+	Status     string
+	StartedMs  int64
+	Summary    string
+	GlanceText string
+	SparkVals  []float64
+}
+
+// ProgressHudSnapshot aggregates background job pills and dock progress rows
+// (`omp.hud.judge`, `omp.hud.downloads`, `omp.hud.compaction`).
+type ProgressHudSnapshot struct {
+	JudgeBatches []JudgeBatchHudItem
+	Downloads    []DownloadHudItem
+	Compaction   CompactionHudItem
+	RunningJobs  int
+	Jobs         []JobHudItem
+}
+
+// Options are what a Piglet that derives from pig-tern fixes for its member.
+type Options struct {
+	// Omp draws the transcript and the dock with omp's roles and node
+	// shapes (roles.go), as PIG_TERN_ROLES=omp does for a run.
+	Omp bool
+	// OnSurface, when non-nil, is called with true once the native surface is
+	// open and drawing, and with false when the member declines, falls back to
+	// PiG's terminal renderer, or closes.
+	OnSurface func(native bool)
+	// Name and Version are what omp's welcome card prints as the wordmark and
+	// the version. Empty means the derived Piglet did not say: the card then
+	// falls back to the host's own name and version.
+	Name    string
+	Version string
+	// ModelDisplayName, when non-nil, resolves a PiG Footer.Model ID (e.g.
+	// "proof-1") to the model's human display name (e.g. "Proof 1") published
+	// by the extension over the shared `surface` channel (Finding 20).
+	// Returning "" falls back to Footer.Model.
+	ModelDisplayName func(modelID string) string
+	// ModelMeta, when non-nil, resolves per-model catalog metadata (context
+	// window, token costs, reasoning, thinking levels) for omp's model picker.
+	ModelMeta func(provider, id string) (ModelMeta, bool)
+	// OnThinkingLevel, when non-nil, is called when the user moves the
+	// thinking slider inside omp's model picker.
+	OnThinkingLevel func(level string)
+	// DisplayPath, when non-nil, normalizes the session working directory when
+	// the frontend resolves a cwd-relative path for display or `file://` hrefs
+	// (e.g. stripping macOS `/private` on project cwd). Absolute paths already
+	// supplied by tool details/args are preserved verbatim. Nil means identity.
+	DisplayPath func(path string) string
+	// AgentHubSnapshot returns the current subagent roster/metrics snapshot.
+	AgentHubSnapshot func() AgentHubSnapshot
+	// OnAgentHubChange subscribes to live subagent snapshot updates and returns
+	// an unsubscribe function.
+	OnAgentHubChange func(func(AgentHubSnapshot)) func()
+	// SetAgentHubOpener registers the frontend's native Agent Hub opener
+	// (invoked by `/agents` in Tern).
+	SetAgentHubOpener func(func())
+	// LoadAgentTranscript loads the transcript entries for an agent ID.
+	LoadAgentTranscript func(agentID string) []AgentHubTranscriptEntry
+	// KillAgent terminates a running or idle subagent by ID.
+	KillAgent func(agentID string) (string, error)
+	// ReviveAgent revives a parked or aborted subagent by ID.
+	ReviveAgent func(agentID string) (string, error)
+	// SendAgentMessage sends a steering/follow-up message to a subagent.
+	SendAgentMessage func(agentID, body string) error
+	// LookupCompaction resolves compaction metadata by tokensBefore for omp's
+	// native `section[omp.compaction]` divider.
+	LookupCompaction func(tokensBefore int) (CompactionMeta, bool)
+	// OnTurnUsage subscribes to completed turn usage records and returns an
+	// unsubscribe function.
+	OnTurnUsage func(func(TurnUsageRecord)) func()
+	// LatestTurnUsage returns the most recently recorded TurnUsageRecord, if any.
+	LatestTurnUsage func() (TurnUsageRecord, bool)
+	// ComposerMeta returns the current ComposerMeta snapshot.
+	ComposerMeta func() ComposerMeta
+	// OnComposerMetaChange subscribes to live ComposerMeta updates and returns
+	// an unsubscribe function.
+	OnComposerMetaChange func(func(ComposerMeta)) func()
+	// ProgressHudSnapshot returns the current ProgressHudSnapshot.
+	ProgressHudSnapshot func() ProgressHudSnapshot
+	// OnProgressHudChange subscribes to live ProgressHudSnapshot updates and
+	// returns an unsubscribe function.
+	OnProgressHudChange func(func(ProgressHudSnapshot)) func()
+	// BuildShellPresentation builds omp's canonical ShellVizPresentation map
+	// for Tern's native `shell` node, or returns nil to fall back to `code`.
+	BuildShellPresentation func(command string, running bool, exitCode *int, output string) map[string]any
+}
+
+// own member returns.
+func FrontendWith(opts Options) fe.Frontend { return member{opts: opts} }
+
+type member struct{ opts Options }
 
 // Open starts a session only when the process runs directly in a Tern pane:
 // a multiplexer between them swallows TSP, and PIG_TUI_NATIVE=0 (or the
 // SDK's TERN_TSP=0) opts out. The hello goes out from a goroutine, so Open
 // never waits for Tern.
-func (member) Open(env fe.Env) (fe.Session, error) {
+func (m member) Open(env fe.Env) (fe.Session, error) {
 	if env.Getenv("PIG_TUI_NATIVE") == "0" || env.Getenv("TERN_TSP") == "0" || env.Getenv("TERM_PROGRAM") != "tern" {
+		if m.opts.OnSurface != nil {
+			m.opts.OnSurface(false)
+		}
 		return nil, nil
 	}
 	for _, key := range []string{"TMUX", "STY", "ZELLIJ", "HERDR_ENV"} {
 		if env.Getenv(key) != "" {
+			if m.opts.OnSurface != nil {
+				m.opts.OnSurface(false)
+			}
 			return nil, nil
 		}
 	}
 	s := newSession(env)
+	s.ompRoles = s.ompRoles || m.opts.Omp
+	s.ompDerived = m.opts.Omp
+	s.onSurface = m.opts.OnSurface
+	s.pigletName = m.opts.Name
+	s.pigletVersion = m.opts.Version
+	s.modelDisplayName = m.opts.ModelDisplayName
+	s.modelMeta = m.opts.ModelMeta
+	s.onThinkingLevel = m.opts.OnThinkingLevel
+	s.displayPath = m.opts.DisplayPath
+	s.agentHubSnapshotFn = m.opts.AgentHubSnapshot
+	s.onAgentHubChangeFn = m.opts.OnAgentHubChange
+	s.setAgentHubOpenerFn = m.opts.SetAgentHubOpener
+	s.loadAgentTranscriptFn = m.opts.LoadAgentTranscript
+	s.killAgentFn = m.opts.KillAgent
+	s.reviveAgentFn = m.opts.ReviveAgent
+	s.sendAgentMessageFn = m.opts.SendAgentMessage
+	s.lookupCompaction = m.opts.LookupCompaction
+	s.onTurnUsageFn = m.opts.OnTurnUsage
+	s.latestTurnUsageFn = m.opts.LatestTurnUsage
+	s.composerMetaFn = m.opts.ComposerMeta
+	s.onComposerMetaChangeFn = m.opts.OnComposerMetaChange
+	s.progressHudSnapshotFn = m.opts.ProgressHudSnapshot
+	s.onProgressHudChangeFn = m.opts.OnProgressHudChange
+	s.buildShellPresentationFn = m.opts.BuildShellPresentation
+	s.initOmpBridge()
 	s.start()
 	return s, nil
 }
@@ -176,6 +454,15 @@ type session struct {
 	mark                     fe.Mark
 	markDirty, markInstalled bool
 	overlaySheetSent         bool
+	// omp_brand.go: omp-brand stylesheet (welcome logo sizing/theming +
+	// animated pig working spinner) and the live welcome logo node for
+	// /sprite updates. Only used when ompRoles is on.
+	ompBrandDirty     bool
+	ompBrandSheetSent bool
+	ompBrandSheetText string
+	welcomeEntryID    string
+	welcomeLogoNodeID string
+	welcomeLogoBlob   string
 	// The views (view.go): themeTokens maps the theme's colors to their
 	// tokens; viewRules are the themed views' rules by their root's TSP id,
 	// viewsShown reports that a view was drawn, viewSheetSent that the
@@ -202,12 +489,13 @@ type session struct {
 	dirty            bool
 	renders          int
 	renderedSendable bool
-	// editor is the editor node shown, if hasEditor.
-	editor    fe.Editor
-	hasEditor bool
-
-	// What HandleInput read from Tern: the pane's width in cells and a
-	// cell's height in CSS pixels, the credits, the highest acknowledged
+	// editor is the editor node shown, if hasEditor; footer is the footer node
+	// shown, if hasFooter (used by ompRoles to feed the composer bar).
+	editor        fe.Editor
+	hasEditor     bool
+	footer        fe.Footer
+	hasFooter     bool
+	toolsExpanded bool
 	// frame, whether the DA1 answer the hello asked for is still owed, and
 	// whether the pane is hidden (another tab shows). Frames are counted
 	// from the session's first; frameBase is the count before the surface's
@@ -242,30 +530,95 @@ type session struct {
 	blobCache  bool
 	blobInline map[string]bool
 
-	// ompRoles is the omp role trial (roles.go).
-	ompRoles bool
+	// ompRoles is the omp role mode (roles.go, omp_*.go). now is the clock for
+	// omp's elapsed timers (time.Now by default; overridden in tests).
+	ompRoles      bool
+	ompDerived    bool
+	now           func() time.Time
+	welcomeTipIdx int
+	// pigletName and pigletVersion are Options.Name and Options.Version.
+	pigletName           string
+	pigletVersion        string
+	modelDisplayName     func(modelID string) string
+	modelMeta            func(provider, id string) (ModelMeta, bool)
+	onThinkingLevel      func(level string)
+	displayPath          func(path string) string
+	errorBannerMsg       string
+	errorBannerExpanded  bool
+	errorBannerDismissed bool
+	recentModels         []string
+	// lastEditorView retains the last rendered omp composer node so that while
+	// PiG temporarily replaces the editor slot with a composer-anchored picker
+	// (such as /model), Tern still has `[data-role='omp.editor']` in the dock
+	// to anchor `.sf-picker.at-composer` above it.
+	lastEditorView *tern.Node
+	// tabTitleSent tracks the last OSC 2 tab title written under ompRoles so
+	// PiG's startup `pig - <dir>` title is replaced with pigletName or SessionName.
+	tabTitleSent string
+	autocomplete *ompAutocompleteState
+	// Composer prompt predictions extracted from hidden omp.composer.prediction dock widget.
+	predictions        []string
+	predictionIdx      int
+	insertedPrediction string
+	// Native omp Agent Hub state & callbacks (omp_agents_hub.go).
+	agentHubSnapshotFn    func() AgentHubSnapshot
+	onAgentHubChangeFn    func(func(AgentHubSnapshot)) func()
+	setAgentHubOpenerFn   func(func())
+	loadAgentTranscriptFn func(agentID string) []AgentHubTranscriptEntry
+	killAgentFn           func(agentID string) (string, error)
+	reviveAgentFn         func(agentID string) (string, error)
+	sendAgentMessageFn    func(agentID, body string) error
+	lookupCompaction      func(tokensBefore int) (CompactionMeta, bool)
+	agentHubUnsub         func()
+	agentHub              AgentHubSnapshot
+	agentHubUI            *ompAgentHubState
+	// Wave 7 omp bridge callbacks & live state (turn usage, composer meta, progress HUD, shell viz).
+	onTurnUsageFn            func(func(TurnUsageRecord)) func()
+	latestTurnUsageFn        func() (TurnUsageRecord, bool)
+	composerMetaFn           func() ComposerMeta
+	onComposerMetaChangeFn   func(func(ComposerMeta)) func()
+	progressHudSnapshotFn    func() ProgressHudSnapshot
+	onProgressHudChangeFn    func(func(ProgressHudSnapshot)) func()
+	buildShellPresentationFn func(command string, running bool, exitCode *int, output string) map[string]any
+	turnUsageUnsub           func()
+	composerMetaUnsub        func()
+	progressHudUnsub         func()
+	composerMeta             ComposerMeta
+	progressHud              ProgressHudSnapshot
+	pendingTurnUsage         *TurnUsageRecord
+	compactionHudCached      bool
+	compactionHudStartedAtMs int64
+	compactionHudLabel       string
+	compactionHudNode        tern.Node
+	// surfaceMu serializes callbacks and re-checks closed/fellBack so a late
+	// open notification can never overwrite a Close or fallback(false) (fixes N6).
+	onSurface    func(native bool)
+	surfaceMu    sync.Mutex
+	surfaceState int // 0 unreported, 1 false, 2 true
 }
 
 func newSession(env fe.Env) *session {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &session{
-		env:          env,
-		out:          &termWriter{w: env.Out},
-		in:           newInputPipe(),
-		ctx:          ctx,
-		cancel:       cancel,
-		connectDone:  make(chan struct{}),
-		afterFunc:    time.AfterFunc,
-		keepalive:    progressKeepalive,
-		sent:         map[string]*mainEntry{},
-		dirty:        true,
-		cols:         env.Columns,
-		cellHeightPx: defaultCellHeightPx,
-		credits:      tern.DefaultCredits,
-		hasJSON:      true,
-		hostname:     hostname(),
-		blobDir:      env.Getenv("TERN_BLOB_DIR"),
-		ompRoles:     ompRolesOn(env.Getenv),
+		env:           env,
+		out:           &termWriter{w: env.Out},
+		in:            newInputPipe(),
+		ctx:           ctx,
+		cancel:        cancel,
+		connectDone:   make(chan struct{}),
+		afterFunc:     time.AfterFunc,
+		keepalive:     progressKeepalive,
+		sent:          map[string]*mainEntry{},
+		dirty:         true,
+		cols:          env.Columns,
+		cellHeightPx:  defaultCellHeightPx,
+		credits:       tern.DefaultCredits,
+		hasJSON:       true,
+		hostname:      hostname(),
+		blobDir:       env.Getenv("TERN_BLOB_DIR"),
+		ompRoles:      ompRolesOn(env.Getenv),
+		now:           time.Now,
+		welcomeTipIdx: int((uint64(time.Now().UnixNano())) % uint64(len(ompWelcomeTips))),
 	}
 }
 
@@ -314,13 +667,18 @@ func (s *session) connect(opts tern.Options) {
 	// A surface opened while PiG lends the terminal out would cover the
 	// other program; Resume opens it instead.
 	var openErr error
+	var opened bool
 	if !s.suspended {
 		openErr = s.openLocked()
+		opened = openErr == nil
 	}
 	if errors.Is(openErr, errRefused) {
 		s.tsp = nil
 	}
 	s.mu.Unlock()
+	if opened {
+		s.notifySurface(true)
+	}
 	if errors.Is(openErr, errRefused) {
 		_ = tsp.Close()
 		s.fallback(openErr.Error())
@@ -339,8 +697,17 @@ var (
 )
 
 // openLocked opens the surface and sends what is pending.
+// surfaceTitle returns the Tern surface title: pigletName when set (e.g.
+// "oh-my-pig"), otherwise "pig".
+func (s *session) surfaceTitle() string {
+	if s.pigletName != "" {
+		return s.pigletName
+	}
+	return "pig"
+}
+
 func (s *session) openLocked() error {
-	sf, err := s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: "pig", Role: "pig.session", Chat: true})
+	sf, err := s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: s.surfaceTitle(), Role: "pig.session", Chat: true})
 	if err != nil {
 		return errRefused
 	}
@@ -372,12 +739,41 @@ func (s *session) run(tsp *tern.Session) {
 	}
 }
 
+// notifySurface serializes OnSurface callbacks and never reports native=true
+// after Close or fallback has already ended the session (fixes N6).
+func (s *session) notifySurface(native bool) {
+	s.surfaceMu.Lock()
+	defer s.surfaceMu.Unlock()
+	s.mu.Lock()
+	onSurface := s.onSurface
+	if onSurface == nil {
+		s.mu.Unlock()
+		return
+	}
+	if native && (s.closed || s.fellBack) {
+		s.mu.Unlock()
+		return
+	}
+	next := 1
+	if native {
+		next = 2
+	}
+	if s.surfaceState == next {
+		s.mu.Unlock()
+		return
+	}
+	s.surfaceState = next
+	s.mu.Unlock()
+	onSurface(native)
+}
+
 // fallback asks PiG, once, to continue with its ANSI renderer.
 func (s *session) fallback(reason string) {
 	s.mu.Lock()
 	first := !s.fellBack && !s.closed
 	s.fellBack = true
 	s.mu.Unlock()
+	s.notifySurface(false)
 	if first && s.env.Fallback != nil {
 		s.env.Fallback(reason)
 	}
@@ -421,6 +817,10 @@ func (s *session) Apply(frame fe.Frame) error {
 	}
 	if frame.Mark != nil && !sameMark(*frame.Mark, s.mark) {
 		s.mark, s.markDirty = *frame.Mark, true
+		if s.ompRoles {
+			s.ompBrandDirty = true
+			s.refreshOmpWelcomeLogo()
+		}
 	}
 	for _, op := range frame.Ops {
 		switch op.Region {
@@ -463,6 +863,9 @@ func (s *session) flushLocked() error {
 	if s.sf == nil || !s.live || s.fellBack || s.closed || s.suspended {
 		return nil
 	}
+	if s.ompRoles && s.pigletName != "" && s.tabTitleSent == "" {
+		s.reportOmpTabTitle(s.footer.SessionName)
+	}
 	if s.markDirty {
 		if css := markSheet(s.mark); css != "" || s.markInstalled {
 			if err := s.sendErr(s.sf.Stylesheet(markSheetName, css)); err != nil {
@@ -471,6 +874,9 @@ func (s *session) flushLocked() error {
 			s.markInstalled = css != ""
 		}
 		s.markDirty = false
+	}
+	if err := s.sendErr(s.flushOmpBrandSheet()); err != nil {
+		return err
 	}
 	if err := s.sendErr(s.flushBlobs()); err != nil {
 		return err
@@ -554,6 +960,14 @@ func (s *session) HandleInput(data string) bool {
 	for _, item := range items {
 		switch {
 		case item.Keys != nil:
+			if s.ompRoles && len(items) == 1 && s.handleAgentHubKeyLocked(string(item.Keys)) {
+				s.mu.Unlock()
+				return true
+			}
+			if s.ompRoles && len(items) == 1 && s.handlePredictionKeyLocked(string(item.Keys)) {
+				s.mu.Unlock()
+				return true
+			}
 			s.mu.Unlock()
 			return false
 		case item.DA1 && !s.owedDA1:
@@ -673,7 +1087,32 @@ func (s *session) Close() error {
 		s.timer.Stop()
 	}
 	s.closed = true
+	unsub := s.agentHubUnsub
+	s.agentHubUnsub = nil
+	turnUnsub := s.turnUsageUnsub
+	s.turnUsageUnsub = nil
+	composerUnsub := s.composerMetaUnsub
+	s.composerMetaUnsub = nil
+	progressUnsub := s.progressHudUnsub
+	s.progressHudUnsub = nil
+	setOpener := s.setAgentHubOpenerFn
 	s.mu.Unlock()
+	if unsub != nil {
+		unsub()
+	}
+	if turnUnsub != nil {
+		turnUnsub()
+	}
+	if composerUnsub != nil {
+		composerUnsub()
+	}
+	if progressUnsub != nil {
+		progressUnsub()
+	}
+	if setOpener != nil {
+		setOpener(nil)
+	}
+	s.notifySurface(false)
 	s.setProgress(false)
 	s.cancel()
 	<-s.connectDone

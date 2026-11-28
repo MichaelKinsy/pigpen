@@ -1,0 +1,529 @@
+# Validation and platform builds. No signing, no publishing, no secrets. Releases are release.yml (a Piglet tag) and
+# release-package.yml (a Package tag); a tag never starts this workflow.
+#
+# Tiers:
+#   validate        every run: tests, checks, the PiG validator over every manifest, and ONE linux/amd64 build + smoke of
+#                   pig-with-batteries.
+#   slow-checks     every run, in parallel with validate: the live Package and Piglet installs (from tags and from npm)
+#                   and the release rehearsal, one job each so none can push another past its timeout.
+#   platform-matrix every push to main, merge group, manual run, the weekly schedule, and a pull request labelled
+#                   `full-ci`: one job per OS on a native runner builds ALL eleven Piglets for that OS and smokes every Binary.
+#   android-cross   with platform-matrix: compile + vet every module for android/arm64 (Termux), CGO_ENABLED=0.
+#   govulncheck     every run, in parallel with validate: every Go module scanned for vulnerabilities its code can reach
+#                   (scripts/govulncheck.mjs, pinned govulncheck); an unscanned module fails it. The vulnerability database
+#                   is live, so a new advisory can turn it red with no change here: the weekly schedule shows that on main.
+#   listings        every run, in parallel with validate: every third-party listing (listings/<id>.json) is installed from its
+#                   pinned commit with the pig built from PIG_COMMIT, validated, built and loaded in a faux-model session
+#                   (scripts/verify-listings.mjs), after a fixture Package proves the check itself. A failing listing fails
+#                   the job and is named in its log and summary.
+#   autolith-binary every run, in parallel with validate: the Lisp Piglet pig-autolith needs SBCL, which no other job installs, so it is
+#                   left out of platform-matrix and proved here on linux/amd64: the bridge's own tests, a native Piglet Binary build
+#                   (statically linked, starts, registers its tools), and the size and first-load time of its SBCL image (scripts/measure-lisp-piglet.mjs).
+#   autolith-binary-macos  the same on a macos-15 runner for darwin/arm64, with SBCL built from pinned source by scripts/install-sbcl-macos.sh, the script release.yml runs.
+#   rea-windows     every run: the windows/amd64 half of a pig-rea and pig-rea-sealed release build on a windows-2025 runner (the REA payload with System32 tar.exe and zstd, both Binaries built and smoked, test:rea), with the pig built from PIG_COMMIT.
+#   ci-result       the one required check. Green when validate, every slow check, govulncheck, listings and autolith-binary passed and each
+#                   other tier passed or was skipped.
+name: Validate Pigpen
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  push:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 4 * * 1' # Mondays, 04:23 UTC: catches runner-image and toolchain drift on an idle main
+permissions:
+  contents: read
+concurrency:
+  # A new push or label on a pull request cancels the run it replaces. Every other run is its own group, so no push to
+  # main or merge group is ever skipped. Any label re-runs the pull request's checks: a run that skipped them would still
+  # report a green `CI result` for the same commit, and the newest check of that name is the one a required check reads.
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  # The PiG release these jobs target is scripts/pig-requirement.json (`release`); a test keeps this commit equal to it.
+  PIG_COMMIT: '0e35a120627aa6ab2a8e1d7ae72bd15394b8078f' # PiG 0.8.0 release candidate (release/v0.8.0), reports 0.7.0 until the release commit; re-pinned to the tag after the release
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    # Measured: this set ran in 5 min 9 s on the hosted runner (run 37333959069, before the slow checks below existed).
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # The index check verifies each Package release record against its tag and commit (releases/packages).
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      # Archon plugins (components/*/archon-plugin.json) are tested with bun by validate-manifests.mjs.
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.4.3'
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run check
+      - name: Validate target metadata
+        run: node scripts/build-matrix.mjs
+      - name: Check out the reviewed PiG validator source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Build the PiG validator
+        run: |
+          set -euo pipefail
+          mkdir -p .pig-bin
+          go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
+          {
+            echo "PIG_BIN=$PWD/.pig-bin/pig"
+            echo "PIG_HOME=$RUNNER_TEMP/pig-home"
+            echo "PIG_SOURCE_ROOT=$GITHUB_WORKSPACE/.pig-src"
+          } >> "$GITHUB_ENV"
+      # One step per check, so the run shows what each costs (a single shell step hid it, and the job hit its timeout).
+      - name: Validate every manifest
+        run: npm run validate
+      - name: Build and smoke pig-with-batteries (linux/amd64)
+        run: node scripts/platform-smoke.mjs --only pig-with-batteries --no-stage
+      - run: npm run test:porter
+      - run: npm run test:tool-scope
+      - run: npm run test:moved
+      - run: npm run test:go-ports
+
+  # The slow checks that need only the built pig and share nothing with validate, one job each, in parallel. Before the
+  # split they ran after validate's steps in one job and took it past 45 minutes (runs 37391641163, 37413900709), so on
+  # the hosted runner the four together cost at least 40 minutes. Pinned to 4 CPUs with an empty Go build cache they took
+  # test:packages 123 s, test:npm-packages 344 s, test:npm-piglets 285 s and the rehearsal 507 s (21 minutes together),
+  # so the hosted runner is at least about 2x slower than that; each job also builds pig from source first. Timeouts
+  # give each check 2x its share of those 40+ minutes or more, and never less than the check's own node --test timeout
+  # (30 min). Read the real step times from the first runs and tighten them.
+  slow-checks:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: 'Package installs from tags (test:packages)', runner: ubuntu-24.04, timeout: 30, run: 'npm run test:packages' }
+          - { name: 'Package installs from npm (test:npm-packages)', runner: ubuntu-24.04, timeout: 30, run: 'npm run test:npm-packages' }
+          - { name: 'Piglet sources from npm (test:npm-piglets)', runner: ubuntu-24.04, timeout: 30, run: 'npm run test:npm-piglets' }
+          - { name: 'Release rehearsal', runner: ubuntu-24.04, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src' }
+          # The same rehearsal, release.yml's own steps for pig-autolith on each target it ships for, on that target's native runner
+          # (the rehearsal builds the host target): the pinned SBCL install, the signed Binary build, plan, publish, the signed receipt,
+          # then the released Binary started with its tools registered. The darwin/arm64 run builds SBCL from source (about 10 minutes).
+          - { name: 'Release rehearsal pig-autolith linux/amd64', runner: ubuntu-24.04, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-autolith --expect-tools autolith_job,autolith_session --without fuse-anchor' }
+          - { name: 'Release rehearsal pig-autolith darwin/arm64', runner: macos-15, timeout: 60, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-autolith --expect-tools autolith_job,autolith_session --without fuse-anchor' }
+          # pig-rea and pig-rea-sealed: release.yml's REA payload step and Binary build on the Linux and macOS targets (windows/amd64 is
+          # rea-windows; linux/arm64 and darwin/amd64 have no runner here and are covered by platform-matrix after the release).
+          - { name: 'Release rehearsal pig-rea linux/amd64', runner: ubuntu-24.04, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-rea' }
+          - { name: 'Release rehearsal pig-rea darwin/arm64', runner: macos-15, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-rea' }
+          - { name: 'Release rehearsal pig-rea-sealed linux/amd64', runner: ubuntu-24.04, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-rea-sealed' }
+          - { name: 'Release rehearsal pig-rea-sealed darwin/arm64', runner: macos-15, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-rea-sealed' }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - name: Check out the reviewed PiG source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Build the PiG validator
+        run: |
+          set -euo pipefail
+          mkdir -p .pig-bin
+          go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
+          {
+            echo "PIG_BIN=$PWD/.pig-bin/pig"
+            echo "PIG_HOME=$RUNNER_TEMP/pig-home"
+            echo "PIG_SOURCE_ROOT=$GITHUB_WORKSPACE/.pig-src"
+          } >> "$GITHUB_ENV"
+      - name: ${{ matrix.name }}
+        run: ${{ matrix.run }}
+
+  platform-matrix:
+    name: Platform ${{ matrix.target }}
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-ci')
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: linux/amd64, runner: ubuntu-24.04, artifact: linux-amd64 }
+          - { target: linux/arm64, runner: ubuntu-24.04-arm, artifact: linux-arm64 }
+          - { target: darwin/arm64, runner: macos-15, artifact: darwin-arm64 }
+          - { target: darwin/amd64, runner: macos-15-intel, artifact: darwin-amd64 }
+          - { target: windows/amd64, runner: windows-2025, artifact: windows-amd64 }
+    steps:
+      - name: Keep line endings as committed
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Check out the PiG source the Piglet builds need
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Download the pinned PiG release for ${{ matrix.target }} and verify its checksum
+        run: node scripts/fetch-pig.mjs --target '${{ matrix.target }}' --out "$RUNNER_TEMP/pig" --github-env
+      # pig-rea embeds REA and its pinned Node: build the payload for this target before the Piglets are staged and built.
+      - name: Build the REA payload for ${{ matrix.target }}
+        run: node components/rea/scripts/payload.mjs '${{ matrix.target }}'
+      - name: Build all Piglets but pig-autolith (SBCL, job autolith-binary) for ${{ matrix.target }} and smoke every Binary
+        env:
+          PIG_HOME: ${{ runner.temp }}/pig-home
+          PIG_SOURCE_ROOT: ${{ github.workspace }}/.pig-src
+        run: node scripts/platform-smoke.mjs --except pig-autolith --out dist/bin
+      - name: REA faithfulness gates (catalog against npx's REA, rea setup registration, skill)
+        run: npm run test:rea
+      # The harness gate symlinks one unpacked payload into every sandbox, which Windows runners do not allow unprivileged.
+      - name: REA harness gate on the pig-rea and pig-rea-sealed Binaries
+        if: ${{ runner.os != 'Windows' }}
+        env:
+          PIG_REA_BIN: ${{ github.workspace }}/dist/bin/pig-rea
+          PIG_REA_SEALED_BIN: ${{ github.workspace }}/dist/bin/pig-rea-sealed
+        run: npm run test:rea-harness
+      # Each Binary in a real terminal (tmux), with only system tools on PATH: its main features, a faux turn and a clean /quit.
+      - name: Drive every Binary in a terminal
+        if: ${{ runner.os == 'Linux' }}
+        env:
+          PIGLET_E2E_BIN_DIR: ${{ github.workspace }}/dist/bin
+        run: node --test --test-timeout=900000 scripts/piglet-e2e.test.mjs
+      - name: Keep the Binaries for three days
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: piglets-${{ matrix.artifact }}
+          path: dist/bin
+          retention-days: 3
+          if-no-files-found: error
+
+  android-cross:
+    name: Compile for android/arm64
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-ci')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Check out the PiG SDK the modules build against
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: go build and go vet every module for android/arm64 with cgo off
+        env:
+          PIG_SDK_DIR: ${{ github.workspace }}/.pig-src/extensions/sdk
+        run: node scripts/cross-check.mjs android/arm64
+
+  govulncheck:
+    name: govulncheck (every module)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Check out the PiG SDK the modules build against
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Scan every module for reachable vulnerabilities
+        env:
+          PIG_SDK_DIR: ${{ github.workspace }}/.pig-src/extensions/sdk
+        run: node scripts/govulncheck.mjs
+
+  # pig-autolith has a Common Lisp extension (an ASDF system), so loading it needs SBCL 2.6.9, which PiG does not bundle. The archive
+  # is the official linux/x86-64 binary; its SHA-256 is the one of the file downloaded on 2026-11-05 (the release signature is not verified).
+  # The pig is built from PIG_COMMIT, the PiG 0.8.0 release candidate, which embeds the Lisp cell in a Piglet Binary (MichaelKinsy/PiG#490); PiG 0.7.0 builds a
+  # Binary that stops at startup. The proof: the Binary builds, is statically linked, starts, loads the embedded cell and registers
+  # autolith_job and autolith_session in a faux turn (the step fails otherwise); the Piglet source answers a faux turn through the real
+  # Lisp image; the sizes and the cold and warm times are printed in the job summary.
+  autolith-binary:
+    name: Lisp Piglet pig-autolith (SBCL, Binary build, image size)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      SBCL_VERSION: '2.6.9'
+      SBCL_SHA256: '39fac28407405841003e4c2abfbe0d96abd93b7701e8b61cdd35e713943b46d6'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - name: Check out the reviewed PiG source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Build the PiG validator
+        run: |
+          set -euo pipefail
+          mkdir -p .pig-bin
+          go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
+          {
+            echo "PIG_BIN=$PWD/.pig-bin/pig"
+            echo "PIG_HOME=$RUNNER_TEMP/pig-home"
+            echo "PIG_SOURCE_ROOT=$GITHUB_WORKSPACE/.pig-src"
+          } >> "$GITHUB_ENV"
+      - name: Install SBCL ${{ env.SBCL_VERSION }} (official binary, checksum pinned)
+        run: |
+          set -euo pipefail
+          archive="sbcl-${SBCL_VERSION}-x86-64-linux-binary.tar.bz2"
+          curl -fsSL -o "$RUNNER_TEMP/$archive" "https://downloads.sourceforge.net/project/sbcl/sbcl/${SBCL_VERSION}/$archive"
+          echo "$SBCL_SHA256  $RUNNER_TEMP/$archive" | sha256sum -c -
+          tar -C "$RUNNER_TEMP" -xjf "$RUNNER_TEMP/$archive"
+          (cd "$RUNNER_TEMP/sbcl-${SBCL_VERSION}-x86-64-linux" && INSTALL_ROOT="$RUNNER_TEMP/sbcl" sh install.sh)
+          {
+            echo "PIG_SBCL=$RUNNER_TEMP/sbcl/bin/sbcl"
+            echo "SBCL_HOME=$RUNNER_TEMP/sbcl/lib/sbcl"
+          } >> "$GITHUB_ENV"
+          "$RUNNER_TEMP/sbcl/bin/sbcl" --version
+      - name: The bridge's own tests (event reader, run state, job file, result envelope)
+        run: SBCL_HOME="$RUNNER_TEMP/sbcl/lib/sbcl" "$RUNNER_TEMP/sbcl/bin/sbcl" --script piglets/pig-autolith/extensions/autolith-bridge/tests/parser-tests.lisp "$PIG_SOURCE_ROOT/extensions/sdk-lisp/pig-sdk.asd"
+      - name: Build the pig-autolith Binary for linux/amd64 and check it is static
+        run: |
+          set -euo pipefail
+          node scripts/build-piglet.mjs pig-autolith --out dist/bin/pig-autolith
+          file dist/bin/pig-autolith | tee /dev/stderr | grep -q 'statically linked'
+          dist/bin/pig-autolith --version
+      - name: Binary start and tool registration, size and first-load time of the SBCL image
+        run: node scripts/measure-lisp-piglet.mjs --piglet dist/staged/piglets/pig-autolith/piglet.yaml --without fuse-anchor --binary dist/bin/pig-autolith --expect-tools autolith_job,autolith_session --runs 5
+
+  # The darwin/arm64 half of the pig-autolith release, on a real Apple-silicon runner: the same SBCL install script release.yml runs
+  # (scripts/install-sbcl-macos.sh: SBCL 2.6.9 built from the checksum-pinned official source, no official macOS arm64 binary of 2.6.9
+  # exists), then the same unsigned Binary build, start, tool registration and image measurement as autolith-binary. The Binary size
+  # is printed in the job summary to compare with the 104,288,082 bytes built on the maintainer's Mac.
+  autolith-binary-macos:
+    name: Lisp Piglet pig-autolith on darwin/arm64 (SBCL from source, Binary build)
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - name: Check out the reviewed PiG source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Build the PiG validator
+        run: |
+          set -euo pipefail
+          mkdir -p .pig-bin
+          go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
+          {
+            echo "PIG_BIN=$PWD/.pig-bin/pig"
+            echo "PIG_HOME=$RUNNER_TEMP/pig-home"
+            echo "PIG_SOURCE_ROOT=$GITHUB_WORKSPACE/.pig-src"
+          } >> "$GITHUB_ENV"
+      - name: Install SBCL 2.6.9 (official source, checksum pinned; the script release.yml runs)
+        run: sh scripts/install-sbcl-macos.sh "$RUNNER_TEMP/sbcl" >> "$GITHUB_ENV"
+      - name: Build the pig-autolith Binary for darwin/arm64 and check it starts
+        run: |
+          set -euo pipefail
+          node scripts/build-piglet.mjs pig-autolith --out dist/bin/pig-autolith
+          file dist/bin/pig-autolith
+          dist/bin/pig-autolith --version
+          size=$(stat -f %z dist/bin/pig-autolith)
+          echo "pig-autolith darwin/arm64 Binary: $size bytes (maintainer's Mac: 104288082)" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Binary start and tool registration, size and first-load time of the SBCL image
+        run: node scripts/measure-lisp-piglet.mjs --piglet dist/staged/piglets/pig-autolith/piglet.yaml --without fuse-anchor --binary dist/bin/pig-autolith --expect-tools autolith_job,autolith_session --runs 5
+
+  # Third-party listings: no listing is Pigpen's code, so each one is built and loaded here, from its pinned commit, with the
+  # pig this run builds (the PiG 0.8.0 release candidate, 0e35a120627a), before index.json may claim it. The fixture test runs first so a broken check cannot pass
+  # for a working listing. The job has the read-only token and no secret; a listing's code runs only here (CONTRIBUTING.md).
+  listings:
+    name: Third-party listings (verify:listings)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - name: Check out the reviewed PiG source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Build the PiG validator
+        run: |
+          set -euo pipefail
+          mkdir -p .pig-bin
+          go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
+          {
+            echo "PIG_BIN=$PWD/.pig-bin/pig"
+            echo "PIG_HOME=$RUNNER_TEMP/pig-home"
+            echo "PIG_SOURCE_ROOT=$GITHUB_WORKSPACE/.pig-src"
+          } >> "$GITHUB_ENV"
+      - name: The check on a fixture Package (test:listings)
+        run: npm run test:listings
+      - name: Install, validate, build and load every listing (verify:listings)
+        run: npm run verify:listings
+
+  # The Windows half of a pig-rea / pig-rea-sealed release build, proved before a release tag and with no published PiG release:
+  # platform-matrix's windows entry does the same but starts with fetch-pig, which needs the v0.8.0 assets. Here the pig is built
+  # from PIG_COMMIT, as release.yml does. It unpacks the pinned Node .zip with System32\tar.exe (payload.mjs), packs the zstd payload,
+  # builds both Binaries for windows/amd64 and smokes them. Nothing is signed or published, no secret is read.
+  rea-windows:
+    name: REA payload and Binaries for windows/amd64
+    runs-on: windows-2025
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Keep line endings as committed
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - name: Check out the PiG source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Build pig from source
+        run: |
+          set -euo pipefail
+          mkdir -p .pig-bin
+          go -C .pig-src build -trimpath -o ../.pig-bin/pig.exe ./cmd/pig
+          echo "PIG_BIN=$PWD/.pig-bin/pig.exe" >> "$GITHUB_ENV"
+      - name: Say which zstd the payload step will spawn
+        run: zstd --version
+      - run: node components/rea/scripts/payload.mjs windows/amd64
+      - name: Build and smoke pig-rea and pig-rea-sealed
+        env:
+          PIG_HOME: ${{ runner.temp }}/pig-home
+          PIG_SOURCE_ROOT: ${{ github.workspace }}/.pig-src
+        run: node scripts/platform-smoke.mjs --only pig-rea,pig-rea-sealed --out dist/bin
+      - run: npm run test:rea
+
+  ci-result:
+    name: CI result
+    if: ${{ always() }}
+    needs: [validate, slow-checks, platform-matrix, android-cross, govulncheck, listings, autolith-binary, autolith-binary-macos, rea-windows]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require validate, the slow checks, govulncheck and the listings, and every other tier that ran
+        env:
+          VALIDATE: ${{ needs.validate.result }}
+          SLOW_CHECKS: ${{ needs.slow-checks.result }}
+          PLATFORM_MATRIX: ${{ needs.platform-matrix.result }}
+          ANDROID_CROSS: ${{ needs.android-cross.result }}
+          GOVULNCHECK: ${{ needs.govulncheck.result }}
+          LISTINGS: ${{ needs.listings.result }}
+          AUTOLITH_BINARY: ${{ needs.autolith-binary.result }}
+          AUTOLITH_BINARY_MACOS: ${{ needs.autolith-binary-macos.result }}
+          REA_WINDOWS: ${{ needs.rea-windows.result }}
+        run: |
+          echo "validate=$VALIDATE slow-checks=$SLOW_CHECKS platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS govulncheck=$GOVULNCHECK listings=$LISTINGS autolith-binary=$AUTOLITH_BINARY autolith-binary-macos=$AUTOLITH_BINARY_MACOS rea-windows=$REA_WINDOWS"
+          [ "$VALIDATE" = success ] || { echo "validate did not pass"; exit 1; }
+          [ "$SLOW_CHECKS" = success ] || { echo "a slow check did not pass"; exit 1; }
+          [ "$GOVULNCHECK" = success ] || { echo "govulncheck did not pass"; exit 1; }
+          [ "$LISTINGS" = success ] || { echo "a third-party listing did not verify (see the listings job)"; exit 1; }
+          [ "$AUTOLITH_BINARY" = success ] || { echo "the Lisp Piglet pig-autolith did not build or load (see the autolith-binary job)"; exit 1; }
+          [ "$AUTOLITH_BINARY_MACOS" = success ] || { echo "the Lisp Piglet pig-autolith did not build or load on darwin/arm64 (see the autolith-binary-macos job)"; exit 1; }
+          [ "$REA_WINDOWS" = success ] || { echo "the REA payload and Binaries did not build on windows/amd64 (see the rea-windows job)"; exit 1; }
+          for result in "$PLATFORM_MATRIX" "$ANDROID_CROSS"; do
+            case "$result" in
+              success | skipped) ;;
+              *) echo "a platform tier did not pass ($result)"; exit 1 ;;
+            esac
+          done

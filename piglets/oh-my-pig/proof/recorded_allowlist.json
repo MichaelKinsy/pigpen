@@ -1,0 +1,12 @@
+[
+  {
+    "tool": "*",
+    "kind": "intent-in-args",
+    "class": "HOST",
+    "ref_file": "PiG agent/tool_execution.go",
+    "ref_term": [
+      "func (h *loopHost) emitToolExecutionStart(call pendingToolCall)"
+    ],
+    "why": "PiG emits ToolExecutionStartEvent with raw call.args before PrepareArguments/hooks run (agent/tool_execution.go) and serializes only {type, toolCallId, toolName, args} with no intent field (coding/cli/rpc_events.go), whereas omp strips `i` into `tool_execution_start.intent` before emitting (packages/agent/src/agent-loop.ts:3201-3220)."
+  }
+]

@@ -1,0 +1,15 @@
+package p
+
+func foo(
+	a int,
+	b int,
+) int {
+	return a + b
+}
+
+func bar() {
+	Builder{
+		x: 1,
+	}
+		.Build()
+}

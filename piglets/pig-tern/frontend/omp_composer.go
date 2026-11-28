@@ -1,0 +1,803 @@
+package frontend
+
+import (
+	fe "github.com/MichaelKinsy/PiG/extensions/sdk/frontend"
+	"github.com/stencil-hq/tern-sdk/go/tern"
+	"github.com/stencil-hq/tern-sdk/go/tern/ui"
+	"math"
+	"slices"
+	"strconv"
+	"strings"
+)
+
+// ompComposerPlaceholder is omp's untitled-session placeholder (custom-editor.ts:54).
+const ompComposerPlaceholder = "What are we cooking?"
+
+// ompComposerElement builds omp's composer column (custom-editor.ts:1112):
+//
+//	col(role="omp.editor", tone="pending" while running):
+//	  - meter(key="context", role="omp.composer.context", style="bar", ...)  [when footer present]
+//	  - row(key="line", role="omp.composer.line", align="start", gap="sm"):
+//	      - editor(key="input", placeholder, sendable, handlers)
+//	  - row(key="bar", role="omp.composer.bar", gap="sm", align="center"):
+//	      - row(key="model", role="omp.composer.model", ...)                 [when footer present]
+//	          - effort(key="effort", role="omp.composer.model.effort", ...)  [when thinkingLevel != ""]
+//	            OR icon(key="icon", name="model")                            [when thinkingLevel == ""]
+//	          - text(key="name", spans=..., wrap="none")
+//	          - icon(key="chev", name="chev")
+//	      - status(key="extras", role="omp.composer.extras", transparent=true, grow=1)
+//	      - text(key="usage", role="omp.composer.usage", ...)                [when footer present]
+//	      - text(key="stop", role="omp.composer.stop", ...)                  [when running]
+//	        OR kbd(key="send", role="omp.composer.send", keys=["enter"], ...) [when idle]
+//
+// In omp, the composer's input is a child keyed "input" under row "line", so
+// its TSP id is "<editorTID>.line.input". Handlers for edit, undo, send and
+// focus live on that input node. When PiG is working (running == true), the
+// composer column gets tone "pending" and the submit control swaps from Send
+// to Stop (non-interactive since frontend.Env has no interrupt callback).
+func (s *session) ompComposerElement(e *entry, editor fe.Editor, interactive bool) tern.Element {
+	running := s.progress
+	placeholder := editor.Placeholder
+	if placeholder == "" {
+		placeholder = ompComposerPlaceholder
+	}
+	inputCommon := ui.Common{Key: "input"}
+	inputField := ui.Field{
+		Placeholder: ui.T(placeholder),
+		Sendable:    interactive && editor.Sendable,
+		Ghost:       s.ompPredictionSuffix(editor),
+	}
+	if !interactive {
+		cursor := editor.Cursor
+		inputField.Text = editor.Text
+		inputField.Cursor = &cursor
+	}
+	inputNode := ui.Editor{Common: inputCommon, Field: inputField, MaxLines: 18}.Node()
+	if interactive {
+		inputNode.Handlers = s.editorHandlers(e)
+	}
+	line := ui.Row{
+		Common:   ui.Common{Key: "line", Role: "omp.composer.line"},
+		Align:    ui.AlignStart,
+		Gap:      ui.GapSM,
+		Children: []tern.Element{inputNode},
+	}
+
+	var barChildren []tern.Element
+	var children []tern.Element
+	if s.hasFooter {
+		children = append(children, ompContextMeter(s.footer, s.composerMeta, interactive, s.runCommand))
+		barChildren = append(barChildren, ompComposerModelChip(s.footer, s.resolveModelDisplayName(s.footer.Model), interactive, s.runCommand))
+	}
+	barChildren = append(barChildren, ompComposerExtras(s.hasFooter, s.footer, s.composerMeta, running))
+	if s.hasFooter {
+		barChildren = append(barChildren, ompComposerUsageText(s.footer, s.agentHub.SubagentCost, s.composerMeta, interactive, s.runCommand))
+	}
+	if running {
+		barChildren = append(barChildren, ompComposerStopControl())
+	} else {
+		barChildren = append(barChildren, ompComposerSendControl(editor, interactive, s.submitEditorDraft))
+	}
+	bar := ui.Row{
+		Common:   ui.Common{Key: "bar", Role: "omp.composer.bar"},
+		Gap:      ui.GapSM,
+		Align:    ui.AlignCenter,
+		Children: barChildren,
+	}
+	children = append(children, line, bar)
+
+	colCommon := ui.Common{Key: e.id, Role: "omp.editor"}
+	if running {
+		colCommon.Tone = ui.TonePending
+	}
+	return ui.Col{Common: colCommon, Children: children}
+}
+
+// editorInputID is the TSP id of the editor's actual `editor` node: for pig-tern
+// it is e.tid ("dock.editor"), and for ompRoles it is the "input" child inside
+// the "line" row ("dock.editor.line.input").
+func (s *session) editorInputID(e *entry) string {
+	if s.ompRoles {
+		return "dock.editor.editor.line.input"
+	}
+	return e.tid
+}
+
+// submitEditorDraft submits the editor's current text through Env.Send, used by
+// clicks on the omp.composer.send control.
+func (s *session) submitEditorDraft() {
+	s.mu.Lock()
+	ok := s.sendable() && !s.closed && !s.fellBack
+	text := s.editor.Text
+	s.mu.Unlock()
+	if ok && strings.TrimSpace(text) != "" && s.env.Send != nil {
+		s.env.Send(text)
+	}
+}
+
+// ompContextMeter builds omp's context hairline meter above the composer
+// (status-line/component.ts:3925-3977).
+func ompContextMeter(footer fe.Footer, meta ComposerMeta, interactive bool, run func(string)) ui.Meter {
+	usage := footer.ContextUsage
+	var value *float64
+	var label ui.Rich
+	if !usage.Unknown && usage.ContextWindow > 0 {
+		v := math.Min(1, usage.Percent/100)
+		value = &v
+		label = ui.T(strconv.Itoa(int(math.Round(usage.Percent))) + "%")
+	}
+	var total ui.Rich
+	if usage.ContextWindow > 0 {
+		total = ui.T(ompFormatNumber(usage.ContextWindow))
+	}
+	lines := make([]string, 0, 4)
+	if usage.Unknown {
+		lines = append(lines, "Context usage unknown")
+	} else {
+		lines = append(lines, "Context "+strconv.Itoa(int(math.Round(usage.Percent)))+"% used")
+	}
+	if usage.ContextWindow > 0 {
+		lines = append(lines, ompFormatNumber(usage.Tokens)+" of "+ompFormatNumber(usage.ContextWindow)+" tokens")
+	} else {
+		lines = append(lines, "No context window")
+	}
+	var marks []ui.MeterMark
+	var parts []ui.Part
+	if footer.AutoCompact && meta.HasBoundaries && meta.AutoCompactEnabled && meta.ThresholdPercent > 0 {
+		thresholdPct := int(math.Round(meta.ThresholdPercent))
+		lines = append(lines, "Auto-compact at "+strconv.Itoa(thresholdPct)+"%")
+		var specAt *float64
+		if meta.SpeculationPercent > 0 {
+			at := math.Min(1, meta.SpeculationPercent/100)
+			specAt = &at
+			specMark := ui.MeterMark{
+				At:    at,
+				Icon:  ui.IconName("context.speculation"),
+				Title: "Compaction summary starts at " + strconv.Itoa(int(math.Round(at*100))) + "%",
+			}
+			if meta.SpeculationState == "running" || meta.SpeculationState == "armed" {
+				specMark.Tone = ui.ToneAccent
+			}
+			marks = append(marks, specMark)
+		}
+		marks = append(marks, ui.MeterMark{
+			At:    math.Min(1, meta.ThresholdPercent/100),
+			Icon:  ui.IconName("context.compaction"),
+			Title: "Auto-compact at " + strconv.Itoa(thresholdPct) + "%",
+		})
+		if value != nil && specAt != nil && *value > *specAt {
+			parts = []ui.Part{
+				{Value: *specAt},
+				{Value: *value - *specAt, Token: "accent"},
+			}
+		}
+	} else if footer.AutoCompact {
+		lines = append(lines, "Auto-compact enabled")
+	}
+	switch meta.SpeculationState {
+	case "running":
+		lines = append(lines, "Compaction summary in progress")
+	case "armed":
+		lines = append(lines, "Compaction summary ready")
+	}
+	common := ui.Common{
+		Key:   "context",
+		Role:  "omp.composer.context",
+		Title: strings.Join(lines, "\n"),
+	}
+	if interactive && run != nil {
+		common.Actions = &ui.Actions{Click: "status.context"}
+		common.OnClick = func(*tern.Action) { run("/context") }
+	}
+	return ui.Meter{
+		Common:     common,
+		Value:      value,
+		Parts:      parts,
+		Style:      ui.MeterBar,
+		Thresholds: ompContextThresholds(usage.ContextWindow),
+		Marks:      marks,
+		Label:      label,
+		Total:      total,
+	}
+}
+
+// ompContextThresholds mirrors omp's getContextMeterThresholds
+// (chrome/context-thresholds.ts:71-76).
+func ompContextThresholds(contextWindow int) *ui.Thresholds {
+	warn := ompThresholdShare(contextWindow, 50, 150_000)
+	bad := ompThresholdShare(contextWindow, 90, 500_000)
+	return &ui.Thresholds{Warn: &warn, Bad: &bad}
+}
+
+func ompThresholdShare(contextWindow int, pctThreshold, tokenThreshold float64) float64 {
+	pct := pctThreshold
+	if contextWindow > 0 {
+		if tokPct := (tokenThreshold / float64(contextWindow)) * 100; tokPct < pct {
+			pct = tokPct
+		}
+	}
+	return pct / 100
+}
+
+// ompComposerModelChip builds omp's model selector chip in the composer bar
+// (custom-editor.ts:1262-1294). When the model reasons (ThinkingLevel != ""),
+// the effort glyph sits as the model chip's leading icon with role
+// "omp.composer.model.effort" and its own click handler for /thinking; clicking
+// the model chip itself opens PiG's /model picker.
+func ompComposerModelChip(footer fe.Footer, displayName string, interactive bool, run func(string)) ui.Row {
+	common := ui.Common{
+		Key:   "model",
+		Role:  "omp.composer.model",
+		Title: "Switch model  ⌥P",
+	}
+	if interactive {
+		common.Actions = &ui.Actions{Click: "status.model"}
+		common.OnClick = func(*tern.Action) { run("/model") }
+	}
+	var lead tern.Element
+	if footer.ThinkingLevel != "" {
+		effortCommon := ui.Common{
+			Key:   "effort",
+			Role:  "omp.composer.model.effort",
+			Title: "Thinking effort: " + footer.ThinkingLevel + "  ⇧⇥",
+		}
+		if interactive {
+			effortCommon.Actions = &ui.Actions{Click: "thinking.cycle"}
+			effortCommon.OnClick = func(*tern.Action) { run("/thinking") }
+		}
+		lead = ui.Effort{Common: effortCommon, Level: ui.EffortLevel(footer.ThinkingLevel)}
+	} else {
+		lead = ui.Icon{Common: ui.Common{Key: "icon"}, Name: ui.IconName("model")}
+	}
+	return ui.Row{
+		Common: common,
+		Gap:    ui.GapXS,
+		Align:  ui.AlignCenter,
+		Children: []tern.Element{
+			lead,
+			ui.Text{Common: ui.Common{Key: "name"}, Spans: ompModelSpansWithName(footer, displayName, false), Wrap: ui.WrapNone},
+			ui.Icon{Common: ui.Common{Key: "chev"}, Name: ui.IconChev},
+		},
+	}
+}
+
+// ompComposerExtras builds omp's flexible status strip in the composer bar
+// (status-line/component.ts:3655-3684, 3765): transparent status with role
+// "omp.composer.extras" and grow=1, holding git branch and extension statuses
+// as `seg` nodes with role "omp.composer.fact".
+func ompComposerExtras(hasFooter bool, footer fe.Footer, meta ComposerMeta, running bool) ui.Status {
+	var segs []tern.Element
+	if hasFooter {
+		if footer.GitBranch != "" {
+			segs = append(segs, ui.Seg{
+				Common:   ui.Common{Key: "git", Role: "omp.composer.fact"},
+				Icon:     ui.IconBranch,
+				Spans:    []ui.Span{{T: footer.GitBranch, S: "statusLineGitClean"}},
+				Priority: 1001,
+			})
+		}
+		if running && meta.TokensPerSec >= 0.05 && !math.IsNaN(meta.TokensPerSec) && !math.IsInf(meta.TokensPerSec, 0) {
+			rounded := math.Round(meta.TokensPerSec*10) / 10
+			segs = append(segs, ui.Seg{
+				Common:   ui.Common{Key: "token_rate", Role: "omp.composer.fact"},
+				Icon:     ui.IconName("throughput"),
+				Priority: 2,
+				Children: []tern.Element{
+					ui.Rate{Common: ui.Common{Key: "rate"}, Value: rounded, Unit: "tok/s"},
+				},
+			})
+		}
+		for i, st := range footer.ExtensionStatuses {
+			text := strings.TrimSpace(stripANSI(st))
+			if text == "" {
+				continue
+			}
+			if seg, ok := ompModeFactSeg(text); ok {
+				segs = append(segs, seg)
+				continue
+			}
+			segs = append(segs, ui.Seg{
+				Common:   ui.Common{Key: "hook-" + strconv.Itoa(i), Role: "omp.composer.fact"},
+				Spans:    []ui.Span{{T: text}},
+				Priority: 0,
+			})
+		}
+	}
+	return ui.Status{
+		Common:      ui.Common{Key: "extras", Role: "omp.composer.extras", Grow: 1},
+		Transparent: true,
+		Children:    segs,
+	}
+}
+
+// ompModeFactSeg converts PiG's extension status strings emitted by
+// `internal/modes` (`"PLAN"`, `"PLAN (paused)"`, `"GOAL ..."`, `"GOAL (paused)"`)
+// into omp's native `mode` segment (upstream: status-line/segments.ts:505-520,
+// status-line/component.ts:80 `priority: 8`).
+func ompModeFactSeg(text string) (ui.Seg, bool) {
+	switch {
+	case text == "PLAN":
+		return ui.Seg{
+			Common:   ui.Common{Key: "mode", Role: "omp.composer.fact"},
+			Icon:     ui.IconName("plan"),
+			Spans:    []ui.Span{{T: "Plan", S: "accent"}},
+			Priority: 8,
+		}, true
+	case text == "PLAN (paused)":
+		return ui.Seg{
+			Common:   ui.Common{Key: "mode", Role: "omp.composer.fact"},
+			Icon:     ui.IconName("plan"),
+			Spans:    []ui.Span{{T: "Plan (paused)", S: "warning"}},
+			Priority: 8,
+		}, true
+	case text == "GOAL (paused)":
+		return ui.Seg{
+			Common:   ui.Common{Key: "mode", Role: "omp.composer.fact"},
+			Icon:     ui.IconName("goal"),
+			Spans:    []ui.Span{{T: "Goal (paused)", S: "warning"}},
+			Priority: 8,
+		}, true
+	case strings.HasPrefix(text, "GOAL"):
+		label := "Goal" + text[len("GOAL"):]
+		return ui.Seg{
+			Common:   ui.Common{Key: "mode", Role: "omp.composer.fact"},
+			Icon:     ui.IconName("goal"),
+			Spans:    []ui.Span{{T: label, S: "accent"}},
+			Priority: 8,
+		}, true
+	default:
+		return ui.Seg{}, false
+	}
+}
+
+// ompComposerUsageText builds omp's session cost text in the composer bar
+// (status-line/component.ts:3740-3755).
+func ompComposerUsageText(footer fe.Footer, subagentCost float64, meta ComposerMeta, interactive bool, run func(string)) ui.Text {
+	cost := ompCostSummaryWithMeta(footer, subagentCost, meta)
+	title := ""
+	if cost != "" {
+		title = "Session cost " + cost
+	}
+	common := ui.Common{
+		Key:   "usage",
+		Role:  "omp.composer.usage",
+		Title: title,
+	}
+	if interactive {
+		common.Actions = &ui.Actions{Click: "status.cost"}
+		common.OnClick = func(*tern.Action) { run("/usage") }
+	}
+	return ui.Text{
+		Common: common,
+		Text:   cost,
+		Wrap:   ui.WrapNone,
+	}
+}
+
+// ompComposerSendControl builds omp's Enter keycap send control in the composer
+// bar (custom-editor.ts:1366-1377).
+func ompComposerSendControl(editor fe.Editor, interactive bool, submit func()) ui.Kbd {
+	common := ui.Common{
+		Key:   "send",
+		Role:  "omp.composer.send",
+		Title: "Send  ⏎",
+	}
+	if !editor.Sendable {
+		common.Tone = ui.ToneMuted
+	}
+	if interactive && editor.Sendable {
+		common.Actions = &ui.Actions{Click: "submit"}
+		common.OnClick = func(*tern.Action) { submit() }
+	}
+	return ui.Kbd{Common: common, Keys: []string{"enter"}}
+}
+
+// ompComposerStopControl builds omp's Stop indicator shown in place of Send
+// while the agent is working (upstream: prompt/custom-editor.ts:1491-1503).
+// PiG's frontend.Env has no interrupt callback, so clicking is omitted while
+// the Escape key still interrupts via the PTY.
+func ompComposerStopControl() ui.Text {
+	return ui.Text{
+		Common: ui.Common{
+			Key:   "stop",
+			Role:  "omp.composer.stop",
+			Tone:  ui.ToneError,
+			Title: "Stop  esc",
+		},
+		Text: "Stop",
+	}
+}
+
+// resolveModelDisplayName returns the human display name for modelID when a
+// derived Piglet provides Options.ModelDisplayName, falling back to modelID.
+func (s *session) resolveModelDisplayName(modelID string) string {
+	if s != nil && s.modelDisplayName != nil && modelID != "" {
+		if name := strings.TrimSpace(s.modelDisplayName(modelID)); name != "" {
+			return name
+		}
+	}
+	return modelID
+}
+
+// ompModelSpans formats the model name as omp's model segment spans
+// (status-line/segments.ts:391-404). When includeThinking is true (status bar),
+// the thinking level follows after " · ".
+func ompModelSpans(footer fe.Footer, includeThinking bool) []ui.Span {
+	return ompModelSpansWithName(footer, footer.Model, includeThinking)
+}
+
+func ompModelSpansWithName(footer fe.Footer, modelName string, includeThinking bool) []ui.Span {
+	name := modelName
+	if name == "" {
+		name = footer.Model
+	}
+	if name == "" {
+		name = "no-model"
+	}
+	name = strings.TrimPrefix(name, "Claude ")
+	if footer.Routed.Model != "" {
+		name += " → " + strings.TrimPrefix(footer.Routed.Model, "Claude ")
+	}
+	spans := []ui.Span{{T: name, S: "statusLineModel"}}
+	if includeThinking && footer.ThinkingLevel != "" {
+		spans = append(spans,
+			ui.Span{T: " · ", S: "dim"},
+			ui.Span{T: footer.ThinkingLevel, S: ompThinkingLevelToken(footer.ThinkingLevel)},
+		)
+	}
+	return spans
+}
+
+// ompThinkingLevelToken maps a thinking level name to omp's theme span token.
+func ompThinkingLevelToken(level string) string {
+	switch level {
+	case "off":
+		return "thinkingOff"
+	case "minimal":
+		return "thinkingMinimal"
+	case "low":
+		return "thinkingLow"
+	case "medium":
+		return "thinkingMedium"
+	case "high":
+		return "thinkingHigh"
+	case "xhigh", "max":
+		return "thinkingXhigh"
+	default:
+		return "muted"
+	}
+}
+
+// ompSubscriptionIcon is omp's nerd-preset subscription icon
+// (`nf-md-currency_usd_off`, packages/tui/src/theme/symbols.ts:882).
+const ompSubscriptionIcon = "\U000f067a"
+
+// ompAdvisorIcon is omp's nerd-preset advisor icon
+// (`nf-cod-lightbulb`, packages/tui/src/theme/symbols.ts:884).
+const ompAdvisorIcon = "\uea70"
+
+// ompCostSummary formats PiG's UsageTotals cost and optional subagent spend as
+// omp's billing summary (status-line/metrics.ts:34-38, 59-104), with two
+// decimal places and Tern's forced nerd symbol preset.
+func ompCostSummary(footer fe.Footer, subagentCost float64) string {
+	return ompCostSummaryWithMeta(footer, subagentCost, ComposerMeta{})
+}
+
+// ompCostSummaryWithMeta formats PiG's UsageTotals cost, optional subagent
+// spend, GitHub Copilot premium requests (`★ N`), and advisor spend as omp's
+// billing summary (status-line/metrics.ts:34-38, 59-104).
+func ompCostSummaryWithMeta(footer fe.Footer, subagentCost float64, meta ComposerMeta) string {
+	cost := footer.UsageTotals.Cost
+	if math.IsNaN(cost) || math.IsInf(cost, 0) || cost < 0 {
+		cost = 0
+	}
+	if math.IsNaN(subagentCost) || math.IsInf(subagentCost, 0) || subagentCost < 0 {
+		subagentCost = 0
+	}
+	premium := meta.PremiumRequests
+	if math.IsNaN(premium) || math.IsInf(premium, 0) || premium < 0 {
+		premium = 0
+	}
+	premium = math.Round((premium+1e-12)*100) / 100
+	advisorCost := meta.AdvisorCost
+	if math.IsNaN(advisorCost) || math.IsInf(advisorCost, 0) || advisorCost < 0 {
+		advisorCost = 0
+	}
+
+	hasCost := cost != 0
+	hasSubagent := subagentCost > 0
+	hasPremium := premium > 0
+	hasAdvisor := advisorCost > 0
+	if !hasCost && !hasSubagent && !hasAdvisor && !footer.UsingSubscription && !hasPremium {
+		return ""
+	}
+
+	var parts []string
+	shownUnit := 0 // 0=none, 1=metered, 2=subscription
+	primaryUnit := 1
+	if footer.UsingSubscription {
+		primaryUnit = 2
+	}
+	if hasCost || hasSubagent {
+		parts = append(parts, ompFormatSpend(cost, footer.UsingSubscription, true))
+		shownUnit = primaryUnit
+	} else if footer.UsingSubscription {
+		parts = append(parts, ompSubscriptionIcon)
+		shownUnit = primaryUnit
+	}
+	if hasSubagent {
+		parts = append(parts, "(+"+toFixed(subagentCost, 2)+")")
+	}
+	if hasPremium {
+		parts = append(parts, "★ "+ompFormatPremiumRequests(premium))
+	}
+	if hasAdvisor {
+		prefix := ""
+		if len(parts) > 0 {
+			prefix = "+ "
+		}
+		advisorUnit := 1
+		if meta.AdvisorSub {
+			advisorUnit = 2
+		}
+		spend := ompFormatSpend(advisorCost, meta.AdvisorSub, shownUnit != advisorUnit)
+		parts = append(parts, prefix+ompAdvisorIcon+" "+spend)
+	}
+	return strings.Join(parts, " ")
+}
+
+func ompFormatSpend(amount float64, usingSubscription bool, showUnit bool) string {
+	formatted := toFixed(amount, 2)
+	if !showUnit {
+		return formatted
+	}
+	if !usingSubscription {
+		return "$" + formatted
+	}
+	return ompSubscriptionIcon + " " + formatted
+}
+
+func ompFormatPremiumRequests(n float64) string {
+	if n == math.Trunc(n) {
+		return ompFormatNumber(int(n))
+	}
+	if n < 1_000 {
+		return strconv.FormatFloat(n, 'f', -1, 64)
+	}
+	return ompFormatNumber(int(math.Round(n)))
+}
+
+// ompFormatNumber mirrors omp's formatNumber (packages/utils/src/format.ts:38-52).
+func ompFormatNumber(n int) string {
+	switch {
+	case n < 1_000:
+		return strconv.Itoa(n)
+	case n < 10_000:
+		return trimDotZero(toFixed(float64(n)/1_000, 1)) + "K"
+	case n < 1_000_000:
+		return strconv.Itoa(int(math.Floor(float64(n)/1_000+0.5))) + "K"
+	case n < 10_000_000:
+		return trimDotZero(toFixed(float64(n)/1_000_000, 1)) + "M"
+	case n < 1_000_000_000:
+		return strconv.Itoa(int(math.Floor(float64(n)/1_000_000+0.5))) + "M"
+	default:
+		return trimDotZero(toFixed(float64(n)/1_000_000_000, 1)) + "B"
+	}
+}
+
+func trimDotZero(s string) string {
+	return strings.TrimSuffix(s, ".0")
+}
+
+// rebuildOmpEditor triggers a rebuild of the dock editor entry when ompRoles is
+// active and composer-fed state (footer or running status) changed.
+func (s *session) rebuildOmpEditor() {
+	if !s.ompRoles || !s.hasEditor {
+		return
+	}
+	for _, e := range s.dock {
+		if _, ok := e.node.(fe.Editor); ok {
+			s.rebuild(e, e.node, true)
+			return
+		}
+	}
+}
+
+// sameFooterComposerData reports whether two Footer snapshots produce the same
+// omp composer bar, extras, and context meter.
+func sameFooterComposerData(a, b fe.Footer) bool {
+	if a.Model != b.Model ||
+		a.Provider != b.Provider ||
+		a.ThinkingLevel != b.ThinkingLevel ||
+		a.Routed != b.Routed ||
+		a.GitBranch != b.GitBranch ||
+		a.ContextUsage != b.ContextUsage ||
+		a.AutoCompact != b.AutoCompact ||
+		a.UsageTotals.Cost != b.UsageTotals.Cost ||
+		a.UsingSubscription != b.UsingSubscription ||
+		len(a.ExtensionStatuses) != len(b.ExtensionStatuses) {
+		return false
+	}
+	for i := range a.ExtensionStatuses {
+		if a.ExtensionStatuses[i] != b.ExtensionStatuses[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// ompFooterSuppressed reports whether dock.footer is omitted under ompRoles.
+// Upstream status-line/component.ts:3810 ("on a TSP terminal, which draws no
+// status strip"): omp NEVER mounts a separate dock status bar in Tern — even
+// while a picker/selector replaces the editor — so suppress dock.footer
+// whenever ompRoles is active.
+func (s *session) ompFooterSuppressed() bool {
+	return s.ompRoles
+}
+
+// syncOmpFooterMount reconciles dock.footer whenever the editor mounts or
+// unmounts under ompRoles: entering composer mode drops pending footer ops and
+// unmounts dock.footer; leaving composer mode (e.g. a selector taking the
+// editor's place) rebuilds dock.footer fresh so the status strip reappears.
+func (s *session) syncOmpFooterMount() {
+	for _, e := range s.dock {
+		if _, ok := e.node.(fe.Footer); ok {
+			if s.ompFooterSuppressed() {
+				s.dropPending(e.tid)
+				e.view, e.unsent, e.raw = tern.Node{}, true, rawProps{}
+				s.dirty = true
+			} else {
+				e.unsent = true
+				s.rebuild(e, e.node, true)
+			}
+			return
+		}
+	}
+}
+
+// setOmpPredictions updates the composer's prompt prediction choices and
+// live-patches the editor's `ghost` prop when the active ghost suffix changes.
+func (s *session) setOmpPredictions(choices []string) {
+	if slices.Equal(s.predictions, choices) {
+		return
+	}
+	s.predictions = slices.Clone(choices)
+	s.predictionIdx = 0
+	if len(s.predictions) == 0 {
+		s.insertedPrediction = ""
+	}
+	s.syncOmpEditorGhost()
+}
+
+// ompPredictionSuffix computes the dim ghost suffix to paint after the editor
+// caret, matching omp `editor.ts:5608-5630` (`#getShownPrediction`):
+//   - suppressed when autocomplete is open, editor is multi-line, or cursor is
+//     not at the end of the text;
+//   - when text is empty, returns `predictions[predictionIdx]`;
+//   - when text is non-empty, returns the remaining suffix of the first choice
+//     whose lowercased prefix matches `text` (strictly longer than `text`),
+//     unless the buffer equals an already-inserted prediction with >1 choices
+//     so a second Tab can cycle alternatives.
+func (s *session) ompPredictionSuffix(editor fe.Editor) string {
+	if !s.ompRoles || len(s.predictions) == 0 || s.autocomplete != nil {
+		return ""
+	}
+	if strings.ContainsRune(editor.Text, '\n') {
+		return ""
+	}
+	if editor.Cursor != utf16Len(editor.Text) {
+		return ""
+	}
+	typed := editor.Text
+	if typed == "" {
+		idx := s.predictionIdx
+		if idx < 0 || idx >= len(s.predictions) {
+			idx = 0
+		}
+		return s.predictions[idx]
+	}
+	if len(s.predictions) > 1 && typed == s.insertedPrediction && slices.Contains(s.predictions, typed) {
+		return ""
+	}
+	lowerTyped := strings.ToLower(typed)
+	for _, p := range s.predictions {
+		if len(typed) < len(p) && strings.HasPrefix(strings.ToLower(p), lowerTyped) {
+			return p[len(typed):]
+		}
+	}
+	return ""
+}
+
+// syncOmpEditorGhost sends a raw `set` op updating `ghost` on the live editor
+// input node whenever the computed ghost suffix changed.
+func (s *session) syncOmpEditorGhost() {
+	if !s.ompRoles || !s.hasEditor {
+		return
+	}
+	for _, e := range s.dock {
+		editor, ok := e.node.(fe.Editor)
+		if !ok {
+			continue
+		}
+		nextGhost := s.ompPredictionSuffix(editor)
+		if nextGhost == e.raw.ghost {
+			return
+		}
+		e.raw.ghost = nextGhost
+		if !e.unsent {
+			if nextGhost == "" {
+				s.queue(tern.OpSet(s.editorInputID(e), map[string]any{"ghost": nil}))
+			} else {
+				s.queue(tern.OpSet(s.editorInputID(e), map[string]any{"ghost": nextGhost}))
+			}
+		}
+		return
+	}
+}
+
+// handlePredictionKeyLocked intercepts Tab (`"\t"`) and Right (`"\x1b[C"`)
+// while a composer ghost prediction is active (or Tab when cycling between
+// prediction alternatives) and inserts it via `Env.Edit` without submitting.
+// Caller holds `s.mu`.
+func (s *session) handlePredictionKeyLocked(keys string) bool {
+	if !s.hasEditor || s.closed || s.fellBack || s.screen != nil || s.autocomplete != nil || len(s.overlays) > 0 || len(s.predictions) == 0 {
+		return false
+	}
+	if keys != "\t" && keys != "\x1b[C" {
+		return false
+	}
+	for _, e := range s.dock {
+		if isLayerNode(e.node) {
+			return false
+		}
+	}
+	editor := s.editor
+	if strings.ContainsRune(editor.Text, '\n') || editor.Cursor != utf16Len(editor.Text) {
+		return false
+	}
+	editFn := s.env.Edit
+	if editFn == nil {
+		return false
+	}
+	if suffix := s.ompPredictionSuffix(editor); suffix != "" {
+		full := editor.Text + suffix
+		if idx := slices.Index(s.predictions, full); idx >= 0 {
+			s.predictionIdx = idx
+		}
+		s.insertedPrediction = full
+		cur := editor.Cursor
+		newCur := utf16Len(full)
+		s.mu.Unlock()
+		editFn(fe.Edit{
+			From:   cur,
+			To:     cur,
+			Text:   suffix,
+			Cursor: newCur,
+			Len:    utf16Len(editor.Text),
+		})
+		s.mu.Lock()
+		return true
+	}
+	// Second Tab when current buffer equals one of multiple predictions: cycle to next alternative.
+	if keys == "\t" && len(s.predictions) > 1 {
+		if idx := slices.Index(s.predictions, editor.Text); idx >= 0 {
+			nextIdx := (idx + 1) % len(s.predictions)
+			nextText := s.predictions[nextIdx]
+			s.predictionIdx = nextIdx
+			s.insertedPrediction = nextText
+			oldLen := utf16Len(editor.Text)
+			newCur := utf16Len(nextText)
+			s.mu.Unlock()
+			editFn(fe.Edit{
+				From:   0,
+				To:     oldLen,
+				Text:   nextText,
+				Cursor: newCur,
+				Len:    oldLen,
+			})
+			s.mu.Lock()
+			return true
+		}
+	}
+	return false
+}

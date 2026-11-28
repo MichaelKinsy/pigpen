@@ -1,0 +1,3312 @@
+{
+  "lang": "go",
+  "sample": "sample3",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample3",
+  "total": 442,
+  "omp_resolved": 215,
+  "omp_refused": 227,
+  "cases": [
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 1,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`."
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 22,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 29,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        29,
+        103
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 32,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        32,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 39,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        39,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 42,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 54,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        54,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 59,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        59,
+        62
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 62,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused": "line 1: `CUT 62*` could not resolve a syntactic block beginning on line 62 (blank/closer line, or parse error). Use `CUT 62.=M` with explicit lines. The nearest enclosing multi-line block begins at line 59 and ends at line 62; use `CUT 59*` to target it."
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 66,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        66,
+        68
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 79,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        79,
+        102
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 82,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        82,
+        86
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 83,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 87,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        87,
+        90
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 94,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        94,
+        96
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 102,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 109,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        109,
+        111
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 119,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        119,
+        130
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 122,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 125,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        125,
+        129
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 132,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        132,
+        134
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 140,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        140,
+        142
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 142,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 150,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        150,
+        157
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 153,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        153,
+        155
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 161,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 165,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        165,
+        168
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 174,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 184,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 186,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        186,
+        188
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 196,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        196,
+        200
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 201,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 206,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        206,
+        208
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 207,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go.src",
+      "anchor": 214,
+      "path": "pigpen_components__pig-model-tweaks__extensions__pig-model-tweaks__remember_model.go",
+      "span": [
+        214,
+        216
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 1,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 20,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 24,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        24,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 30,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        30,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 33,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        33,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 42,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        42,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 49,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        49,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 60,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        60,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 62,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        62,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 65,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        65,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 79,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        79,
+        86
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 82,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 96,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        96,
+        105
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 100,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 107,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        107,
+        116
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 118,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        118,
+        126
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 121,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 128,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        128,
+        135
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 138,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        138,
+        166
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 141,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 144,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 148,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 151,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 154,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 157,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 161,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 164,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 165,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 174,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 183,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 186,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        186,
+        188
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 197,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 202,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 206,
+      "path": "pig_tui__highlight_test.go",
+      "span": [
+        206,
+        220
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__highlight_test.go.src",
+      "anchor": 209,
+      "path": "pig_tui__highlight_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 1,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 26,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 34,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        34,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 44,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        44,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 56,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        56,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 64,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 76,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        76,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 85,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 95,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        95,
+        97
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 110,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 111,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 117,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        117,
+        119
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 123,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 136,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 138,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        138,
+        140
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 147,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 154,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        154,
+        156
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 159,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 164,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 166,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        166,
+        171
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 173,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 180,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        180,
+        182
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 191,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 193,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        193,
+        195
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 202,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        202,
+        204
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 218,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 219,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        219,
+        221
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 226,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        226,
+        228
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 236,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        236,
+        247
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 242,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        242,
+        244
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 245,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        245,
+        246
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 256,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        256,
+        279
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 267,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        267,
+        269
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 271,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        271,
+        273
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__toolchain__toolchain.go.src",
+      "anchor": 283,
+      "path": "pig_internal__toolchain__toolchain.go",
+      "span": [
+        283,
+        296
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 1,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 10,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 14,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        14,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 16,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        16,
+        18
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 20,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        20,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 22,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 24,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        24,
+        26
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 28,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        28,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 31,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        31,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 33,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 37,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        37,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 40,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        40,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 44,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 52,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        52,
+        120
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 54,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 55,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        55,
+        57
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 59,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        59,
+        63
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 64,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        64,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 65,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 68,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        68,
+        72
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 69,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        69,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 76,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 77,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        77,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 80,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        80,
+        89
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 86,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        86,
+        88
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 88,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 92,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        92,
+        94
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 95,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        95,
+        109
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 99,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 100,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        100,
+        103
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 104,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        104,
+        107
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 109,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 110,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "span": [
+        110,
+        112
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 115,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__piglet__show_effective_extras_test.go.src",
+      "anchor": 116,
+      "path": "pig_coding__piglet__show_effective_extras_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 1,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 7,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 10,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        10,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 11,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        11,
+        45
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 12,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        12,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 14,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        14,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 17,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        17,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 18,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 22,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 23,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        23,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 24,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 26,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 29,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        29,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 30,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 31,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 32,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 34,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        34,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 38,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        38,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 39,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 41,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        41,
+        43
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 45,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 49,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        49,
+        78
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 50,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        50,
+        77
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 51,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        51,
+        76
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 53,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 55,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 56,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        56,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 59,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 60,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        60,
+        62
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 62,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 64,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        64,
+        66
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 67,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        67,
+        69
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 68,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 70,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "span": [
+        70,
+        72
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__session_model_mutation_options_test.go.src",
+      "anchor": 74,
+      "path": "pig_coding__session_model_mutation_options_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 1,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 5,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        5,
+        17
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 8,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 11,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 13,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 17,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 22,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        22,
+        35
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 23,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 24,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        24,
+        32
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 25,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        25,
+        31
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 27,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        27,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 28,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 31,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 34,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 37,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 39,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        39,
+        61
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 41,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 43,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        43,
+        50
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 44,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        44,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 45,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        45,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 47,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 49,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 51,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 52,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        52,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 54,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 55,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        55,
+        57
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 58,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        58,
+        60
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 59,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 61,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 64,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        64,
+        74
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 66,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 67,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 68,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        68,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 71,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "span": [
+        71,
+        73
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_coding__extension__exec_signal_unix_test.go.src",
+      "anchor": 72,
+      "path": "pig_coding__extension__exec_signal_unix_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 1,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 3,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 5,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "span": [
+        5,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 6,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 7,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 8,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 9,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 11,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 12,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 13,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "span": [
+        13,
+        27
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 14,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 15,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 16,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 17,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 18,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "span": [
+        18,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 19,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 20,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 21,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 22,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 23,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "span": [
+        23,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 24,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 25,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 26,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pigpen_components__herdr__extensions__herdr__transport_other.go.src",
+      "anchor": 27,
+      "path": "pigpen_components__herdr__extensions__herdr__transport_other.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 1,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 8,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        8,
+        13
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 9,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        9,
+        11
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 11,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 16,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        16,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 17,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        17,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 19,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 24,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 27,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        27,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 29,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 30,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        30,
+        32
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 35,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        35,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 36,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        36,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 37,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 39,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        39,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 44,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 46,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        46,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 49,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        49,
+        51
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 51,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 52,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        52,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 57,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        57,
+        59
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 59,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 60,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        60,
+        62
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 64,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        64,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 65,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        65,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 67,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 68,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        68,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 69,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        69,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 72,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        72,
+        75
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 76,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        76,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 77,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        77,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 78,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 80,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        80,
+        83
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 81,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "span": [
+        81,
+        83
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_schema__formats__internal__idna__label_unicode.go.src",
+      "anchor": 85,
+      "path": "pig_schema__formats__internal__idna__label_unicode.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 1,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 12,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        12,
+        45
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 15,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        15,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 16,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 22,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        22,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 27,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 29,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        29,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 34,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        34,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 38,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        38,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 41,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 42,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        42,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 51,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        51,
+        53
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 54,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        54,
+        68
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 55,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 56,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 58,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 65,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        65,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 69,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 76,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        76,
+        78
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 79,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 82,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 87,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        87,
+        93
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 89,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        89,
+        91
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 96,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 100,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        100,
+        102
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 104,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        104,
+        108
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 106,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 109,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        109,
+        113
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 110,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 111,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 118,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        118,
+        120
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 123,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 127,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        127,
+        137
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 129,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "span": [
+        129,
+        131
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_durable__core__abi__chunks_test.go.src",
+      "anchor": 135,
+      "path": "pig_durable__core__abi__chunks_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 1,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 6,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 11,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 13,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        13,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 16,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 20,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 21,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 23,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        23,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 25,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 27,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        27,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 30,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 31,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        31,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 36,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 37,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 38,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        38,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 39,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        39,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 40,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 41,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 44,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        44,
+        53
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 46,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        46,
+        49
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 47,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        47,
+        49
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 48,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 50,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        50,
+        51
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 54,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 57,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        57,
+        76
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 59,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 60,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        60,
+        62
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 62,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 64,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        64,
+        66
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 67,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 68,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        68,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 69,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 70,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 71,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "span": [
+        71,
+        75
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__tools__process_mutation_queue_test.go.src",
+      "anchor": 72,
+      "path": "pig_internal__codingagent__tools__process_mutation_queue_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 1,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 20,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 27,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 48,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        48,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 49,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 59,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 71,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        71,
+        87
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 92,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 101,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        101,
+        103
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 116,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 137,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 138,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        138,
+        164
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 156,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        156,
+        158
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 177,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 181,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 196,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        196,
+        228
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 209,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        209,
+        215
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 224,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        224,
+        226
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 240,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        240,
+        244
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 256,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 269,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 276,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 284,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 310,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        310,
+        312
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 312,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 337,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        337,
+        339
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 347,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 356,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 369,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        369,
+        370
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 394,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        394,
+        395
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 398,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 419,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        419,
+        421
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 429,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 442,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__sessionentry__union_test.go.src",
+      "anchor": 452,
+      "path": "pig_internal__sessionentry__union_test.go",
+      "span": [
+        452,
+        454
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 1,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 9,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 18,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 22,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        22,
+        101
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 24,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 25,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 27,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 29,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        29,
+        43
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 30,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        30,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 36,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        36,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 37,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 38,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 45,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        45,
+        49
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 46,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 50,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 53,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        53,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 54,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 56,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        56,
+        68
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 59,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        59,
+        60
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 63,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 64,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        64,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 65,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 69,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        69,
+        73
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 70,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 74,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 75,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        75,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 76,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 81,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        81,
+        85
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 82,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        82,
+        83
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 84,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 87,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        87,
+        97
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 88,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        88,
+        94
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 92,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        92,
+        94
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 94,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_internal__codingagent__startup_session_picker_async_wcli_test.go.src",
+      "anchor": 95,
+      "path": "pig_internal__codingagent__startup_session_picker_async_wcli_test.go",
+      "span": [
+        95,
+        96
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 1,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 3,
+      "path": "pig_tui__component_color_fn_test.go",
+      "span": [
+        3,
+        6
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 4,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 5,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 6,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 8,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 9,
+      "path": "pig_tui__component_color_fn_test.go",
+      "span": [
+        9,
+        17
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 10,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 11,
+      "path": "pig_tui__component_color_fn_test.go",
+      "span": [
+        11,
+        13
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 12,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 13,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 14,
+      "path": "pig_tui__component_color_fn_test.go",
+      "span": [
+        14,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 15,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 16,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 17,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 19,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 20,
+      "path": "pig_tui__component_color_fn_test.go",
+      "span": [
+        20,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 21,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 22,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 23,
+      "path": "pig_tui__component_color_fn_test.go",
+      "span": [
+        23,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 24,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 25,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 26,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 27,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 28,
+      "path": "pig_tui__component_color_fn_test.go",
+      "span": [
+        28,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 29,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 30,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 31,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 32,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 33,
+      "path": "pig_tui__component_color_fn_test.go",
+      "span": [
+        33,
+        35
+      ]
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 34,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 35,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/go/pig_tui__component_color_fn_test.go.src",
+      "anchor": 36,
+      "path": "pig_tui__component_color_fn_test.go",
+      "refused_kind": "unresolved"
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`.",
+    "unresolved": "line 1: `CUT 62*` could not resolve a syntactic block beginning on line 62 (blank/closer line, or parse error). Use `CUT 62.=M` with explicit lines. The nearest enclosing multi-line block begins at line 59 and ends at line 62; use `CUT 59*` to target it."
+  }
+}

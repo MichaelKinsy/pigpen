@@ -1,0 +1,168 @@
+{
+  "generator": "internal/relay/gen/build-extension.ts",
+  "ompTag": "v19.1.1",
+  "ompCommit": "31ffee513f27a01bba7d4dfbe12bae239cdc646a",
+  "bunVersion": "1.4.2",
+  "build": "f28349de8681733b",
+  "totalBytes": 86456,
+  "outputs": [
+    {
+      "file": "LICENSE",
+      "bytes": 1144,
+      "sha256": "16c45f9d667442781f03fa198914cc39abcaa48ec5ed8f644643e554ca2fbf63"
+    },
+    {
+      "file": "background.js",
+      "bytes": 30275,
+      "sha256": "ff0194571f76c5624969b239526d8894017ac34f86550b435f73d4b9cee75aa2"
+    },
+    {
+      "file": "icons/oh-my-pig-128.png",
+      "bytes": 1089,
+      "sha256": "378623fb94a91645708cdf8d5e53c7e7acba0fe4b88afba63f27d5f8754d7e1b"
+    },
+    {
+      "file": "icons/oh-my-pig-16.png",
+      "bytes": 177,
+      "sha256": "a457fc052b3a39d9f129248d454bf76abe8c261a9a56a2001f15e68ed969aa1b"
+    },
+    {
+      "file": "icons/oh-my-pig-32.png",
+      "bytes": 279,
+      "sha256": "9242a1d2616c5e936a80c455ee6258971759b431e333c61475e892984b5476f5"
+    },
+    {
+      "file": "icons/oh-my-pig-48.png",
+      "bytes": 352,
+      "sha256": "4cba5d0002f2154ad238e9c4272bbb4b9c4802251be59bcef3117865c5aada3b"
+    },
+    {
+      "file": "manifest.json",
+      "bytes": 995,
+      "sha256": "5293204d42613b5b419d1e12e6663814cf10b0ee0f4d4c8cdaa22806301e1848"
+    },
+    {
+      "file": "overlay.js",
+      "bytes": 52145,
+      "sha256": "19e651e7a6704ee7666e2023dcb356a5899ece4c4719865f7ca909cbae048786"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "internal/relay/gen/build-extension.ts",
+      "sha256": "945a083590da76f4a2922cab5b346407470e423a4c285964e7aab4b56b7df7c9"
+    },
+    {
+      "path": "internal/relay/gen/relay-only.patch",
+      "sha256": "641d193ac5e1437788801fa8fd89381578f889ffa2fb32919c0d9155c7e52131"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "16c45f9d667442781f03fa198914cc39abcaa48ec5ed8f644643e554ca2fbf63"
+    },
+    {
+      "path": "packages/coding-agent/src/tools/browser/relay/protocol.ts",
+      "sha256": "8df8a7d07c5ad76ce9fe0183c5728f56c5cbc4fc32e82aca2318ea8bdec1aa84"
+    },
+    {
+      "path": "packages/browser-relay/extension/background.ts",
+      "sha256": "f6fa9b7762584c8a6e8d9e3068d02c9150aaa69a07e850a4212f6a5bacbf5413"
+    },
+    {
+      "path": "packages/browser-relay/extension/debugger-ownership.ts",
+      "sha256": "eff6c72c0b80d100aa3dba45ecb0f57727d49dee173923440bd2e00cf2f277d6"
+    },
+    {
+      "path": "packages/browser-relay/extension/download-pairing.ts",
+      "sha256": "5087f47369fcb98c836bc51373a6a72d30c6c936e66e00d30ed2b3e9ead29409"
+    },
+    {
+      "path": "packages/browser-relay/extension/foreign-frames.ts",
+      "sha256": "d6b8e299778a64b7d7fe7848abd962fdc230c42da753d42188422e0acd6fb122"
+    },
+    {
+      "path": "packages/browser-relay/extension/manifest.json",
+      "sha256": "a54b55796704e7ed64e487d0ee5deb56eb0bbc5b8b2fc8f24db29e1fda6df164"
+    },
+    {
+      "path": "packages/browser-relay/extension/messages.ts",
+      "sha256": "c2fdb3ead345d07273d8dfc452bf5afd82d855870b94155b1af12508cad8dea5"
+    },
+    {
+      "path": "packages/browser-relay/extension/worker/calls.ts",
+      "sha256": "1c19df7132341df8c5c011ba1bf18f16195e36c2decef8b2e16b601229eee2a3"
+    },
+    {
+      "path": "packages/browser-relay/extension/worker/groups.ts",
+      "sha256": "34f60f2426ae6e3e486ec19da0582733fe783a91b3f5f934f9f34beffabd4a89"
+    },
+    {
+      "path": "packages/browser-relay/extension/worker/identity.ts",
+      "sha256": "dbfd9ecf79356694988c235bcd6a1d910124ce6ac3a6aeee1efb52ef34aec357"
+    },
+    {
+      "path": "packages/browser-relay/extension/worker/overlay-host.ts",
+      "sha256": "46ecf4d38d5136fa739722d596e542bbda0226d4ee6106698a026339dad8099e"
+    },
+    {
+      "path": "packages/browser-relay/extension/worker/relay.ts",
+      "sha256": "baa24b406496914edae8bd9c46d3e390306679e82155bf64319a11e4d249b8d1"
+    },
+    {
+      "path": "packages/browser-relay/extension/worker/relay-events.ts",
+      "sha256": "e5a93c664efaf4c9131835f7015c39bf4bd48fe3b4d851192e290285729a6ec2"
+    },
+    {
+      "path": "packages/browser-relay/extension/worker/relay-rpc.ts",
+      "sha256": "f1304410498b99df1c48818367edc0d4f8edc301b081278e35ebec78d5e6c73e"
+    },
+    {
+      "path": "packages/browser-relay/extension/worker/session-store.ts",
+      "sha256": "e756898547e7743f83c6afee12ab8b94682423f4eeb6a2ba50622af10232ae84"
+    },
+    {
+      "path": "packages/browser-relay/extension/worker/tabs.ts",
+      "sha256": "a5b4b7280d5c5ce92a73bc1f4f4e266896ca36d723649428e1a9e0ff08fa09ba"
+    },
+    {
+      "path": "packages/browser-relay/extension/overlay/chip.ts",
+      "sha256": "43fde527b8eaa91fdd3ff71932f97a093ebef509d94bba54805a693d33677a62"
+    },
+    {
+      "path": "packages/browser-relay/extension/overlay/dom.ts",
+      "sha256": "f63ca79801661ba72023c677292d93bf258fe34a8edab105072af04a42868b3a"
+    },
+    {
+      "path": "packages/browser-relay/extension/overlay/favicon.ts",
+      "sha256": "2ff8fb0e4db3add83e7ece5a97514a39a568a66801509bb5374f4ac2f086afbd"
+    },
+    {
+      "path": "packages/browser-relay/extension/overlay/main.ts",
+      "sha256": "fc32e6637cfb2e991d1801f24599680d64d6caa5cdc5eb6a377f054ea1ac1317"
+    },
+    {
+      "path": "packages/browser-relay/extension/overlay/motion.ts",
+      "sha256": "7fbbdf98fb39b32c301591fb4b7311e7baea7f1faf8f9ebcf63e2a6b322046e6"
+    },
+    {
+      "path": "packages/browser-relay/extension/overlay/overlay.ts",
+      "sha256": "243a042846ad2f06c97a1e8b2adfd4bcfbffc248cc43227b5a691b1b6d3dbd94"
+    },
+    {
+      "path": "packages/browser-relay/extension/overlay/picker.ts",
+      "sha256": "ded5b34f8214d4169f0761f22b1f8e5d5afada9a7b58778fcc1fdd9b2853b47e"
+    },
+    {
+      "path": "packages/browser-relay/extension/overlay/pointer.ts",
+      "sha256": "f58df53925743b42c1f51d7758d2f35b7f0e5a2773c4509c1eecc5d84f735c61"
+    },
+    {
+      "path": "packages/browser-relay/extension/overlay/presence.ts",
+      "sha256": "5535456eaefd3225f4094af4cadcd1cbe22afd1b14cb0c1c003a9476428fe89a"
+    },
+    {
+      "path": "packages/browser-relay/extension/overlay/styles.ts",
+      "sha256": "f86044fc9ceffb0748b6b9b3a56b5fd1bed4db2d351bf5cc4e2c45e37e5f5ea5"
+    }
+  ]
+}

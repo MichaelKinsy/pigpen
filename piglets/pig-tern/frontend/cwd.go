@@ -14,6 +14,24 @@ import (
 // reports its directory only in the footer, "~"-abbreviated, so the member
 // expands that and reports it whenever it changes.
 
+// reportOmpTabTitle writes OSC 0 for Tern's tab title under ompRoles when
+// pigletName is set, using the session's custom name or pigletName ("oh-my-pig")
+// instead of PiG's default `pig - <dir>` title.
+func (s *session) reportOmpTabTitle(sessionName string) {
+	if !s.ompRoles || s.pigletName == "" || !s.live || s.suspended || s.closed || s.fellBack {
+		return
+	}
+	title := strings.TrimSpace(sessionName)
+	if title == "" {
+		title = s.pigletName
+	}
+	if title == s.tabTitleSent {
+		return
+	}
+	s.tabTitleSent = title
+	_, _ = io.WriteString(s.out, "\x1b]0;"+title+"\x07")
+}
+
 // reportCwd records the footer's directory as an absolute path and writes
 // OSC 7 when it changed. It runs under the session lock. While PiG lends
 // the terminal out, the report waits for the next change; the directory

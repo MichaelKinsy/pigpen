@@ -1,0 +1,1836 @@
+{
+  "lang": "go",
+  "sample": "sample1",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample1",
+  "total": 216,
+  "omp_resolved": 161,
+  "omp_refused": 55,
+  "cases": [
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 11,
+      "path": "tool_definition.go",
+      "refused": "line 1: `CUT 11*` resolved a single-line block — line 11 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 11`."
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 13,
+      "path": "tool_definition.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 17,
+      "path": "tool_definition.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 19,
+      "path": "tool_definition.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 22,
+      "path": "tool_definition.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 25,
+      "path": "tool_definition.go",
+      "span": [
+        25,
+        30
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 26,
+      "path": "tool_definition.go",
+      "span": [
+        26,
+        28
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 34,
+      "path": "tool_definition.go",
+      "span": [
+        34,
+        95
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 99,
+      "path": "tool_definition.go",
+      "span": [
+        99,
+        122
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 100,
+      "path": "tool_definition.go",
+      "span": [
+        100,
+        120
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 121,
+      "path": "tool_definition.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 124,
+      "path": "tool_definition.go",
+      "span": [
+        124,
+        163
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 126,
+      "path": "tool_definition.go",
+      "span": [
+        126,
+        128
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 131,
+      "path": "tool_definition.go",
+      "span": [
+        131,
+        162
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 133,
+      "path": "tool_definition.go",
+      "span": [
+        133,
+        139
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 134,
+      "path": "tool_definition.go",
+      "span": [
+        134,
+        138
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 140,
+      "path": "tool_definition.go",
+      "span": [
+        140,
+        142
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 145,
+      "path": "tool_definition.go",
+      "span": [
+        145,
+        149
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 147,
+      "path": "tool_definition.go",
+      "refused": "line 1: `CUT 147*` could not resolve a syntactic block beginning on line 147 (blank/closer line, or parse error). Use `CUT 147.=M` with explicit lines. The nearest enclosing multi-line block begins at line 145 and ends at line 149; use `CUT 145*` to target it."
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 150,
+      "path": "tool_definition.go",
+      "span": [
+        150,
+        154
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 152,
+      "path": "tool_definition.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 156,
+      "path": "tool_definition.go",
+      "span": [
+        156,
+        158
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 161,
+      "path": "tool_definition.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 166,
+      "path": "tool_definition.go",
+      "span": [
+        166,
+        186
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 169,
+      "path": "tool_definition.go",
+      "span": [
+        169,
+        173
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 174,
+      "path": "tool_definition.go",
+      "span": [
+        174,
+        176
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 177,
+      "path": "tool_definition.go",
+      "span": [
+        177,
+        185
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 179,
+      "path": "tool_definition.go",
+      "span": [
+        179,
+        181
+      ]
+    },
+    {
+      "file": "files/go/tool_definition.go.src",
+      "anchor": 182,
+      "path": "tool_definition.go",
+      "span": [
+        182,
+        184
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 13,
+      "path": "provider.go",
+      "span": [
+        13,
+        39
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 41,
+      "path": "provider.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 44,
+      "path": "provider.go",
+      "span": [
+        44,
+        51
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 53,
+      "path": "provider.go",
+      "span": [
+        53,
+        56
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 57,
+      "path": "provider.go",
+      "span": [
+        57,
+        63
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 64,
+      "path": "provider.go",
+      "span": [
+        64,
+        72
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 75,
+      "path": "provider.go",
+      "span": [
+        75,
+        80
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 82,
+      "path": "provider.go",
+      "span": [
+        82,
+        85
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 86,
+      "path": "provider.go",
+      "span": [
+        86,
+        90
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 91,
+      "path": "provider.go",
+      "span": [
+        91,
+        95
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 96,
+      "path": "provider.go",
+      "span": [
+        96,
+        99
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 100,
+      "path": "provider.go",
+      "span": [
+        100,
+        104
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 105,
+      "path": "provider.go",
+      "span": [
+        105,
+        109
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 110,
+      "path": "provider.go",
+      "span": [
+        110,
+        119
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 121,
+      "path": "provider.go",
+      "span": [
+        121,
+        125
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 126,
+      "path": "provider.go",
+      "span": [
+        126,
+        129
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 130,
+      "path": "provider.go",
+      "span": [
+        130,
+        143
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 145,
+      "path": "provider.go",
+      "span": [
+        145,
+        194
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 146,
+      "path": "provider.go",
+      "span": [
+        146,
+        148
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 147,
+      "path": "provider.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 149,
+      "path": "provider.go",
+      "span": [
+        149,
+        151
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 150,
+      "path": "provider.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 152,
+      "path": "provider.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 153,
+      "path": "provider.go",
+      "span": [
+        153,
+        155
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 158,
+      "path": "provider.go",
+      "span": [
+        158,
+        160
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 161,
+      "path": "provider.go",
+      "span": [
+        161,
+        163
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 162,
+      "path": "provider.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 164,
+      "path": "provider.go",
+      "span": [
+        164,
+        171
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 167,
+      "path": "provider.go",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 168,
+      "path": "provider.go",
+      "span": [
+        168,
+        170
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 172,
+      "path": "provider.go",
+      "span": [
+        172,
+        184
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 173,
+      "path": "provider.go",
+      "span": [
+        173,
+        175
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 176,
+      "path": "provider.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 178,
+      "path": "provider.go",
+      "span": [
+        178,
+        180
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 181,
+      "path": "provider.go",
+      "span": [
+        181,
+        183
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 185,
+      "path": "provider.go",
+      "span": [
+        185,
+        192
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 186,
+      "path": "provider.go",
+      "span": [
+        186,
+        188
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 189,
+      "path": "provider.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 190,
+      "path": "provider.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 197,
+      "path": "provider.go",
+      "span": [
+        197,
+        211
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 199,
+      "path": "provider.go",
+      "span": [
+        199,
+        201
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 203,
+      "path": "provider.go",
+      "span": [
+        203,
+        205
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 204,
+      "path": "provider.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 209,
+      "path": "provider.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 216,
+      "path": "provider.go",
+      "span": [
+        216,
+        220
+      ]
+    },
+    {
+      "file": "files/go/provider.go.src",
+      "anchor": 225,
+      "path": "provider.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 9,
+      "path": "footer_data.go",
+      "span": [
+        9,
+        13
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 16,
+      "path": "footer_data.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 19,
+      "path": "footer_data.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 22,
+      "path": "footer_data.go",
+      "span": [
+        22,
+        26
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 29,
+      "path": "footer_data.go",
+      "span": [
+        29,
+        33
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 36,
+      "path": "footer_data.go",
+      "span": [
+        36,
+        40
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 43,
+      "path": "footer_data.go",
+      "span": [
+        43,
+        48
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 44,
+      "path": "footer_data.go",
+      "span": [
+        44,
+        46
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 45,
+      "path": "footer_data.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 47,
+      "path": "footer_data.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 51,
+      "path": "footer_data.go",
+      "span": [
+        51,
+        63
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 52,
+      "path": "footer_data.go",
+      "span": [
+        52,
+        54
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 55,
+      "path": "footer_data.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 56,
+      "path": "footer_data.go",
+      "span": [
+        56,
+        58
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 57,
+      "path": "footer_data.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 66,
+      "path": "footer_data.go",
+      "span": [
+        66,
+        70
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 73,
+      "path": "footer_data.go",
+      "span": [
+        73,
+        78
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 75,
+      "path": "footer_data.go",
+      "span": [
+        75,
+        77
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 76,
+      "path": "footer_data.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 80,
+      "path": "footer_data.go",
+      "span": [
+        80,
+        87
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 81,
+      "path": "footer_data.go",
+      "span": [
+        81,
+        85
+      ]
+    },
+    {
+      "file": "files/go/footer_data.go.src",
+      "anchor": 82,
+      "path": "footer_data.go",
+      "span": [
+        82,
+        84
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 12,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        12,
+        19
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 25,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        25,
+        64
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 26,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        26,
+        62
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 27,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        27,
+        44
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 29,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        29,
+        34
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 30,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        30,
+        32
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 33,
+      "path": "compaction_cutpoint.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 36,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        36,
+        43
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 37,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        37,
+        42
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 38,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        38,
+        39
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 39,
+      "path": "compaction_cutpoint.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 40,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        40,
+        41
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 41,
+      "path": "compaction_cutpoint.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 44,
+      "path": "compaction_cutpoint.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 45,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        45,
+        50
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 47,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        47,
+        49
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 48,
+      "path": "compaction_cutpoint.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 50,
+      "path": "compaction_cutpoint.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 51,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        51,
+        54
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 52,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        52,
+        54
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 53,
+      "path": "compaction_cutpoint.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 55,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        55,
+        61
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 57,
+      "path": "compaction_cutpoint.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 58,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        58,
+        60
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 61,
+      "path": "compaction_cutpoint.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 66,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        66,
+        71
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 73,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        73,
+        76
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 78,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        78,
+        83
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 79,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        79,
+        81
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 85,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        85,
+        91
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 86,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        86,
+        89
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 87,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        87,
+        88
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 93,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        93,
+        99
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 94,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        94,
+        97
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 95,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        95,
+        96
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 101,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        101,
+        106
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 102,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        102,
+        104
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 109,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        109,
+        121
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 111,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        111,
+        119
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 113,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        113,
+        115
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 116,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        116,
+        118
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 125,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        125,
+        132
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 126,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        126,
+        130
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 127,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        127,
+        129
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 137,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        137,
+        177
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 139,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        139,
+        141
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 140,
+      "path": "compaction_cutpoint.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 144,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        144,
+        163
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 146,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        146,
+        148
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 149,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        149,
+        151
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 153,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        153,
+        162
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 155,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        155,
+        160
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 156,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        156,
+        159
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 164,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        164,
+        170
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 166,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        166,
+        168
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 173,
+      "path": "compaction_cutpoint.go",
+      "span": [
+        173,
+        175
+      ]
+    },
+    {
+      "file": "files/go/compaction_cutpoint.go.src",
+      "anchor": 176,
+      "path": "compaction_cutpoint.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 20,
+      "path": "user_bash.go",
+      "span": [
+        20,
+        25
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 27,
+      "path": "user_bash.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 28,
+      "path": "user_bash.go",
+      "span": [
+        28,
+        30
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 32,
+      "path": "user_bash.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 33,
+      "path": "user_bash.go",
+      "span": [
+        33,
+        35
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 38,
+      "path": "user_bash.go",
+      "span": [
+        38,
+        97
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 39,
+      "path": "user_bash.go",
+      "span": [
+        39,
+        41
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 42,
+      "path": "user_bash.go",
+      "span": [
+        42,
+        45
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 43,
+      "path": "user_bash.go",
+      "span": [
+        43,
+        44
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 47,
+      "path": "user_bash.go",
+      "span": [
+        47,
+        70
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 48,
+      "path": "user_bash.go",
+      "span": [
+        48,
+        69
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 50,
+      "path": "user_bash.go",
+      "span": [
+        50,
+        57
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 51,
+      "path": "user_bash.go",
+      "span": [
+        51,
+        52
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 53,
+      "path": "user_bash.go",
+      "span": [
+        53,
+        56
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 54,
+      "path": "user_bash.go",
+      "span": [
+        54,
+        56
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 58,
+      "path": "user_bash.go",
+      "span": [
+        58,
+        68
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 60,
+      "path": "user_bash.go",
+      "span": [
+        60,
+        62
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 61,
+      "path": "user_bash.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 67,
+      "path": "user_bash.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 71,
+      "path": "user_bash.go",
+      "span": [
+        71,
+        79
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 73,
+      "path": "user_bash.go",
+      "span": [
+        73,
+        75
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 76,
+      "path": "user_bash.go",
+      "span": [
+        76,
+        78
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 81,
+      "path": "user_bash.go",
+      "span": [
+        81,
+        83
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 89,
+      "path": "user_bash.go",
+      "span": [
+        89,
+        91
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 92,
+      "path": "user_bash.go",
+      "span": [
+        92,
+        94
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 100,
+      "path": "user_bash.go",
+      "span": [
+        100,
+        139
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 104,
+      "path": "user_bash.go",
+      "span": [
+        104,
+        106
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 107,
+      "path": "user_bash.go",
+      "span": [
+        107,
+        112
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 113,
+      "path": "user_bash.go",
+      "span": [
+        113,
+        115
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 119,
+      "path": "user_bash.go",
+      "span": [
+        119,
+        126
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 122,
+      "path": "user_bash.go",
+      "span": [
+        122,
+        124
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 125,
+      "path": "user_bash.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 127,
+      "path": "user_bash.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 132,
+      "path": "user_bash.go",
+      "span": [
+        132,
+        134
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 135,
+      "path": "user_bash.go",
+      "span": [
+        135,
+        137
+      ]
+    },
+    {
+      "file": "files/go/user_bash.go.src",
+      "anchor": 138,
+      "path": "user_bash.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/test_faux_excerpt.go.src",
+      "anchor": 3,
+      "path": "test_faux_excerpt.go",
+      "span": [
+        3,
+        31
+      ]
+    },
+    {
+      "file": "files/go/test_faux_excerpt.go.src",
+      "anchor": 16,
+      "path": "test_faux_excerpt.go",
+      "span": [
+        16,
+        22
+      ]
+    },
+    {
+      "file": "files/go/test_faux_excerpt.go.src",
+      "anchor": 17,
+      "path": "test_faux_excerpt.go",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/test_faux_excerpt.go.src",
+      "anchor": 23,
+      "path": "test_faux_excerpt.go",
+      "span": [
+        23,
+        29
+      ]
+    },
+    {
+      "file": "files/go/test_faux_excerpt.go.src",
+      "anchor": 25,
+      "path": "test_faux_excerpt.go",
+      "span": [
+        25,
+        28
+      ]
+    },
+    {
+      "file": "files/go/constructed_n1_cont_if_and.go.src",
+      "anchor": 3,
+      "path": "constructed_n1_cont_if_and.go",
+      "constructed": true,
+      "name": "n1_cont_if_and",
+      "span": [
+        3,
+        8
+      ]
+    },
+    {
+      "file": "files/go/constructed_n1_cont_if_and.go.src",
+      "anchor": 4,
+      "path": "constructed_n1_cont_if_and.go",
+      "constructed": true,
+      "name": "n1_cont_if_and",
+      "span": [
+        4,
+        7
+      ]
+    },
+    {
+      "file": "files/go/constructed_n1_cont_if_and.go.src",
+      "anchor": 5,
+      "path": "constructed_n1_cont_if_and.go",
+      "constructed": true,
+      "name": "n1_cont_if_and",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/constructed_n1_cont_for_or.go.src",
+      "anchor": 4,
+      "path": "constructed_n1_cont_for_or.go",
+      "constructed": true,
+      "name": "n1_cont_for_or",
+      "span": [
+        4,
+        7
+      ]
+    },
+    {
+      "file": "files/go/constructed_n1_cont_for_or.go.src",
+      "anchor": 5,
+      "path": "constructed_n1_cont_for_or.go",
+      "constructed": true,
+      "name": "n1_cont_for_or",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/constructed_n1_cont_switch_type.go.src",
+      "anchor": 4,
+      "path": "constructed_n1_cont_switch_type.go",
+      "constructed": true,
+      "name": "n1_cont_switch_type",
+      "span": [
+        4,
+        8
+      ]
+    },
+    {
+      "file": "files/go/constructed_n1_cont_switch_type.go.src",
+      "anchor": 5,
+      "path": "constructed_n1_cont_switch_type.go",
+      "constructed": true,
+      "name": "n1_cont_switch_type",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/constructed_n1_cont_switch_type.go.src",
+      "anchor": 6,
+      "path": "constructed_n1_cont_switch_type.go",
+      "constructed": true,
+      "name": "n1_cont_switch_type",
+      "span": [
+        6,
+        7
+      ]
+    },
+    {
+      "file": "files/go/constructed_n1_two_stmts_same_line.go.src",
+      "anchor": 3,
+      "path": "constructed_n1_two_stmts_same_line.go",
+      "constructed": true,
+      "name": "n1_two_stmts_same_line",
+      "span": [
+        3,
+        7
+      ]
+    },
+    {
+      "file": "files/go/constructed_n1_two_stmts_same_line.go.src",
+      "anchor": 4,
+      "path": "constructed_n1_two_stmts_same_line.go",
+      "constructed": true,
+      "name": "n1_two_stmts_same_line",
+      "span": [
+        4,
+        6
+      ]
+    },
+    {
+      "file": "files/go/constructed_multiline_if_cond.go.src",
+      "anchor": 3,
+      "path": "constructed_multiline_if_cond.go",
+      "constructed": true,
+      "name": "multiline_if_cond",
+      "span": [
+        3,
+        9
+      ]
+    },
+    {
+      "file": "files/go/constructed_multiline_if_cond.go.src",
+      "anchor": 4,
+      "path": "constructed_multiline_if_cond.go",
+      "constructed": true,
+      "name": "multiline_if_cond",
+      "span": [
+        4,
+        8
+      ]
+    },
+    {
+      "file": "files/go/constructed_multiline_if_cond.go.src",
+      "anchor": 6,
+      "path": "constructed_multiline_if_cond.go",
+      "constructed": true,
+      "name": "multiline_if_cond",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/go/constructed_multiline_sig_chained_lit.go.src",
+      "anchor": 3,
+      "path": "constructed_multiline_sig_chained_lit.go",
+      "constructed": true,
+      "name": "multiline_sig_chained_lit",
+      "span": [
+        3,
+        8
+      ]
+    },
+    {
+      "file": "files/go/constructed_multiline_sig_chained_lit.go.src",
+      "anchor": 6,
+      "path": "constructed_multiline_sig_chained_lit.go",
+      "constructed": true,
+      "name": "multiline_sig_chained_lit",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/go/constructed_multiline_sig_chained_lit.go.src",
+      "anchor": 11,
+      "path": "constructed_multiline_sig_chained_lit.go",
+      "constructed": true,
+      "name": "multiline_sig_chained_lit",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/go/constructed_valid_func_raw_if_else.go.src",
+      "anchor": 3,
+      "path": "constructed_valid_func_raw_if_else.go",
+      "constructed": true,
+      "name": "valid_func_raw_if_else",
+      "span": [
+        3,
+        11
+      ]
+    },
+    {
+      "file": "files/go/constructed_valid_func_raw_if_else.go.src",
+      "anchor": 5,
+      "path": "constructed_valid_func_raw_if_else.go",
+      "constructed": true,
+      "name": "valid_func_raw_if_else",
+      "span": [
+        5,
+        9
+      ]
+    },
+    {
+      "file": "files/go/constructed_valid_func_raw_if_else.go.src",
+      "anchor": 7,
+      "path": "constructed_valid_func_raw_if_else.go",
+      "constructed": true,
+      "name": "valid_func_raw_if_else",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/go/constructed_w5_closed_block_then_for.go.src",
+      "anchor": 3,
+      "path": "constructed_w5_closed_block_then_for.go",
+      "constructed": true,
+      "name": "w5_closed_block_then_for",
+      "span": [
+        3,
+        9
+      ]
+    },
+    {
+      "file": "files/go/constructed_w5_closed_block_then_for.go.src",
+      "anchor": 5,
+      "path": "constructed_w5_closed_block_then_for.go",
+      "constructed": true,
+      "name": "w5_closed_block_then_for",
+      "refused_kind": "single_line"
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 11*` resolved a single-line block — line 11 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 11`.",
+    "unresolved": "line 1: `CUT 147*` could not resolve a syntactic block beginning on line 147 (blank/closer line, or parse error). Use `CUT 147.=M` with explicit lines. The nearest enclosing multi-line block begins at line 145 and ends at line 149; use `CUT 145*` to target it."
+  }
+}

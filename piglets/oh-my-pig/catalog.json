@@ -1,0 +1,11 @@
+{
+  "featured": false,
+  "updatedAt": "2026-11-24",
+  "languages": ["go"],
+  "notes": [
+    "An homage to omp (oh-my-pi) by Can Bölük and Stencil Labs. Unofficial and not affiliated with them. omp changes daily; this follows it at a pinned commit, and parity is a goal, not a promise. PARITY.md lists what is ported and what is not.",
+    "Derives from pig-tern: in a Tern pane it draws natively with omp's roles, so Tern's styles for omp apply; anywhere else PiG draws as usual. It keeps PiG's own names towards Tern and does not present itself as omp.",
+    "Keeps none of PiG's built-in tools: the model sees omp's read, write, edit, bash, grep, glob, find, todo, ask and web_search from the oh-my-pig extension, a Go port, with omp's system prompt. Absent today: subagents, eval, lsp, ast_edit, the internal URL schemes, and omp's modes, commands, settings and extensions.",
+    "Source only. Built and run on darwin/arm64; no Binary is signed or published, so no platform is a support claim. A build needs PiG's source (PIG_SOURCE_ROOT) and a Go toolchain, as for pig-tern."
+  ]
+}

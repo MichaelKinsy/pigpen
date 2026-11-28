@@ -1,0 +1,38 @@
+{
+	"manifest_version": 3,
+	"name": "oh-my-pig",
+	"version": "0.2.0",
+	"description": "oh-my-pig browser relay (unofficial; based on omp's MIT-licensed extension): drives your existing Chrome tabs through the local oh-my-pig relay.",
+	"author": "Michael Kinsy (oh-my-pig)",
+	"homepage_url": "https://github.com/MichaelKinsy/pigpen/tree/main/components/oh-my-pig",
+	"minimum_chrome_version": "120",
+	"permissions": [
+		"debugger",
+		"tabs",
+		"tabGroups",
+		"storage",
+		"alarms",
+		"scripting",
+		"downloads",
+		"nativeMessaging"
+	],
+	"host_permissions": ["<all_urls>"],
+	"background": {
+		"service_worker": "background.js"
+	},
+	"action": {
+		"default_title": "oh-my-pig",
+		"default_icon": {
+			"16": "icons/oh-my-pig-16.png",
+			"32": "icons/oh-my-pig-32.png",
+			"48": "icons/oh-my-pig-48.png",
+			"128": "icons/oh-my-pig-128.png"
+		}
+	},
+	"icons": {
+		"16": "icons/oh-my-pig-16.png",
+		"32": "icons/oh-my-pig-32.png",
+		"48": "icons/oh-my-pig-48.png",
+		"128": "icons/oh-my-pig-128.png"
+	}
+}

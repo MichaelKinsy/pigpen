@@ -1,0 +1,2870 @@
+{
+  "lang": "md",
+  "sample": "sample2",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample2",
+  "total": 460,
+  "omp_resolved": 185,
+  "omp_refused": 275,
+  "refusal_samples": {
+    "unresolved": "line 1: `CUT 4*` could not resolve a syntactic block beginning on line 4 (blank/closer line, or parse error). Use `CUT 4.=M` with explicit lines. The nearest enclosing multi-line block begins at line 3 and ends at line 6; use `CUT 3*` to target it.",
+    "single_line": "line 1: `CUT 3*` resolved a single-line block — line 3 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 3`. The nearest enclosing multi-line block begins at line 1 and ends at line 483; use `CUT 1*` to target it."
+  },
+  "cases": [
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 1,
+      "span": [
+        1,
+        24
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 3,
+      "span": [
+        3,
+        6
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 4,
+      "refused": "line 1: `CUT 4*` could not resolve a syntactic block beginning on line 4 (blank/closer line, or parse error). Use `CUT 4.=M` with explicit lines. The nearest enclosing multi-line block begins at line 3 and ends at line 6; use `CUT 3*` to target it."
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 6,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 8,
+      "span": [
+        8,
+        9
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 9,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 11,
+      "span": [
+        11,
+        24
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 15,
+      "span": [
+        15,
+        16
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 17,
+      "span": [
+        17,
+        18
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 19,
+      "span": [
+        19,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 21,
+      "span": [
+        21,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 23,
+      "span": [
+        23,
+        24
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__ollama-native__CREDITS.md",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 1,
+      "span": [
+        1,
+        483
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 3,
+      "refused": "line 1: `CUT 3*` resolved a single-line block — line 3 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 3`. The nearest enclosing multi-line block begins at line 1 and ends at line 483; use `CUT 1*` to target it."
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 53,
+      "span": [
+        53,
+        483
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 65,
+      "span": [
+        65,
+        87
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 82,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 99,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 111,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 132,
+      "span": [
+        132,
+        210
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 134,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 150,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 167,
+      "span": [
+        167,
+        171
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 178,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 183,
+      "span": [
+        183,
+        192
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 209,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 219,
+      "span": [
+        219,
+        227
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 223,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 239,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 263,
+      "span": [
+        263,
+        266
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 268,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 288,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 309,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 313,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 323,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 340,
+      "span": [
+        340,
+        351
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 353,
+      "span": [
+        353,
+        439
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 359,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 377,
+      "span": [
+        377,
+        379
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 394,
+      "span": [
+        394,
+        397
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 401,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 409,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 428,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 442,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 460,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__slash-commands.md",
+      "anchor": 477,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 1,
+      "span": [
+        1,
+        71
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 3,
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 7,
+      "span": [
+        7,
+        34
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 11,
+      "span": [
+        11,
+        27
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 15,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 31,
+      "span": [
+        31,
+        33
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 35,
+      "span": [
+        35,
+        61
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 39,
+      "span": [
+        39,
+        48
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 50,
+      "span": [
+        50,
+        60
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 52,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 54,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 55,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 57,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 59,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 62,
+      "span": [
+        62,
+        71
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 64,
+      "span": [
+        64,
+        67
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 65,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 67,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_internal__pigdocs__content__events.md",
+      "anchor": 70,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 1,
+      "span": [
+        1,
+        18
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 3,
+      "span": [
+        3,
+        4
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 6,
+      "span": [
+        6,
+        13
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 8,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 10,
+      "span": [
+        10,
+        13
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 14,
+      "span": [
+        14,
+        18
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 15,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__powerline__CREDITS.md",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 1,
+      "span": [
+        1,
+        101
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 3,
+      "span": [
+        3,
+        7
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 6,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 13,
+      "span": [
+        13,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 28,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 31,
+      "span": [
+        31,
+        40
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 38,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 41,
+      "span": [
+        41,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 43,
+      "span": [
+        43,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 46,
+      "span": [
+        46,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 48,
+      "span": [
+        48,
+        59
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 50,
+      "span": [
+        50,
+        53
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 52,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 58,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 60,
+      "span": [
+        60,
+        68
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 65,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 69,
+      "span": [
+        69,
+        76
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 71,
+      "span": [
+        71,
+        75
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 75,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 77,
+      "span": [
+        77,
+        81
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 82,
+      "span": [
+        82,
+        89
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 84,
+      "span": [
+        84,
+        89
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 86,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 87,
+      "span": [
+        87,
+        89
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 90,
+      "span": [
+        90,
+        101
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 94,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 96,
+      "span": [
+        96,
+        98
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pig-snake__README.md",
+      "anchor": 98,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 1,
+      "span": [
+        1,
+        406
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 3,
+      "span": [
+        3,
+        6
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 12,
+      "span": [
+        12,
+        14
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 28,
+      "span": [
+        28,
+        44
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 39,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 61,
+      "span": [
+        61,
+        65
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 75,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 77,
+      "span": [
+        77,
+        98
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 107,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 109,
+      "span": [
+        109,
+        113
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 126,
+      "span": [
+        126,
+        146
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 138,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 150,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 166,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 181,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 212,
+      "span": [
+        212,
+        237
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 214,
+      "span": [
+        214,
+        235
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 221,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 234,
+      "span": [
+        234,
+        235
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 245,
+      "span": [
+        245,
+        248
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 251,
+      "span": [
+        251,
+        262
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 252,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 268,
+      "span": [
+        268,
+        299
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 289,
+      "span": [
+        289,
+        293
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 291,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 300,
+      "span": [
+        300,
+        314
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 305,
+      "span": [
+        305,
+        308
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 315,
+      "span": [
+        315,
+        340
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 329,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 332,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 348,
+      "span": [
+        348,
+        349
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 368,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 375,
+      "span": [
+        375,
+        396
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 384,
+      "span": [
+        384,
+        386
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_python__robomp__docs__pr-review-handoff.md",
+      "anchor": 391,
+      "span": [
+        391,
+        392
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 1,
+      "span": [
+        1,
+        261
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 3,
+      "span": [
+        3,
+        7
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 9,
+      "span": [
+        9,
+        16
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 21,
+      "span": [
+        21,
+        25
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 28,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 37,
+      "span": [
+        37,
+        43
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 50,
+      "span": [
+        50,
+        101
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 54,
+      "span": [
+        54,
+        61
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 55,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 76,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 95,
+      "span": [
+        95,
+        100
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 102,
+      "span": [
+        102,
+        116
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 117,
+      "span": [
+        117,
+        155
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 125,
+      "span": [
+        125,
+        155
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 132,
+      "span": [
+        132,
+        134
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 138,
+      "span": [
+        138,
+        144
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 140,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 142,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 149,
+      "span": [
+        149,
+        151
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 156,
+      "span": [
+        156,
+        200
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 165,
+      "span": [
+        165,
+        174
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 166,
+      "span": [
+        166,
+        169
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 181,
+      "span": [
+        181,
+        200
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 186,
+      "span": [
+        186,
+        198
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 191,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 203,
+      "span": [
+        203,
+        243
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 213,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 215,
+      "span": [
+        215,
+        225
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 233,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 237,
+      "span": [
+        237,
+        243
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 246,
+      "span": [
+        246,
+        257
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 247,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 250,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 252,
+      "span": [
+        252,
+        253
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_RELEASE-NOTES.md",
+      "anchor": 255,
+      "span": [
+        255,
+        257
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 1,
+      "span": [
+        1,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 3,
+      "span": [
+        3,
+        6
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 6,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 8,
+      "span": [
+        8,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 10,
+      "span": [
+        10,
+        13
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 11,
+      "span": [
+        11,
+        13
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 15,
+      "span": [
+        15,
+        19
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 20,
+      "span": [
+        20,
+        21
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__references__context-safety.md",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 1,
+      "span": [
+        1,
+        32
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 5,
+      "span": [
+        5,
+        14
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 9,
+      "span": [
+        9,
+        12
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 11,
+      "span": [
+        11,
+        12
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 15,
+      "span": [
+        15,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 17,
+      "span": [
+        17,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 19,
+      "span": [
+        19,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 21,
+      "span": [
+        21,
+        29
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 25,
+      "span": [
+        25,
+        27
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 26,
+      "span": [
+        26,
+        27
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 30,
+      "span": [
+        30,
+        32
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__fix-992-tool-renderer-examples.md",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 1,
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 5,
+      "span": [
+        5,
+        66
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 7,
+      "span": [
+        7,
+        10
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 11,
+      "span": [
+        11,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 21,
+      "span": [
+        21,
+        37
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 29,
+      "span": [
+        29,
+        35
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 34,
+      "span": [
+        34,
+        35
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 38,
+      "span": [
+        38,
+        48
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 42,
+      "span": [
+        42,
+        48
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 47,
+      "span": [
+        47,
+        48
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 53,
+      "span": [
+        53,
+        61
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 60,
+      "span": [
+        60,
+        61
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_.github__SECURITY.md",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 1,
+      "span": [
+        1,
+        26
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 6,
+      "span": [
+        6,
+        7
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 9,
+      "span": [
+        9,
+        26
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 13,
+      "span": [
+        13,
+        16
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 15,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 17,
+      "span": [
+        17,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 21,
+      "span": [
+        21,
+        23
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 24,
+      "span": [
+        24,
+        26
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 25,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__quality-evidence.md",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 1,
+      "span": [
+        1,
+        30
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 3,
+      "span": [
+        3,
+        6
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 6,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 8,
+      "span": [
+        8,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 9,
+      "span": [
+        9,
+        14
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 17,
+      "span": [
+        17,
+        26
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 28,
+      "span": [
+        28,
+        30
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 29,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__pi-typesafe-api__README.md",
+      "anchor": 30,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 1,
+      "span": [
+        1,
+        68
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 5,
+      "span": [
+        5,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 7,
+      "span": [
+        7,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 9,
+      "span": [
+        9,
+        28
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 11,
+      "span": [
+        11,
+        25
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 29,
+      "span": [
+        29,
+        39
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 31,
+      "span": [
+        31,
+        36
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 40,
+      "span": [
+        40,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 48,
+      "span": [
+        48,
+        53
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 54,
+      "span": [
+        54,
+        57
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 58,
+      "span": [
+        58,
+        61
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 62,
+      "span": [
+        62,
+        65
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__site__docs__usage.md",
+      "anchor": 66,
+      "span": [
+        66,
+        68
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__xd-harness-retire__PROGRESS.md",
+      "anchor": 1,
+      "span": [
+        1,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__xd-harness-retire__PROGRESS.md",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__xd-harness-retire__PROGRESS.md",
+      "anchor": 5,
+      "span": [
+        5,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__xd-harness-retire__PROGRESS.md",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__xd-harness-retire__PROGRESS.md",
+      "anchor": 9,
+      "span": [
+        9,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__xd-harness-retire__PROGRESS.md",
+      "anchor": 11,
+      "span": [
+        11,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__xd-harness-retire__PROGRESS.md",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__xd-harness-retire__PROGRESS.md",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__xd-harness-retire__PROGRESS.md",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pig_docs__plan__progress__xd-harness-retire__PROGRESS.md",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 1,
+      "span": [
+        1,
+        23
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 5,
+      "span": [
+        5,
+        12
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 6,
+      "span": [
+        6,
+        11
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 8,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 9,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 16,
+      "span": [
+        16,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 17,
+      "span": [
+        17,
+        21
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 24,
+      "span": [
+        24,
+        32
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 26,
+      "span": [
+        26,
+        32
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__ai__src__dialect__glm.md",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 1,
+      "span": [
+        1,
+        28
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 8,
+      "span": [
+        8,
+        28
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 9,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 13,
+      "span": [
+        13,
+        17
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 15,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 18,
+      "span": [
+        18,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 21,
+      "span": [
+        21,
+        23
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 24,
+      "span": [
+        24,
+        25
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 25,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 26,
+      "span": [
+        26,
+        28
+      ]
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 27,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/pigpen_components__superpowers__skills__pigpen-superpowers-diagnosing-superpowers__prompts__cost-and-time.md",
+      "anchor": 28,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 1,
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 3,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 6,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 10,
+      "span": [
+        10,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 12,
+      "span": [
+        12,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 14,
+      "span": [
+        14,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 16,
+      "span": [
+        16,
+        37
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 18,
+      "span": [
+        18,
+        28
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 19,
+      "span": [
+        19,
+        27
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 25,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 27,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 30,
+      "span": [
+        30,
+        36
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 38,
+      "span": [
+        38,
+        41
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 40,
+      "span": [
+        40,
+        41
+      ]
+    },
+    {
+      "file": "files/sample2/md/omp_packages__coding-agent__src__discovery__builtin-rules__go-rand-v2.md",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    }
+  ]
+}

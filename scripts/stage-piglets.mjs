@@ -1,5 +1,5 @@
 import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { isMap, parseDocument } from 'yaml';
 import { readManifests, root } from './generate-index.mjs';
 
@@ -11,6 +11,22 @@ function sourceFiles(path) {
   if (stat.isFile()) return [{ path, mode: stat.mode & 0o777 }];
   if (!stat.isDirectory()) throw new Error(`${path}: expected a regular file or directory`);
   return readdirSync(path).sort().filter(name => !excluded.has(name)).flatMap(name => sourceFiles(join(path, name)));
+}
+
+// A Piglet's own Go module (a frontend member, say) may `replace` a module of a shared Package by its repository path
+// (../../../components/<name>/...). Staging moves that Package to packages/<alias> beside the manifest, so the copy of
+// the go.mod names the staged path instead; every other byte is kept. Only replacements that resolve inside a shared
+// Package this Piglet selects are touched.
+function stagedGoMod(text, sourceDirectory, stagedDirectory, links) {
+  return text.split('\n').map((line) => {
+    const match = /^(\s*(?:replace\s+)?\S+(?:\s+\S+)?\s+=>\s+)(\.{1,2}(?:\/\S*)?)(\s*(?:\/\/.*)?)$/.exec(line);
+    if (!match) return line;
+    const target = resolve(sourceDirectory, match[2]);
+    const link = links.find(({ packageRoot }) => target === packageRoot || target.startsWith(packageRoot + sep));
+    if (!link) return line;
+    const staged = relative(stagedDirectory, join(link.stagedRoot, relative(link.packageRoot, target))).split(sep).join('/');
+    return match[1] + (staged.startsWith('.') ? staged : `./${staged}`) + match[3];
+  }).join('\n');
 }
 
 // Optional selections: a Piglet may list extensions it does not select by default in piglets/<name>/optional.json
@@ -42,6 +58,7 @@ try {
   }
 
   const copies = sourceFiles(join(directory, 'LICENSE')).map(file => ({ ...file, destination: 'LICENSE' }));
+  const packageLinks = [];
   const manifests = readManifests(directory).map(({ path, raw, manifest }) => {
     const owner = dirname(path);
     const destination = join('piglets', manifest.name);
@@ -79,6 +96,7 @@ try {
         copies.push({ ...file, destination: join(destination, stagedPackage, relative(packageRoot, file.path)) });
       }
       document.setIn(['packages', alias], `local:./packages/${alias}`);
+      packageLinks.push({ owner, packageRoot, stagedRoot: join(destination, stagedPackage) });
     }
     for (const entry of options.withs.filter((value) => value.startsWith(`${manifest.name}:`))) {
       const selection = entry.slice(manifest.name.length + 1);
@@ -108,7 +126,13 @@ try {
     for (const file of copies) {
       const target = join(temporary, file.destination);
       mkdirSync(dirname(target), { recursive: true });
-      copyFileSync(file.path, target);
+      const links = basename(file.path) === 'go.mod' ? packageLinks.filter(({ owner }) => file.path.startsWith(owner + sep)) : [];
+      if (links.length) {
+        const staged = links.map((link) => ({ ...link, stagedRoot: join(temporary, link.stagedRoot) }));
+        writeFileSync(target, stagedGoMod(readFileSync(file.path, 'utf8'), dirname(file.path), dirname(target), staged));
+      } else {
+        copyFileSync(file.path, target);
+      }
       chmodSync(target, file.mode);
     }
     for (const manifest of manifests) writeFileSync(join(temporary, manifest.destination), manifest.text);

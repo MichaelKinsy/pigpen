@@ -1,0 +1,883 @@
+{
+  "lang": "md",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py",
+  "total": 107,
+  "omp_resolved": 101,
+  "omp_refused": 6,
+  "cases": [
+    {
+      "file": "files/md/recall.md",
+      "anchor": 1,
+      "span": [
+        1,
+        130
+      ]
+    },
+    {
+      "file": "files/md/recall.md",
+      "anchor": 5,
+      "span": [
+        5,
+        18
+      ]
+    },
+    {
+      "file": "files/md/recall.md",
+      "anchor": 19,
+      "span": [
+        19,
+        26
+      ]
+    },
+    {
+      "file": "files/md/recall.md",
+      "anchor": 27,
+      "span": [
+        27,
+        32
+      ]
+    },
+    {
+      "file": "files/md/recall.md",
+      "anchor": 33,
+      "span": [
+        33,
+        58
+      ]
+    },
+    {
+      "file": "files/md/recall.md",
+      "anchor": 59,
+      "span": [
+        59,
+        76
+      ]
+    },
+    {
+      "file": "files/md/recall.md",
+      "anchor": 77,
+      "span": [
+        77,
+        91
+      ]
+    },
+    {
+      "file": "files/md/recall.md",
+      "anchor": 92,
+      "span": [
+        92,
+        101
+      ]
+    },
+    {
+      "file": "files/md/recall.md",
+      "anchor": 102,
+      "span": [
+        102,
+        116
+      ]
+    },
+    {
+      "file": "files/md/recall.md",
+      "anchor": 117,
+      "span": [
+        117,
+        124
+      ]
+    },
+    {
+      "file": "files/md/recall.md",
+      "anchor": 125,
+      "span": [
+        125,
+        130
+      ]
+    },
+    {
+      "file": "files/md/manage_skill.md",
+      "anchor": 1,
+      "span": [
+        1,
+        84
+      ]
+    },
+    {
+      "file": "files/md/manage_skill.md",
+      "anchor": 5,
+      "span": [
+        5,
+        11
+      ]
+    },
+    {
+      "file": "files/md/manage_skill.md",
+      "anchor": 12,
+      "span": [
+        12,
+        18
+      ]
+    },
+    {
+      "file": "files/md/manage_skill.md",
+      "anchor": 19,
+      "span": [
+        19,
+        27
+      ]
+    },
+    {
+      "file": "files/md/manage_skill.md",
+      "anchor": 28,
+      "span": [
+        28,
+        35
+      ]
+    },
+    {
+      "file": "files/md/manage_skill.md",
+      "anchor": 36,
+      "span": [
+        36,
+        45
+      ]
+    },
+    {
+      "file": "files/md/manage_skill.md",
+      "anchor": 46,
+      "span": [
+        46,
+        52
+      ]
+    },
+    {
+      "file": "files/md/manage_skill.md",
+      "anchor": 53,
+      "span": [
+        53,
+        59
+      ]
+    },
+    {
+      "file": "files/md/manage_skill.md",
+      "anchor": 60,
+      "span": [
+        60,
+        68
+      ]
+    },
+    {
+      "file": "files/md/manage_skill.md",
+      "anchor": 69,
+      "span": [
+        69,
+        79
+      ]
+    },
+    {
+      "file": "files/md/manage_skill.md",
+      "anchor": 80,
+      "span": [
+        80,
+        84
+      ]
+    },
+    {
+      "file": "files/md/find.md",
+      "anchor": 1,
+      "span": [
+        1,
+        91
+      ]
+    },
+    {
+      "file": "files/md/find.md",
+      "anchor": 5,
+      "span": [
+        5,
+        20
+      ]
+    },
+    {
+      "file": "files/md/find.md",
+      "anchor": 21,
+      "span": [
+        21,
+        24
+      ]
+    },
+    {
+      "file": "files/md/find.md",
+      "anchor": 25,
+      "span": [
+        25,
+        40
+      ]
+    },
+    {
+      "file": "files/md/find.md",
+      "anchor": 41,
+      "span": [
+        41,
+        55
+      ]
+    },
+    {
+      "file": "files/md/find.md",
+      "anchor": 56,
+      "span": [
+        56,
+        66
+      ]
+    },
+    {
+      "file": "files/md/find.md",
+      "anchor": 67,
+      "span": [
+        67,
+        72
+      ]
+    },
+    {
+      "file": "files/md/find.md",
+      "anchor": 73,
+      "span": [
+        73,
+        79
+      ]
+    },
+    {
+      "file": "files/md/find.md",
+      "anchor": 80,
+      "span": [
+        80,
+        85
+      ]
+    },
+    {
+      "file": "files/md/find.md",
+      "anchor": 86,
+      "span": [
+        86,
+        91
+      ]
+    },
+    {
+      "file": "files/md/learn.md",
+      "anchor": 1,
+      "span": [
+        1,
+        94
+      ]
+    },
+    {
+      "file": "files/md/learn.md",
+      "anchor": 5,
+      "span": [
+        5,
+        12
+      ]
+    },
+    {
+      "file": "files/md/learn.md",
+      "anchor": 13,
+      "span": [
+        13,
+        20
+      ]
+    },
+    {
+      "file": "files/md/learn.md",
+      "anchor": 21,
+      "span": [
+        21,
+        29
+      ]
+    },
+    {
+      "file": "files/md/learn.md",
+      "anchor": 30,
+      "span": [
+        30,
+        39
+      ]
+    },
+    {
+      "file": "files/md/learn.md",
+      "anchor": 40,
+      "span": [
+        40,
+        52
+      ]
+    },
+    {
+      "file": "files/md/learn.md",
+      "anchor": 53,
+      "span": [
+        53,
+        59
+      ]
+    },
+    {
+      "file": "files/md/learn.md",
+      "anchor": 60,
+      "span": [
+        60,
+        70
+      ]
+    },
+    {
+      "file": "files/md/learn.md",
+      "anchor": 71,
+      "span": [
+        71,
+        79
+      ]
+    },
+    {
+      "file": "files/md/learn.md",
+      "anchor": 80,
+      "span": [
+        80,
+        88
+      ]
+    },
+    {
+      "file": "files/md/learn.md",
+      "anchor": 89,
+      "span": [
+        89,
+        94
+      ]
+    },
+    {
+      "file": "files/md/rewind.md",
+      "anchor": 1,
+      "span": [
+        1,
+        113
+      ]
+    },
+    {
+      "file": "files/md/rewind.md",
+      "anchor": 5,
+      "span": [
+        5,
+        14
+      ]
+    },
+    {
+      "file": "files/md/rewind.md",
+      "anchor": 15,
+      "span": [
+        15,
+        22
+      ]
+    },
+    {
+      "file": "files/md/rewind.md",
+      "anchor": 23,
+      "span": [
+        23,
+        28
+      ]
+    },
+    {
+      "file": "files/md/rewind.md",
+      "anchor": 29,
+      "span": [
+        29,
+        41
+      ]
+    },
+    {
+      "file": "files/md/rewind.md",
+      "anchor": 42,
+      "span": [
+        42,
+        57
+      ]
+    },
+    {
+      "file": "files/md/rewind.md",
+      "anchor": 58,
+      "span": [
+        58,
+        64
+      ]
+    },
+    {
+      "file": "files/md/rewind.md",
+      "anchor": 65,
+      "span": [
+        65,
+        81
+      ]
+    },
+    {
+      "file": "files/md/rewind.md",
+      "anchor": 82,
+      "span": [
+        82,
+        90
+      ]
+    },
+    {
+      "file": "files/md/rewind.md",
+      "anchor": 91,
+      "span": [
+        91,
+        97
+      ]
+    },
+    {
+      "file": "files/md/rewind.md",
+      "anchor": 98,
+      "span": [
+        98,
+        113
+      ]
+    },
+    {
+      "file": "files/md/memory_edit.md",
+      "anchor": 1,
+      "span": [
+        1,
+        80
+      ]
+    },
+    {
+      "file": "files/md/memory_edit.md",
+      "anchor": 5,
+      "span": [
+        5,
+        10
+      ]
+    },
+    {
+      "file": "files/md/memory_edit.md",
+      "anchor": 11,
+      "span": [
+        11,
+        18
+      ]
+    },
+    {
+      "file": "files/md/memory_edit.md",
+      "anchor": 19,
+      "span": [
+        19,
+        28
+      ]
+    },
+    {
+      "file": "files/md/memory_edit.md",
+      "anchor": 29,
+      "span": [
+        29,
+        36
+      ]
+    },
+    {
+      "file": "files/md/memory_edit.md",
+      "anchor": 37,
+      "span": [
+        37,
+        46
+      ]
+    },
+    {
+      "file": "files/md/memory_edit.md",
+      "anchor": 47,
+      "span": [
+        47,
+        54
+      ]
+    },
+    {
+      "file": "files/md/memory_edit.md",
+      "anchor": 55,
+      "span": [
+        55,
+        60
+      ]
+    },
+    {
+      "file": "files/md/memory_edit.md",
+      "anchor": 61,
+      "span": [
+        61,
+        68
+      ]
+    },
+    {
+      "file": "files/md/memory_edit.md",
+      "anchor": 69,
+      "span": [
+        69,
+        75
+      ]
+    },
+    {
+      "file": "files/md/memory_edit.md",
+      "anchor": 76,
+      "span": [
+        76,
+        80
+      ]
+    },
+    {
+      "file": "files/md/reflect.md",
+      "anchor": 1,
+      "span": [
+        1,
+        116
+      ]
+    },
+    {
+      "file": "files/md/reflect.md",
+      "anchor": 5,
+      "span": [
+        5,
+        16
+      ]
+    },
+    {
+      "file": "files/md/reflect.md",
+      "anchor": 17,
+      "span": [
+        17,
+        24
+      ]
+    },
+    {
+      "file": "files/md/reflect.md",
+      "anchor": 25,
+      "span": [
+        25,
+        31
+      ]
+    },
+    {
+      "file": "files/md/reflect.md",
+      "anchor": 32,
+      "span": [
+        32,
+        49
+      ]
+    },
+    {
+      "file": "files/md/reflect.md",
+      "anchor": 50,
+      "span": [
+        50,
+        67
+      ]
+    },
+    {
+      "file": "files/md/reflect.md",
+      "anchor": 68,
+      "span": [
+        68,
+        82
+      ]
+    },
+    {
+      "file": "files/md/reflect.md",
+      "anchor": 83,
+      "span": [
+        83,
+        92
+      ]
+    },
+    {
+      "file": "files/md/reflect.md",
+      "anchor": 93,
+      "span": [
+        93,
+        101
+      ]
+    },
+    {
+      "file": "files/md/reflect.md",
+      "anchor": 102,
+      "span": [
+        102,
+        110
+      ]
+    },
+    {
+      "file": "files/md/reflect.md",
+      "anchor": 111,
+      "span": [
+        111,
+        116
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 1,
+      "span": [
+        1,
+        146
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 7,
+      "span": [
+        7,
+        16
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 17,
+      "span": [
+        17,
+        30
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 31,
+      "span": [
+        31,
+        51
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 52,
+      "span": [
+        52,
+        74
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 54,
+      "span": [
+        54,
+        62
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 62,
+      "refused": "line 1: `CUT 62*` resolved a single-line block — line 62 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 62`. The nearest enclosing multi-line block begins at line 54 and ends at line 62; use `CUT 54*` to target it."
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 75,
+      "span": [
+        75,
+        88
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 89,
+      "span": [
+        89,
+        110
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 94,
+      "span": [
+        94,
+        100
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 100,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 111,
+      "span": [
+        111,
+        132
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 133,
+      "span": [
+        133,
+        146
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 137,
+      "span": [
+        137,
+        143
+      ]
+    },
+    {
+      "file": "files/md/omptype-guide.md",
+      "anchor": 143,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/md/constructed_n2_trailing_blanks_and_eof.md",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n2_trailing_blanks_and_eof",
+      "span": [
+        1,
+        7
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_trailing_blanks_and_eof.md",
+      "anchor": 4,
+      "constructed": true,
+      "name": "n2_trailing_blanks_and_eof",
+      "span": [
+        4,
+        7
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_trailing_blanks_and_eof.md",
+      "anchor": 8,
+      "constructed": true,
+      "name": "n2_trailing_blanks_and_eof",
+      "span": [
+        8,
+        11
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_setext_inside_section.md",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n2_setext_inside_section",
+      "span": [
+        1,
+        7
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_setext_inside_section.md",
+      "anchor": 4,
+      "constructed": true,
+      "name": "n2_setext_inside_section",
+      "span": [
+        4,
+        5
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_setext_inside_section.md",
+      "anchor": 8,
+      "constructed": true,
+      "name": "n2_setext_inside_section",
+      "span": [
+        8,
+        9
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_html_and_fences.md",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n2_html_and_fences",
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_html_and_fences.md",
+      "anchor": 3,
+      "constructed": true,
+      "name": "n2_html_and_fences",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/md/constructed_n2_html_and_fences.md",
+      "anchor": 7,
+      "constructed": true,
+      "name": "n2_html_and_fences",
+      "span": [
+        7,
+        11
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_html_and_fences.md",
+      "anchor": 12,
+      "constructed": true,
+      "name": "n2_html_and_fences",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/md/constructed_n2_indented_heading_under_list.md",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n2_indented_heading_under_list",
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_indented_heading_under_list.md",
+      "anchor": 3,
+      "constructed": true,
+      "name": "n2_indented_heading_under_list",
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_indented_heading_under_list.md",
+      "anchor": 6,
+      "constructed": true,
+      "name": "n2_indented_heading_under_list",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/md/constructed_n2_front_matter.md",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n2_front_matter",
+      "span": [
+        1,
+        3
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_front_matter.md",
+      "anchor": 4,
+      "constructed": true,
+      "name": "n2_front_matter",
+      "span": [
+        4,
+        6
+      ]
+    },
+    {
+      "file": "files/md/constructed_n2_front_matter.md",
+      "anchor": 7,
+      "constructed": true,
+      "name": "n2_front_matter",
+      "span": [
+        7,
+        8
+      ]
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 62*` resolved a single-line block — line 62 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 62`. The nearest enclosing multi-line block begins at line 54 and ends at line 62; use `CUT 54*` to target it."
+  }
+}

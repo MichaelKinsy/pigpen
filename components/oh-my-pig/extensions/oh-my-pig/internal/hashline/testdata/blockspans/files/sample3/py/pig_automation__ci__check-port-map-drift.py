@@ -1,0 +1,347 @@
+#!/usr/bin/env python3
+"""Fail when docs/parity/PORT_MAP.md does not account for current upstream source files.
+
+docs/parity/PORT_MAP.md is the denominator for parity coverage. If upstream adds a source
+file and the map omits it, coverage can overstate faithfulness. This check makes
+that impossible: every non-test upstream source file in the packages pig tracks
+must be represented, and every row, whatever its status, must point at a file
+that still exists in .upstream/current. A removed file has no behavior to port,
+defer, or rule out, so an n/a or ⏸ row for it only inflates those counts; the
+removal is recorded in test/parity/upstream-sync/v<version>.toml instead.
+
+Explicit production comments claiming to port/mirror an upstream source also
+require a live mapping (partial is acceptable). This catches stale negative
+classifications without pretending code presence proves behavioral completeness.
+Explicitly mapped non-test sources outside the automatic src roots, such as model-generation scripts, are checked for physical existence rather than mistaken for removed source. Automatic root completeness remains unchanged.
+
+Pi's directories under apps/ are outside the packages and have no rows. The check reads their path names in the mirror and fails on a
+directory that APPS does not name and on a path of a documents-only app that is outside its documents directory or is not a document.
+--apps runs that part alone; --docs-only-listing runs it on a path listing taken from a Pi clone.
+
+--reconcile prepares an upstream leap: it appends a ⬜ row for each new file to
+its package table and deletes each row whose file disappeared. It never marks
+anything ported; review the result.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import pathlib
+import re
+import sys
+from dataclasses import dataclass
+
+PACKAGES_JSON = pathlib.Path(__file__).resolve().parents[2] / "test" / "parity" / "upstreampackages" / "packages.json"
+
+
+def load_tracked_roots(packages_json: pathlib.Path = PACKAGES_JSON) -> tuple[str, ...]:
+    """The source root of every package in the one shared list (test/parity/upstreampackages/packages.json)."""
+    packages = json.loads(packages_json.read_text(encoding="utf-8"))["packages"]
+    return tuple(sorted(f"{package['root']}/src" for package in packages))
+
+
+def package_list_problems(upstream_root: pathlib.Path, roots: tuple[str, ...]) -> list[str]:
+    """Report a package directory in the mirror that the shared list lacks, and a listed package the mirror lacks."""
+    mirror = upstream_root / "packages"
+    if not mirror.is_dir():
+        return []
+    present = {entry.name for entry in mirror.iterdir() if entry.is_dir()}
+    listed = {root.split("/")[1] for root in roots}
+    return [f"package {name} is in the upstream mirror but not in test/parity/upstreampackages/packages.json" for name in sorted(present - listed)] + [
+        f"package {name} is in test/parity/upstreampackages/packages.json but not in the upstream mirror" for name in sorted(listed - present)
+    ]
+
+
+@dataclass(frozen=True)
+class App:
+    """One of Pi's directories under apps/. They are outside the packages and the map has no rows for them; the "Package scope" section of
+    docs/parity/PORT_MAP.md records each one. An app with docs is recorded as design documents only: every path it holds is under docs
+    and has one of the document extensions in kinds. An app without docs is ported on a line of its own."""
+
+    root: str
+    docs: str = ""
+    kinds: frozenset[str] = frozenset()
+
+
+APPS = (App("apps/p2"), App("apps/p3", "apps/p3/docs", frozenset({".html", ".md"})))
+APPS_RECORD = 'docs/parity/PORT_MAP.md "Package scope" and APPS in automation/ci/check-port-map-drift.py'
+
+
+def shown(paths: list[str]) -> str:
+    return ", ".join(paths[:10]) + (f" and {len(paths) - 10} more" if len(paths) > 10 else "")
+
+
+def apps_problems(paths: list[str], apps: tuple[App, ...] = APPS) -> list[str]:
+    """Report, from upstream path names alone, a directory under apps/ that APPS does not name and every path of a documents-only app
+    that is outside its documents directory or is not a document."""
+    known = {app.root for app in apps}
+    roots = {"/".join(path.split("/")[:2]) for path in paths if path.startswith("apps/") and path.count("/") >= 2}
+    problems = [f"Pi added {root}: record its disposition in {APPS_RECORD}" for root in sorted(roots) if root not in known]
+    for app in apps:
+        if not app.docs:
+            continue
+        inside = sorted(path for path in paths if path.startswith(app.root + "/"))
+        code = [path for path in inside if not path.startswith(app.docs + "/")]
+        other = [path for path in inside if path.startswith(app.docs + "/") and pathlib.PurePosixPath(path).suffix not in app.kinds]
+        if code:
+            problems.append(
+                f"{app.root} holds a path outside {app.docs}/ ({shown(code)}): Pi started its code. "
+                f"Start a port line for {app.root} (a line of its own, as apps/p2 has) and rewrite its record in {APPS_RECORD}"
+            )
+        if other:
+            problems.append(
+                f"{app.docs}/ holds a file that is not a document ({shown(other)}; documents are {', '.join(sorted(app.kinds))}): read it. "
+                f"Code needs a port line for {app.root} and a rewritten record in {APPS_RECORD}; a document asset gets its extension added to APPS"
+            )
+    return problems
+
+
+def mirror_apps_problems(upstream_root: pathlib.Path, port_map: pathlib.Path) -> tuple[list[str], str]:
+    """Check the mirror's apps/ directories against APPS and the PORT_MAP record, reading path names only. The second value says what
+    was checked: a mirror without apps/ shows nothing, and that is said instead of passed over."""
+    base = upstream_root / "apps"
+    if not base.is_dir():
+        return [], f"{base} is absent: Pi's apps/ directories were not checked"
+    paths: list[str] = []
+    for directory, dirnames, filenames in os.walk(base):
+        links = [name for name in dirnames if os.path.islink(os.path.join(directory, name))]
+        paths.extend(pathlib.Path(directory, name).relative_to(upstream_root).as_posix() for name in filenames + links)
+    problems = apps_problems(paths)
+    record = port_map.read_text(encoding="utf-8")
+    for app in APPS:
+        if not any(path.startswith(app.root + "/") for path in paths):
+            problems.append(f"{app.root} is recorded but the upstream mirror has no file under it: Pi moved or removed it; rewrite its record in {APPS_RECORD}")
+        if f"`{app.root}`" not in record:
+            problems.append(f'docs/parity/PORT_MAP.md "Package scope" lost its record of {app.root}, which APPS in automation/ci/check-port-map-drift.py names')
+    return problems, f"Pi's apps/ directories are as recorded ({', '.join(app.root for app in APPS)}; {len(paths)} path names read)"
+
+
+def listing_apps_problems(text: str) -> tuple[list[str], str]:
+    """Check a listing of upstream path names, one per line, taken from a Pi clone at a commit the mirror is not at."""
+    paths = [line.strip() for line in text.splitlines() if line.strip()]
+    problems = apps_problems(paths)
+    documents = [path for path in paths if any(app.docs and path.startswith(app.docs + "/") for app in APPS)]
+    if not documents:
+        problems.append("the listing names no path of a documents-only app (" + ", ".join(app.docs + "/" for app in APPS if app.docs) + "): nothing was checked")
+    return problems, f"the listing is as recorded ({len(paths)} path names read, {len(documents)} documents)"
+
+
+def report_apps(problems: list[str], note: str) -> int:
+    for problem in problems:
+        print(f"port-map-drift: {problem}", file=sys.stderr)
+    if problems:
+        return 1
+    print(f"port-map-drift: {note}")
+    return 0
+
+
+TRACKED_ROOTS = load_tracked_roots()
+
+PORTABLE_STATUSES = {"✅", "🟡", "⬜", "🔴"}
+NON_LIVE_STATUSES = {"n/a", "⏸"}
+# The Go cell is empty or one or more comma-separated code spans (portmap-check -fix-cells writes both).
+ROW_RE = re.compile(r"^\|\s+`(?P<up>packages/[^`]+)`\s+\|\s+(?:`(?P<go>[^`]+(?:`,\s*`[^`]+)*)`)?[^|]*\|\s*(?P<status>[^|]+?)\s*\|")
+
+
+@dataclass(frozen=True)
+class Row:
+    upstream: str
+    go: str
+    status: str
+    line: int
+
+
+def parse_rows(port_map: pathlib.Path) -> dict[str, Row]:
+    rows: dict[str, Row] = {}
+    for line_no, line in enumerate(port_map.read_text(encoding="utf-8").splitlines(), 1):
+        match = ROW_RE.match(line)
+        if not match:
+            continue
+        upstream = match.group("up")
+        status = match.group("status").strip()
+        if upstream in rows:
+            raise SystemExit(f"{port_map}:{line_no}: duplicate PORT_MAP row for {upstream} (first at line {rows[upstream].line})")
+        rows[upstream] = Row(upstream, match.group("go") or "", status, line_no)
+    return rows
+
+
+def should_ignore_source(rel: str) -> bool:
+    name = pathlib.PurePosixPath(rel).name
+    parts = pathlib.PurePosixPath(rel).parts
+    if name.endswith((".test.ts", ".spec.ts", ".test.tsx", ".spec.tsx")):
+        return True
+    if any(part in {"test", "tests", "__tests__"} for part in parts):
+        return True
+    # Generated source files are still tracked in PORT_MAP when they affect
+    # runtime behavior (models.generated.ts, image-models.generated.ts). Do not
+    # ignore them here; require explicit ✅/n/a/⏸ classification.
+    return False
+
+
+def discover_upstream(upstream_root: pathlib.Path) -> set[str]:
+    out: set[str] = set()
+    for root in TRACKED_ROOTS:
+        base = upstream_root / root
+        if not base.exists():
+            continue
+        for path in base.rglob("*"):
+            if not path.is_file():
+                continue
+            if path.suffix not in {".ts", ".tsx"} and not path.name.endswith(".d.ts"):
+                continue
+            rel = path.relative_to(upstream_root).as_posix()
+            if should_ignore_source(rel):
+                continue
+            out.add(rel)
+    return out
+
+
+def status_token(status: str) -> str:
+    # Status cells sometimes include a note after the emoji/text. The first
+    # token is the authoritative status marker.
+    return status.split()[0] if status.split() else status
+
+
+def pinned_version(port_map: pathlib.Path) -> str:
+    if os.environ.get("PIG_UPSTREAM_VERSION"):
+        return os.environ["PIG_UPSTREAM_VERSION"]
+    source = (port_map.parents[2] / "internal" / "coding" / "pigversion" / "pigversion.go").read_text(encoding="utf-8")
+    match = re.search(r'^const UpstreamVersion = "([^"]+)"', source, re.MULTILINE)
+    if not match:
+        raise SystemExit("port-map-drift: cannot read UpstreamVersion from internal/coding/pigversion/pigversion.go")
+    return match.group(1)
+
+
+def reconcile(port_map: pathlib.Path, missing: list[str], stale: list["Row"]) -> None:
+    """Append ⬜ rows for missing files and delete rows for removed files."""
+    version = pinned_version(port_map)
+    lines = port_map.read_text(encoding="utf-8").splitlines()
+    for row in sorted(stale, key=lambda item: -item.line):
+        del lines[row.line - 1]
+    by_root: dict[str, list[str]] = {}
+    for rel in missing:
+        root = next(root for root in TRACKED_ROOTS if rel.startswith(root + "/"))
+        by_root.setdefault(root, []).append(rel)
+    for root in sorted(by_root, key=lambda item: -TRACKED_ROOTS.index(item)):
+        heading = next((i for i, line in enumerate(lines) if line.strip() == f"## `{root}/`"), None)
+        if heading is None:
+            raise SystemExit(f"port-map-drift: PORT_MAP has no section for {root}/")
+        end = next((i for i in range(heading + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+        last_row = max(i for i in range(heading, end) if lines[i].startswith("| `packages/"))
+        new_rows = [f"| `{rel}` | `(new upstream by {version}; not mapped)` | ⬜ |" for rel in by_root[root]]
+        lines[last_row + 1 : last_row + 1] = new_rows
+    port_map.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def implementation_conflicts(port_map: pathlib.Path, rows: dict[str, Row]) -> list[str]:
+    """Reject explicit production port claims left unstarted/designed-out.
+
+    This is a contradiction check, not a completeness detector: source presence
+    never proves a complete port and never auto-promotes a row. Ordinary source
+    references and test fixtures are not implementation claims.
+    """
+    claim = re.compile(r"\b(?:ports?|mirrors?)\s+`?(packages/[\w./-]+\.tsx?)\b", re.IGNORECASE)
+    conflicts = []
+    for directory in ("agent", "ai", "coding", "cmd", "internal", "tui"):
+        for source in sorted((port_map.parents[2] / directory).rglob("*.go")):
+            if source.is_symlink() or source.name.endswith("_test.go") or "testdata" in source.parts:
+                continue
+            for line_no, line in enumerate(source.read_text(encoding="utf-8").splitlines(), 1):
+                if not line.lstrip().startswith("//"):
+                    continue
+                for upstream in claim.findall(line):
+                    row = rows.get(upstream)
+                    if row is not None and status_token(row.status) in {"⬜", "n/a", "⏸"}:
+                        relative = source.relative_to(port_map.parents[2])
+                        conflicts.append(f"{relative}:{line_no}: implementation claim contradicts {upstream} [{row.status}]; review mapping/status (do not auto-promote)")
+    return conflicts
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--upstream", default=".upstream/current", help="current upstream tree")
+    parser.add_argument("--port-map", default="docs/parity/PORT_MAP.md", help="docs/parity/PORT_MAP.md path")
+    parser.add_argument("--reconcile", action="store_true", help="add ⬜ rows for new files and retire rows for removed files, then recheck")
+    parser.add_argument("--packages", default=str(PACKAGES_JSON), help="shared upstream package list")
+    parser.add_argument("--apps", action="store_true", help="check only Pi's apps/ directories in the mirror (make upstream-mirror)")
+    parser.add_argument("--docs-only-listing", metavar="FILE", help="check only a listing of upstream path names, one per line, - for standard input (`git ls-tree -r --name-only <commit> apps/p3` in a Pi clone)")
+    args = parser.parse_args()
+    if args.docs_only_listing:
+        text = sys.stdin.read() if args.docs_only_listing == "-" else pathlib.Path(args.docs_only_listing).read_text(encoding="utf-8")
+        return report_apps(*listing_apps_problems(text))
+    global TRACKED_ROOTS
+    TRACKED_ROOTS = load_tracked_roots(pathlib.Path(args.packages))
+
+    upstream_root = pathlib.Path(args.upstream)
+    port_map = pathlib.Path(args.port_map)
+    if not upstream_root.exists():
+        print(f"port-map-drift: upstream tree not found: {upstream_root}", file=sys.stderr)
+        return 2
+    if not port_map.exists():
+        print(f"port-map-drift: PORT_MAP not found: {port_map}", file=sys.stderr)
+        return 2
+
+    apps, apps_note = mirror_apps_problems(upstream_root, port_map)
+    if args.apps:
+        return report_apps(apps, apps_note)
+    list_problems = package_list_problems(upstream_root, TRACKED_ROOTS)
+    if report_apps(list_problems + apps, apps_note):
+        return 1
+    upstream_files = discover_upstream(upstream_root)
+    rows = parse_rows(port_map)
+    for upstream in rows:
+        relative = pathlib.PurePosixPath(upstream)
+        source = upstream_root / upstream
+        if (
+            ".." not in relative.parts
+            and source.suffix in {".ts", ".tsx"}
+            and not should_ignore_source(upstream)
+            and source.is_file()
+            and source.resolve().is_relative_to(upstream_root.resolve())
+        ):
+            upstream_files.add(upstream)
+
+    missing = sorted(upstream_files - set(rows))
+    stale: list[Row] = []
+    unknown_status: list[Row] = []
+    for row in rows.values():
+        token = status_token(row.status)
+        if token not in PORTABLE_STATUSES | NON_LIVE_STATUSES:
+            unknown_status.append(row)
+            continue
+        if not (upstream_root / row.upstream).is_file():
+            stale.append(row)
+
+    if args.reconcile and (missing or stale):
+        reconcile(port_map, missing, stale)
+        print(f"port-map-drift: reconciled {len(missing)} new and {len(stale)} removed upstream files; review docs/parity/PORT_MAP.md")
+        rows = parse_rows(port_map)
+        missing = sorted(upstream_files - set(rows))
+        stale = [row for row in rows.values() if not (upstream_root / row.upstream).is_file()]
+
+    conflicts = implementation_conflicts(port_map, rows)
+    if not missing and not stale and not unknown_status and not conflicts:
+        print(f"port-map-drift: clean ({len(upstream_files | set(rows))} upstream source files accounted for)")
+        return 0
+
+    for conflict in conflicts:
+        print(f"port-map-drift: {conflict}", file=sys.stderr)
+    if missing:
+        print("port-map-drift: upstream files missing from docs/parity/PORT_MAP.md:", file=sys.stderr)
+        for rel in missing:
+            print(f"  + {rel}", file=sys.stderr)
+    if stale:
+        print("port-map-drift: PORT_MAP rows whose upstream file no longer exists:", file=sys.stderr)
+        for row in stale:
+            print(f"  - line {row.line}: {row.upstream} [{row.status}]", file=sys.stderr)
+        print("    Delete them; test/parity/upstream-sync/v<version>.toml records removed files.", file=sys.stderr)
+    if unknown_status:
+        print("port-map-drift: PORT_MAP rows with unknown status token:", file=sys.stderr)
+        for row in unknown_status:
+            print(f"  ? line {row.line}: {row.upstream} [{row.status}]", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,3063 @@
+{
+  "lang": "yaml",
+  "sample": "sample1",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample1",
+  "total": 493,
+  "omp_resolved": 169,
+  "omp_refused": 324,
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`.",
+    "unresolved": "line 1: `CUT 29*` could not resolve a syntactic block beginning on line 29 (blank/closer line, or parse error). Use `CUT 29.=M` with explicit lines. The nearest enclosing multi-line block begins at line 25 and ends at line 46; use `CUT 25*` to target it."
+  },
+  "cases": [
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 1,
+      "refused": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`."
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 10,
+      "span": [
+        10,
+        17
+      ]
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 11,
+      "span": [
+        11,
+        16
+      ]
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 13,
+      "span": [
+        13,
+        16
+      ]
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 19,
+      "span": [
+        19,
+        23
+      ]
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 24,
+      "span": [
+        24,
+        26
+      ]
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 28,
+      "span": [
+        28,
+        34
+      ]
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 29,
+      "span": [
+        29,
+        34
+      ]
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 32,
+      "span": [
+        32,
+        34
+      ]
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-cache-warm.yml",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 3,
+      "span": [
+        3,
+        31
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 4,
+      "span": [
+        4,
+        23
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 6,
+      "span": [
+        6,
+        23
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 24,
+      "span": [
+        24,
+        31
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 26,
+      "span": [
+        26,
+        31
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 33,
+      "span": [
+        33,
+        35
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 37,
+      "span": [
+        37,
+        38
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 40,
+      "span": [
+        40,
+        53
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 41,
+      "span": [
+        41,
+        53
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 44,
+      "span": [
+        44,
+        53
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 46,
+      "span": [
+        46,
+        49
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 47,
+      "span": [
+        47,
+        49
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 48,
+      "span": [
+        48,
+        49
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 50,
+      "span": [
+        50,
+        51
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 52,
+      "span": [
+        52,
+        53
+      ]
+    },
+    {
+      "file": "files/yaml/nix.yml",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 1,
+      "span": [
+        1,
+        156
+      ]
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 12,
+      "span": [
+        12,
+        122
+      ]
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 35,
+      "span": [
+        35,
+        88
+      ]
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 67,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 70,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 77,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 78,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 82,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 85,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 87,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 90,
+      "span": [
+        90,
+        94
+      ]
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 91,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 96,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 98,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 99,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 101,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 102,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 109,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 110,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 112,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 124,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 125,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 127,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 128,
+      "span": [
+        128,
+        146
+      ]
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 133,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 136,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 137,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 140,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 143,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 145,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 146,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 151,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 153,
+      "span": [
+        153,
+        156
+      ]
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 156,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 161,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 164,
+      "span": [
+        164,
+        165
+      ]
+    },
+    {
+      "file": "files/yaml/docker-compose.yml",
+      "anchor": 167,
+      "span": [
+        167,
+        169
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 4,
+      "span": [
+        4,
+        109
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 7,
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 13,
+      "span": [
+        13,
+        19
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 15,
+      "span": [
+        15,
+        17
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 18,
+      "span": [
+        18,
+        19
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 21,
+      "span": [
+        21,
+        27
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 23,
+      "span": [
+        23,
+        25
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 26,
+      "span": [
+        26,
+        27
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 29,
+      "span": [
+        29,
+        34
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 36,
+      "span": [
+        36,
+        46
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 38,
+      "span": [
+        38,
+        44
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 40,
+      "span": [
+        40,
+        44
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 45,
+      "span": [
+        45,
+        46
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 54,
+      "span": [
+        54,
+        55
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 57,
+      "span": [
+        57,
+        64
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 63,
+      "span": [
+        63,
+        64
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 66,
+      "span": [
+        66,
+        86
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 68,
+      "span": [
+        68,
+        86
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 71,
+      "span": [
+        71,
+        86
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 76,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 78,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 79,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 81,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 84,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 86,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 89,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 90,
+      "span": [
+        90,
+        103
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 92,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 94,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 95,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 99,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 100,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 102,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 105,
+      "span": [
+        105,
+        109
+      ]
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 106,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bug_report.yml",
+      "anchor": 108,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 4,
+      "span": [
+        4,
+        48
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 5,
+      "span": [
+        5,
+        11
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 7,
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 10,
+      "span": [
+        10,
+        11
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 13,
+      "span": [
+        13,
+        19
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 15,
+      "span": [
+        15,
+        17
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 18,
+      "span": [
+        18,
+        19
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 21,
+      "span": [
+        21,
+        36
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 23,
+      "span": [
+        23,
+        36
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 26,
+      "span": [
+        26,
+        36
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 38,
+      "span": [
+        38,
+        42
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 40,
+      "span": [
+        40,
+        42
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 44,
+      "span": [
+        44,
+        48
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 46,
+      "span": [
+        46,
+        48
+      ]
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/feature_request.yml",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 2,
+      "span": [
+        2,
+        6
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 8,
+      "span": [
+        8,
+        15
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 9,
+      "span": [
+        9,
+        11
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 12,
+      "span": [
+        12,
+        15
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 17,
+      "span": [
+        17,
+        72
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 19,
+      "span": [
+        19,
+        72
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 20,
+      "span": [
+        20,
+        46
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 23,
+      "span": [
+        23,
+        24
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 25,
+      "span": [
+        25,
+        46
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 29,
+      "refused": "line 1: `CUT 29*` could not resolve a syntactic block beginning on line 29 (blank/closer line, or parse error). Use `CUT 29.=M` with explicit lines. The nearest enclosing multi-line block begins at line 25 and ends at line 46; use `CUT 25*` to target it."
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 42,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 48,
+      "span": [
+        48,
+        53
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 51,
+      "span": [
+        51,
+        53
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 55,
+      "span": [
+        55,
+        60
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 58,
+      "span": [
+        58,
+        60
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 62,
+      "span": [
+        62,
+        72
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 64,
+      "span": [
+        64,
+        66
+      ]
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 66,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/native-artifacts.yml",
+      "anchor": 67,
+      "span": [
+        67,
+        72
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 2,
+      "span": [
+        2,
+        8
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 10,
+      "span": [
+        10,
+        122
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 12,
+      "span": [
+        12,
+        122
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 13,
+      "span": [
+        13,
+        65
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 16,
+      "span": [
+        16,
+        65
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 25,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 49,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 52,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 59,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 61,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 64,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 66,
+      "span": [
+        66,
+        82
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 67,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 68,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 69,
+      "span": [
+        69,
+        74
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 73,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 83,
+      "span": [
+        83,
+        94
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 84,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 85,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 86,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 87,
+      "span": [
+        87,
+        94
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 89,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 93,
+      "span": [
+        93,
+        94
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 96,
+      "span": [
+        96,
+        116
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 98,
+      "span": [
+        98,
+        113
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 111,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 112,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 117,
+      "span": [
+        117,
+        122
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 118,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 119,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 120,
+      "span": [
+        120,
+        122
+      ]
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 121,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/bun-install.yml",
+      "anchor": 122,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 7,
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 10,
+      "span": [
+        10,
+        11
+      ]
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 12,
+      "span": [
+        12,
+        14
+      ]
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 15,
+      "span": [
+        15,
+        17
+      ]
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 18,
+      "span": [
+        18,
+        19
+      ]
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 20,
+      "span": [
+        20,
+        22
+      ]
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 21,
+      "span": [
+        21,
+        22
+      ]
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 26,
+      "span": [
+        26,
+        29
+      ]
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 27,
+      "span": [
+        27,
+        29
+      ]
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 30,
+      "span": [
+        30,
+        32
+      ]
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/piglet.yaml",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 81,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 120,
+      "span": [
+        120,
+        157
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 164,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 219,
+      "span": [
+        219,
+        240
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 233,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 262,
+      "span": [
+        262,
+        265
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 301,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 325,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 348,
+      "span": [
+        348,
+        355
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 386,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 437,
+      "span": [
+        437,
+        447
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 450,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 463,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 489,
+      "span": [
+        489,
+        549
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 522,
+      "span": [
+        522,
+        533
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 548,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 572,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 586,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 600,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 617,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 630,
+      "span": [
+        630,
+        633
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 644,
+      "span": [
+        644,
+        646
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 659,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 675,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 690,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 707,
+      "span": [
+        707,
+        718
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 744,
+      "span": [
+        744,
+        799
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 762,
+      "span": [
+        762,
+        767
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 768,
+      "span": [
+        768,
+        773
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 774,
+      "span": [
+        774,
+        779
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 780,
+      "span": [
+        780,
+        785
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 781,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 786,
+      "span": [
+        786,
+        791
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 794,
+      "span": [
+        794,
+        799
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 801,
+      "span": [
+        801,
+        802
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 816,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 833,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 848,
+      "span": [
+        848,
+        854
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 874,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 889,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 902,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 942,
+      "span": [
+        942,
+        962
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 956,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 981,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 998,
+      "span": [
+        998,
+        1000
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 1018,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 1063,
+      "span": [
+        1063,
+        1113
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 1082,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 1105,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 1131,
+      "span": [
+        1131,
+        1132
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 1146,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 1174,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 1189,
+      "span": [
+        1189,
+        1190
+      ]
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 1211,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/ci.yml",
+      "anchor": 1232,
+      "span": [
+        1232,
+        1233
+      ]
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 8,
+      "span": [
+        8,
+        11
+      ]
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 12,
+      "span": [
+        12,
+        22
+      ]
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 17,
+      "span": [
+        17,
+        18
+      ]
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 19,
+      "span": [
+        19,
+        22
+      ]
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 30,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 31,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 33,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 35,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 37,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 40,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 45,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 46,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 48,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 49,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 51,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 52,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 54,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 55,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 57,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 58,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 59,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 61,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 62,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 64,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 66,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 67,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 69,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 70,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 73,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 74,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 77,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 78,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 80,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 81,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 82,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 84,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 85,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 87,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 88,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 89,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 92,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 96,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 97,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 99,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 100,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 102,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 104,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 105,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 109,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/job.yaml",
+      "anchor": 110,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/constructed_n3_trailing_comments.yaml",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n3_trailing_comments",
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_n3_trailing_comments.yaml",
+      "anchor": 7,
+      "constructed": true,
+      "name": "n3_trailing_comments",
+      "span": [
+        7,
+        8
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_n3_list_trailing_comment.yaml",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n3_list_trailing_comment",
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_n3_list_trailing_comment.yaml",
+      "anchor": 2,
+      "constructed": true,
+      "name": "n3_list_trailing_comment",
+      "span": [
+        2,
+        4
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_n3_list_trailing_comment.yaml",
+      "anchor": 5,
+      "constructed": true,
+      "name": "n3_list_trailing_comment",
+      "span": [
+        5,
+        6
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_n3_inside_block_scalar.yaml",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n3_inside_block_scalar",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_n3_inside_block_scalar.yaml",
+      "anchor": 2,
+      "constructed": true,
+      "name": "n3_inside_block_scalar",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/constructed_n3_inside_block_scalar.yaml",
+      "anchor": 3,
+      "constructed": true,
+      "name": "n3_inside_block_scalar",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/yaml/constructed_n3_inside_block_scalar.yaml",
+      "anchor": 5,
+      "constructed": true,
+      "name": "n3_inside_block_scalar",
+      "span": [
+        5,
+        6
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_n3_same_indent_seq_and_scalars.yaml",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n3_same_indent_seq_and_scalars",
+      "span": [
+        1,
+        3
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_n3_same_indent_seq_and_scalars.yaml",
+      "anchor": 2,
+      "constructed": true,
+      "name": "n3_same_indent_seq_and_scalars",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/constructed_n3_same_indent_seq_and_scalars.yaml",
+      "anchor": 4,
+      "constructed": true,
+      "name": "n3_same_indent_seq_and_scalars",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/yaml/constructed_n3_same_indent_seq_and_scalars.yaml",
+      "anchor": 5,
+      "constructed": true,
+      "name": "n3_same_indent_seq_and_scalars",
+      "span": [
+        5,
+        6
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_n3_same_indent_seq_and_scalars.yaml",
+      "anchor": 7,
+      "constructed": true,
+      "name": "n3_same_indent_seq_and_scalars",
+      "span": [
+        7,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_lint_eof_blank_lf.yml",
+      "anchor": 3,
+      "constructed": true,
+      "name": "y1_workflow_lint_eof_blank_lf",
+      "span": [
+        3,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_lint_eof_blank_lf.yml",
+      "anchor": 4,
+      "constructed": true,
+      "name": "y1_workflow_lint_eof_blank_lf",
+      "span": [
+        4,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_lint_eof_blank_lf.yml",
+      "anchor": 6,
+      "constructed": true,
+      "name": "y1_workflow_lint_eof_blank_lf",
+      "span": [
+        6,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_lint_eof_blank_lf.yml",
+      "anchor": 8,
+      "constructed": true,
+      "name": "y1_workflow_lint_eof_blank_lf",
+      "span": [
+        8,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_lint_eof_blank_crlf.yml",
+      "anchor": 3,
+      "constructed": true,
+      "name": "y1_workflow_lint_eof_blank_crlf",
+      "span": [
+        3,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_lint_eof_blank_crlf.yml",
+      "anchor": 4,
+      "constructed": true,
+      "name": "y1_workflow_lint_eof_blank_crlf",
+      "span": [
+        4,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_lint_eof_blank_crlf.yml",
+      "anchor": 6,
+      "constructed": true,
+      "name": "y1_workflow_lint_eof_blank_crlf",
+      "span": [
+        6,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_lint_eof_blank_crlf.yml",
+      "anchor": 8,
+      "constructed": true,
+      "name": "y1_workflow_lint_eof_blank_crlf",
+      "span": [
+        8,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_test_eof_blank_lf.yml",
+      "anchor": 3,
+      "constructed": true,
+      "name": "y1_workflow_test_eof_blank_lf",
+      "span": [
+        3,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_test_eof_blank_lf.yml",
+      "anchor": 4,
+      "constructed": true,
+      "name": "y1_workflow_test_eof_blank_lf",
+      "span": [
+        4,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_test_eof_blank_lf.yml",
+      "anchor": 6,
+      "constructed": true,
+      "name": "y1_workflow_test_eof_blank_lf",
+      "span": [
+        6,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_test_eof_blank_lf.yml",
+      "anchor": 8,
+      "constructed": true,
+      "name": "y1_workflow_test_eof_blank_lf",
+      "span": [
+        8,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_test_eof_blank_crlf.yml",
+      "anchor": 3,
+      "constructed": true,
+      "name": "y1_workflow_test_eof_blank_crlf",
+      "span": [
+        3,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_test_eof_blank_crlf.yml",
+      "anchor": 4,
+      "constructed": true,
+      "name": "y1_workflow_test_eof_blank_crlf",
+      "span": [
+        4,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_test_eof_blank_crlf.yml",
+      "anchor": 6,
+      "constructed": true,
+      "name": "y1_workflow_test_eof_blank_crlf",
+      "span": [
+        6,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_workflow_test_eof_blank_crlf.yml",
+      "anchor": 8,
+      "constructed": true,
+      "name": "y1_workflow_test_eof_blank_crlf",
+      "span": [
+        8,
+        10
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_service_rules_eof_blank_lf.yaml",
+      "anchor": 3,
+      "constructed": true,
+      "name": "y1_service_rules_eof_blank_lf",
+      "span": [
+        3,
+        9
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_service_rules_eof_blank_lf.yaml",
+      "anchor": 4,
+      "constructed": true,
+      "name": "y1_service_rules_eof_blank_lf",
+      "span": [
+        4,
+        9
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_service_rules_eof_blank_lf.yaml",
+      "anchor": 7,
+      "constructed": true,
+      "name": "y1_service_rules_eof_blank_lf",
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_service_rules_eof_blank_crlf.yaml",
+      "anchor": 3,
+      "constructed": true,
+      "name": "y1_service_rules_eof_blank_crlf",
+      "span": [
+        3,
+        9
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_service_rules_eof_blank_crlf.yaml",
+      "anchor": 4,
+      "constructed": true,
+      "name": "y1_service_rules_eof_blank_crlf",
+      "span": [
+        4,
+        9
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_service_rules_eof_blank_crlf.yaml",
+      "anchor": 7,
+      "constructed": true,
+      "name": "y1_service_rules_eof_blank_crlf",
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_doc_markers_refuse.yaml",
+      "anchor": 1,
+      "constructed": true,
+      "name": "y1_doc_markers_refuse",
+      "span": [
+        1,
+        2
+      ]
+    },
+    {
+      "file": "files/yaml/constructed_y1_doc_markers_refuse.yaml",
+      "anchor": 5,
+      "constructed": true,
+      "name": "y1_doc_markers_refuse",
+      "span": [
+        5,
+        6
+      ]
+    }
+  ]
+}

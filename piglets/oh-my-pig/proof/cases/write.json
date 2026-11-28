@@ -1,0 +1,119 @@
+[
+  {
+    "name": "write-create-and-overwrite",
+    "description": "Create a new file in a nested directory, verify with read, then overwrite it.",
+    "setup": "",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "nested/created.txt", "content": "first line\nsecond line\n" } },
+      { "tool": "read", "arguments": { "path": "nested/created.txt" } },
+      { "tool": "write", "arguments": { "path": "nested/created.txt", "content": "replaced\n" } },
+      { "tool": "read", "arguments": { "path": "nested/created.txt" } }
+    ]
+  },
+  {
+    "name": "write-archive-zip",
+    "description": "Write a new member, replace an existing member, and write a nested member into an existing ZIP archive, then read listing and members.",
+    "setup": "mkdir -p src && printf 'original\\n' > src/old.txt && touch -t 202001010000 src/old.txt src && zip -q -X bundle.zip src/old.txt && chmod 644 bundle.zip && zip -q -X secret.zip src/old.txt && chmod 600 secret.zip && rm -rf src",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "bundle.zip:added.txt", "content": "hello zip\n" } },
+      { "tool": "write", "arguments": { "path": "bundle.zip:src/old.txt", "content": "replaced zip\n" } },
+      { "tool": "write", "arguments": { "path": "bundle.zip:deep/nested/file.txt", "content": "nested zip\n" } },
+      { "tool": "read", "arguments": { "path": "bundle.zip" } },
+      { "tool": "read", "arguments": { "path": "bundle.zip:added.txt" } },
+      { "tool": "read", "arguments": { "path": "bundle.zip:src/old.txt" } },
+      { "tool": "read", "arguments": { "path": "bundle.zip:deep/nested/file.txt" } },
+      { "tool": "write", "arguments": { "path": "secret.zip:added.txt", "content": "secret\n" } },
+      { "tool": "bash", "arguments": { "command": "ls -l bundle.zip secret.zip | awk '{print substr($1,1,10), $NF}'" } }
+    ]
+  },
+  {
+    "name": "write-archive-tar-and-targz",
+    "description": "Write into existing TAR and TAR.GZ archives (new, replaced, and nested members) and read back listings and contents.",
+    "setup": "mkdir -p pkg && printf 'tar-init\\n' > pkg/a.txt && touch -t 202001010000 pkg/a.txt pkg && COPYFILE_DISABLE=1 tar -cf data.tar pkg/a.txt && COPYFILE_DISABLE=1 tar -czf data.tar.gz pkg/a.txt && rm -rf pkg",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "data.tar:pkg/b.txt", "content": "tar new\n" } },
+      { "tool": "write", "arguments": { "path": "data.tar:pkg/a.txt", "content": "tar replaced\n" } },
+      { "tool": "read", "arguments": { "path": "data.tar:pkg" } },
+      { "tool": "read", "arguments": { "path": "data.tar:pkg/a.txt" } },
+      { "tool": "read", "arguments": { "path": "data.tar:pkg/b.txt" } },
+      { "tool": "write", "arguments": { "path": "data.tar.gz:sub/deep/c.txt", "content": "targz nested\n" } },
+      { "tool": "read", "arguments": { "path": "data.tar.gz" } },
+      { "tool": "read", "arguments": { "path": "data.tar.gz:pkg/a.txt" } },
+      { "tool": "read", "arguments": { "path": "data.tar.gz:sub/deep/c.txt" } }
+    ]
+  },
+  {
+    "name": "write-archive-create-missing",
+    "description": "Write a member into a ZIP archive and a TAR.GZ archive that do not exist yet, then verify with read.",
+    "setup": "",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "newdir/fresh.zip:hello.txt", "content": "created zip\n" } },
+      { "tool": "read", "arguments": { "path": "newdir/fresh.zip" } },
+      { "tool": "read", "arguments": { "path": "newdir/fresh.zip:hello.txt" } },
+      { "tool": "write", "arguments": { "path": "fresh.tgz:dir/item.txt", "content": "created tgz\n" } },
+      { "tool": "read", "arguments": { "path": "fresh.tgz" } },
+      { "tool": "read", "arguments": { "path": "fresh.tgz:dir/item.txt" } },
+      { "tool": "bash", "arguments": { "command": "ls -l newdir/fresh.zip fresh.tgz | awk '{print substr($1,1,10), $NF}'" } }
+    ]
+  },
+  {
+    "name": "write-archive-errors-and-edge-cases",
+    "description": "Exercise unsupported read-only format (.7z), non-stdlib omp-writable format (.tar.zst), directory or plain-file archive part, and invalid archive member paths.",
+    "setup": "mkdir -p fake.zip && printf 'not a zip\\n' > plain.zip && printf 'not 7z' > ro.7z",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "ro.7z:a.txt", "content": "nope\n" } },
+      { "tool": "write", "arguments": { "path": "fake.zip:member.txt", "content": "dir archive\n" } },
+      { "tool": "write", "arguments": { "path": "plain.zip:member.txt", "content": "plain archive\n" } },
+      { "tool": "write", "arguments": { "path": "bad.zip:../escape.txt", "content": "nope\n" } },
+      { "tool": "write", "arguments": { "path": "bad.zip:dir/", "content": "nope\n" } },
+      { "tool": "write", "arguments": { "path": "zstd.tar.zst:a.txt", "content": "zst test\n" } },
+      { "tool": "write", "arguments": { "path": "plain.txt:notarchive.txt", "content": "literal colon\n" } },
+      { "tool": "read", "arguments": { "path": "plain.txt:notarchive.txt" } }
+    ]
+  },
+  {
+    "name": "write-conflict-prefix-recovery",
+    "description": "Write to an erroneously file-prefixed conflict URI (<file>:conflict://1) and verify prefix stripping, explanatory note, and resolved file content.",
+    "setup": "printf 'top\\n<<<<<<< ours\\nleft_line\\n=======\\nright_line\\n>>>>>>> theirs\\nbottom\\n' > merge.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "merge.txt:conflicts" } },
+      { "tool": "write", "arguments": { "path": "merge.txt:conflict://1", "content": "@theirs" } },
+      { "tool": "read", "arguments": { "path": "merge.txt" } }
+    ]
+  },
+  {
+    "name": "write-archive-tar-links",
+    "description": "Rewrite a tar containing a regular file, hard link, file symlink, and directory symlink; verify rewritten member kinds and contents.",
+    "setup": "python3 -B -c \"import io, tarfile; tf = tarfile.open('links.tar', 'w'); d = tarfile.TarInfo('dir'); d.type = tarfile.DIRTYPE; d.mode = 0o755; tf.addfile(d); b = b'target text\\n'; f = tarfile.TarInfo('dir/orig.txt'); f.size = len(b); f.mode = 0o644; tf.addfile(f, io.BytesIO(b)); h = tarfile.TarInfo('hard.txt'); h.type = tarfile.LNKTYPE; h.linkname = 'dir/orig.txt'; tf.addfile(h); s = tarfile.TarInfo('sym.txt'); s.type = tarfile.SYMTYPE; s.linkname = 'dir/orig.txt'; tf.addfile(s); ds = tarfile.TarInfo('dirlink'); ds.type = tarfile.SYMTYPE; ds.linkname = 'dir'; tf.addfile(ds); tf.close()\"",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "links.tar:extra.txt", "content": "added\n" } },
+      { "tool": "read", "arguments": { "path": "links.tar" } },
+      { "tool": "read", "arguments": { "path": "links.tar:hard.txt" } },
+      { "tool": "read", "arguments": { "path": "links.tar:sym.txt" } },
+      { "tool": "bash", "arguments": { "command": "tar -tvf links.tar | awk '{print $1, $NF}'" } }
+    ]
+  },
+  {
+    "name": "write-archive-tar-broken-links",
+    "description": "Exercise tar rewrite refusals for a dangling symlink and a hard link with a missing target.",
+    "setup": "python3 -B -c \"import tarfile; tf = tarfile.open('dangling.tar', 'w'); s = tarfile.TarInfo('bad.txt'); s.type = tarfile.SYMTYPE; s.linkname = 'nowhere.txt'; tf.addfile(s); tf.close(); tf = tarfile.open('missing-hard.tar', 'w'); h = tarfile.TarInfo('badhard.txt'); h.type = tarfile.LNKTYPE; h.linkname = 'ghost.txt'; tf.addfile(h); tf.close()\"",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "dangling.tar:extra.txt", "content": "nope\n" } },
+      { "tool": "write", "arguments": { "path": "missing-hard.tar:extra.txt", "content": "nope\n" } }
+    ]
+  },
+  {
+    "name": "write-archive-zip-symlinks",
+    "description": "Rewrite a ZIP holding a file symlink and an unsafe-name member; test refusals for directory symlink, dangling symlink, and escaping symlink.",
+    "setup": "python3 -B -c \"import zipfile\nz = zipfile.ZipFile('zlinks.zip', 'w')\ni = zipfile.ZipInfo('dir/orig.txt'); i.create_system = 3; i.external_attr = 0o100644 << 16; z.writestr(i, 'zip target\\n')\ns = zipfile.ZipInfo('sym.txt'); s.create_system = 3; s.external_attr = 0o120777 << 16; z.writestr(s, 'dir/orig.txt')\nu = zipfile.ZipInfo('../escape.txt'); u.create_system = 3; u.external_attr = 0o100644 << 16; z.writestr(u, 'ignored\\n')\nz.close()\nz2 = zipfile.ZipFile('zdirlink.zip', 'w')\ni2 = zipfile.ZipInfo('dir/orig.txt'); i2.create_system = 3; i2.external_attr = 0o100644 << 16; z2.writestr(i2, 'zip target\\n')\nds = zipfile.ZipInfo('dirlink'); ds.create_system = 3; ds.external_attr = 0o120777 << 16; z2.writestr(ds, 'dir')\nz2.close()\nz3 = zipfile.ZipFile('zdangling.zip', 'w')\nb = zipfile.ZipInfo('bad.txt'); b.create_system = 3; b.external_attr = 0o120777 << 16; z3.writestr(b, 'nowhere.txt')\nz3.close()\nz4 = zipfile.ZipFile('zescape.zip', 'w')\ne = zipfile.ZipInfo('esc.txt'); e.create_system = 3; e.external_attr = 0o120777 << 16; z4.writestr(e, '../outside.txt')\nz4.close()\"",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "zlinks.zip:extra.txt", "content": "added\n" } },
+      { "tool": "read", "arguments": { "path": "zlinks.zip" } },
+      { "tool": "read", "arguments": { "path": "zlinks.zip:sym.txt" } },
+      { "tool": "bash", "arguments": { "command": "python3 -B -c \"import zipfile; z = zipfile.ZipFile('zlinks.zip'); print('\\n'.join(f'{oct((i.external_attr>>16)&0o170777)} {i.filename}' for i in z.infolist()))\"" } },
+      { "tool": "write", "arguments": { "path": "zdirlink.zip:extra.txt", "content": "nope\n" } },
+      { "tool": "write", "arguments": { "path": "zdangling.zip:extra.txt", "content": "nope\n" } },
+      { "tool": "write", "arguments": { "path": "zescape.zip:extra.txt", "content": "nope\n" } }
+    ]
+  }
+]

@@ -1,0 +1,10 @@
+@mixin box($pad) {
+  padding: $pad;
+}
+
+.btn {
+  @include box(4px);
+  &-primary {
+    color: blue;
+  }
+}

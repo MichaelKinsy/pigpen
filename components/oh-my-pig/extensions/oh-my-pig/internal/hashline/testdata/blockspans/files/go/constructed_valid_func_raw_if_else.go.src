@@ -1,0 +1,11 @@
+package p
+
+func f() string {
+	s := `}`
+	if ok {
+		a()
+	} else {
+		b()
+	}
+	return s
+}

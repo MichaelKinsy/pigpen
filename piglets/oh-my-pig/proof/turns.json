@@ -1,0 +1,290 @@
+[
+  {
+    "comment": "Turn 0 (step 01-markdown): plain Markdown reply",
+    "text": "## Markdown Parity\n\nHere is a **bold** word, `inline code`, and a list:\n\n- first item\n- second item\n\n```go\npackage main\n\nfunc answer() int { return 42 }\n```\n"
+  },
+  {
+    "comment": "Turn 1 (step 02a-working / 02b-thinking): delayed response so working indicator is visible, then thinking + text",
+    "delay_ms": 2200,
+    "thinking": "Let me reason carefully about the sum of 20 and 22 before answering. 20 + 22 equals 42.",
+    "text": "The answer is **42**."
+  },
+  {
+    "comment": "Turn 2 (step 03-tool-read): read notes.txt",
+    "tool_calls": [
+      {
+        "name": "read",
+        "arguments": {
+          "path": "notes.txt"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 3 (step 03-tool-read): reply after read",
+    "text": "Read `notes.txt` successfully."
+  },
+  {
+    "comment": "Turn 4 (step 04-tool-bash): short bash command",
+    "tool_calls": [
+      {
+        "name": "bash",
+        "arguments": {
+          "command": "printf 'alpha\\nbeta\\n'"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 5 (step 04-tool-bash): reply after bash",
+    "text": "Command output captured."
+  },
+  {
+    "comment": "Turn 6 (step 05-tool-edit): edit notes.txt",
+    "tool_calls": [
+      {
+        "name": "edit",
+        "arguments": {
+          "path": "notes.txt",
+          "old_text": "status: draft",
+          "new_text": "status: verified",
+          "line": 2
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 7 (step 05-tool-edit): reply after edit",
+    "text": "Updated `notes.txt` to verified."
+  },
+  {
+    "comment": "Turn 8 (step 06-tool-error): failing tool call (read missing file)",
+    "tool_calls": [
+      {
+        "name": "read",
+        "arguments": {
+          "path": "does-not-exist-proof.txt"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 9 (step 06-tool-error): reply after failing read",
+    "text": "That file does not exist."
+  },
+  {
+    "comment": "Turn 10 (step 07-tool-todo): todo init (leaves items open briefly so HUD can render)",
+    "tool_calls": [
+      {
+        "name": "todo",
+        "arguments": {
+          "op": "init",
+          "list": [
+            {
+              "phase": "Verify",
+              "items": ["Check read card", "Check todo card"]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 11 (step 07-tool-todo): mark both todo items done in the same turn so stop-time todo reminder never fires",
+    "tool_calls": [
+      {
+        "name": "todo",
+        "arguments": {
+          "op": "done",
+          "task": ["Check read card", "Check todo card"]
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 12 (step 07-tool-todo): reply after todo (0 open items)",
+    "text": "Todo checklist initialized and verified."
+  },
+  {
+    "comment": "Turn 13 (step 08a-ask-form / 08b-ask-submitted): interactive ask HTML form",
+    "tool_calls": [
+      {
+        "name": "ask",
+        "arguments": {
+          "html": "<form><p>Choose a mode:</p><label><input type=\"radio\" name=\"mode\" value=\"fast\" checked> Fast</label><label><input type=\"radio\" name=\"mode\" value=\"thorough\"> Thorough</label></form>"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 14 (step 08b-ask-submitted): reply after ask",
+    "text": "Recorded your form choice."
+  },
+  {
+    "comment": "Turn 15 (step 09-tool-eval): python eval",
+    "tool_calls": [
+      {
+        "name": "eval",
+        "arguments": {
+          "language": "py",
+          "title": "Proof Python eval",
+          "code": "print('eval_ok', 6 * 7)"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 16 (step 09-tool-eval): reply after eval",
+    "text": "Python eval completed."
+  },
+  {
+    "comment": "Turn 17 (step 10-tool-task): task subagent spawn",
+    "tool_calls": [
+      {
+        "name": "task",
+        "arguments": {
+          "context": "Proof subagent check.",
+          "tasks": [
+            {
+              "name": "ProofChild",
+              "agent": "task",
+              "task": "Reply with PROOF_CHILD_OK.",
+              "solutionSpace": "one fixed reply"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 18 (step 10-tool-task): wait for subagent",
+    "tool_calls": [
+      {
+        "name": "wait",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "comment": "Turn 19 (step 10-tool-task): reply after task+wait",
+    "text": "Subagent finished."
+  },
+  {
+    "comment": "Turn 20 (step 11-tool-web-search): web_search offline error card",
+    "tool_calls": [
+      {
+        "name": "web_search",
+        "arguments": {
+          "query": "oh-my-pig proof offline query"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 21 (step 11-tool-web-search): reply after web_search",
+    "text": "Web search is offline."
+  },
+  {
+    "comment": "Turn 22 (step 12-tool-write-search): write + grep + glob cards",
+    "tool_calls": [
+      {
+        "name": "write",
+        "arguments": {
+          "path": "generated.txt",
+          "content": "needle_alpha\nneedle_beta\n"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 23 (step 12-tool-write-search): grep card",
+    "tool_calls": [
+      {
+        "name": "grep",
+        "arguments": {
+          "pattern": "needle_"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 24 (step 12-tool-write-search): glob card",
+    "tool_calls": [
+      {
+        "name": "glob",
+        "arguments": {
+          "path": "*.txt"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 25 (step 12-tool-write-search): reply after write/grep/glob",
+    "text": "Wrote and searched workspace files."
+  },
+  {
+    "comment": "Turn 26 (step 13-tool-lsp-ast): direct lsp status + ast_edit cards",
+    "tool_calls": [
+      {
+        "name": "lsp",
+        "arguments": {
+          "action": "status"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 27 (step 13-tool-lsp-ast): ast_edit card",
+    "tool_calls": [
+      {
+        "name": "ast_edit",
+        "arguments": {
+          "ops": [
+            {
+              "pat": "console.log($A)",
+              "out": "print($A)"
+            }
+          ],
+          "paths": ["sample.js"]
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 28 (step 13-tool-lsp-ast): reject staged ast_edit preview so resolve reminder clears",
+    "tool_calls": [
+      {
+        "name": "bash",
+        "arguments": {
+          "command": "reject \"Proof preview only\""
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 29 (step 13-tool-lsp-ast): reply after lsp + ast_edit",
+    "text": "Inspected LSP status and AST edit preview."
+  },
+  {
+    "comment": "Turn 30 (step 14-long-fold): long bash output (30 lines) that folds until expanded with Ctrl+O",
+    "tool_calls": [
+      {
+        "name": "bash",
+        "arguments": {
+          "command": "seq 1 30 | awk '{printf \"fold_line_%02d\\n\", $1}'"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 31 (step 14-long-fold): reply after long output",
+    "text": "Long output rendered."
+  },
+  {
+    "comment": "Turn 32 (step 15-provider-error): simulated provider HTTP 400 error turn",
+    "http_error": {
+      "status": 400,
+      "message": "Proof simulated provider error"
+    }
+  }
+]
